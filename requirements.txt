@@ -1,2 +1,7 @@
+fastapi
 uvicorn
-gunicorn
+aiogram
+pydantic
+python-dotenv
+aiosqlite
+sqlalchemy

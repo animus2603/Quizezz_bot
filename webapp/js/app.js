@@ -3,7 +3,7 @@ tg.ready();
 tg.expand();
 
 // ВАЖНО: на проде укажи реальный адрес бэкенда (тот же домен, куда задеплоил api/main.py)
-const API_BASE = window.location.origin + "/api";
+const API_BASE_URL = window.location.origin + "/api";
 
 const tgUser = tg.initDataUnsafe?.user || {};
 const currentUser = {

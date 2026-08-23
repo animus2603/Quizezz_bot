@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudHub</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="quiz">📚 Quizizz</button>
+    <button class="tab" data-tab="market">🛒 Маркетплейс</button>
+    <button class="tab" data-tab="my">👤 Мои</button>
+  </nav>
+
+  <!-- ===== QUIZ TAB ===== -->
+  <section id="tab-quiz" class="tab-content active">
+    <h2>Готовые тесты</h2>
+    <div id="catalog-list" class="list">Загрузка...</div>
+
+    <h2>Нет нужного теста?</h2>
+    <button id="btn-custom-order" class="btn-primary">Заказать индивидуальный тест — 5000₸</button>
+
+    <div id="custom-form" class="form hidden">
+      <label>Ссылка/описание вопросов теста</label>
+      <input id="cf-file" type="text" placeholder="Ссылка на файл или Quizizz">
+
+      <label>Дедлайн (дата и время)</label>
+      <input id="cf-deadline" type="datetime-local">
+
+      <label>Пожелания / инструкции</label>
+      <textarea id="cf-comment" placeholder="Например: нужно 90%+ правильных"></textarea>
+
+      <button id="cf-submit" class="btn-primary">Оформить заказ — 5000₸</button>
+    </div>
+  </section>
+
+  <!-- ===== MARKET TAB ===== -->
+  <section id="tab-market" class="tab-content">
+    <div class="filter-row">
+      <select id="market-filter">
+        <option value="">Все категории</option>
+        <option value="goods">Товары</option>
+        <option value="services">Услуги</option>
+        <option value="ads">Реклама</option>
+      </select>
+      <button id="btn-new-listing" class="btn-secondary">+ Разместить</button>
+    </div>
+    <div id="market-list" class="list">Загрузка...</div>
+
+    <div id="listing-form" class="form hidden">
+      <label>Категория</label>
+      <select id="lf-category">
+        <option value="goods">Товар</option>
+        <option value="services">Услуга</option>
+        <option value="ads">Реклама</option>
+      </select>
+
+      <label>Название</label>
+      <input id="lf-title" type="text" placeholder="Например: Учебник по матанализу">
+
+      <label>Описание</label>
+      <textarea id="lf-description" placeholder="Состояние, детали..."></textarea>
+
+      <label>Цена (₸, необязательно)</label>
+      <input id="lf-price" type="number" placeholder="5000">
+
+      <label>Контакт (@username)</label>
+      <input id="lf-contact" type="text" placeholder="@your_username">
+
+      <button id="lf-submit" class="btn-primary">Отправить на модерацию</button>
+    </div>
+  </section>
+
+  <!-- ===== MY TAB ===== -->
+  <section id="tab-my" class="tab-content">
+    <h2>Мои заказы и объявления</h2>
+    <p class="hint">Статусы заказов приходят вам личным сообщением от бота.</p>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

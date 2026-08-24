@@ -9,6 +9,32 @@ from database.models import (
 )
 
 
+async def get_user_by_tg_id(session: AsyncSession, tg_id: int) -> User | None:
+    result = await session.execute(select(User).where(User.tg_id == tg_id))
+    return result.scalar_one_or_none()
+
+
+async def set_user_phone(session: AsyncSession, user: User, phone: str) -> User:
+    user.phone = phone
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def get_user_orders(session: AsyncSession, user_id: int) -> list[Order]:
+    result = await session.execute(
+        select(Order).where(Order.user_id == user_id).order_by(Order.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_user_listings(session: AsyncSession, user_id: int) -> list[Listing]:
+    result = await session.execute(
+        select(Listing).where(Listing.seller_id == user_id).order_by(Listing.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 async def get_or_create_user(session: AsyncSession, tg_id: int, username: str | None, full_name: str | None) -> User:
     result = await session.execute(select(User).where(User.tg_id == tg_id))
     user = result.scalar_one_or_none()

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database.engine import init_db
-from api.routers import quiz, marketplace
+from api.routers import quiz, marketplace, users
 from bot.main import start_polling
 
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +32,7 @@ app.add_middleware(
 
 app.include_router(quiz.router, prefix="/api")
 app.include_router(marketplace.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 
 # отдаём статику Mini App прямо с бэкенда (проще для MVP, чем отдельный хостинг)
 app.mount("/webapp", StaticFiles(directory="webapp", html=True), name="webapp")

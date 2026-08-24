@@ -13,7 +13,7 @@ const currentUser = {
 };
 
 // ---------- i18n ----------
-const LANGS = ["RU", "KZ", "EN"];
+const LANGS = ["EN", "RU", "KZ", "TM"];
 
 const DICT = {
   RU: {
@@ -39,13 +39,15 @@ const DICT = {
     lfPriceLabel: "Цена (₸, необязательно)",
     lfContactLabel: "Контакт (@username)",
     lfSubmit: "Отправить на модерацию",
-    myTitle: "Мои заказы и объявления",
-    myHint: "Статусы заказов приходят вам личным сообщением от бота.",
-    navQuiz: "Тесты", navMarket: "Маркет", navMy: "Профиль",
+    myOrdersTitle: "Мои заказы",
+    myListingsTitle: "Мои объявления",
+    navHome: "Главная", navCategories: "Категории", navOrders: "Заказы", navProfile: "Профиль",
     buyBtn: "Купить",
     contactSellerBtn: "Написать продавцу",
     emptyCatalog: "Каталог пока пуст.",
     emptyListings: "Пока нет объявлений в этой категории.",
+    emptyOrders: "У вас пока нет заказов.",
+    emptyMyListings: "Вы ещё не разместили объявлений.",
     errCatalog: "Не удалось загрузить каталог. Проверьте соединение.",
     errListings: "Не удалось загрузить объявления.",
     errDeadline: "Укажите дедлайн",
@@ -55,10 +57,28 @@ const DICT = {
     errOrder: "Ошибка при создании заказа",
     listingSent: "Объявление отправлено на модерацию!",
     errListing: "Ошибка при создании объявления",
+    attachPhone: "Привязать номер",
+    phoneNotLinked: "Номер не привязан",
+    phoneRequestSent: "Откройте всплывающее окно Telegram и подтвердите — номер привяжется автоматически.",
+    menuSettings: "Настройки",
+    menuNotifications: "Уведомления",
+    menuFaq: "FAQ",
+    menuSupport: "Поддержка",
+    comingSoon: "Раздел в разработке — скоро будет доступен",
+    orderType_ready_quiz: "Готовый тест",
+    orderType_custom_quiz: "Индивидуальный тест",
+    status_awaiting_payment: "Ждёт оплаты",
+    status_payment_review: "Чек на проверке",
+    status_in_progress: "В работе",
+    status_done: "Готово",
+    status_sent: "Отправлено",
+    status_rejected: "Отклонено",
+    status_pending: "На модерации",
+    status_approved: "Опубликовано",
+    status_sold: "Продано",
     banners: [
       { icon: "🎓", text: "Готовые тесты Quizizz по фиксированной цене — 3000₸" },
       { icon: "⏱️", text: "Нужен тест к дедлайну? Закажем индивидуально — 5000₸" },
-      { icon: "🛒", text: "Продавай и находи учебники, технику и услуги рядом" },
     ],
   },
   KZ: {
@@ -84,13 +104,15 @@ const DICT = {
     lfPriceLabel: "Бағасы (₸, міндетті емес)",
     lfContactLabel: "Байланыс (@username)",
     lfSubmit: "Модерацияға жіберу",
-    myTitle: "Менің тапсырыстарым мен хабарландыруларым",
-    myHint: "Тапсырыс мәртебелері боттан жеке хабарлама түрінде келеді.",
-    navQuiz: "Тесттер", navMarket: "Маркет", navMy: "Профиль",
+    myOrdersTitle: "Менің тапсырыстарым",
+    myListingsTitle: "Менің хабарландыруларым",
+    navHome: "Басты бет", navCategories: "Санаттар", navOrders: "Тапсырыстар", navProfile: "Профиль",
     buyBtn: "Сатып алу",
     contactSellerBtn: "Сатушыға жазу",
     emptyCatalog: "Каталог әзірге бос.",
     emptyListings: "Бұл санатта хабарландырулар жоқ.",
+    emptyOrders: "Сізде әлі тапсырыстар жоқ.",
+    emptyMyListings: "Сіз әлі хабарландыру бермедіңіз.",
     errCatalog: "Каталогты жүктеу мүмкін болмады. Байланысты тексеріңіз.",
     errListings: "Хабарландыруларды жүктеу мүмкін болмады.",
     errDeadline: "Мерзімді көрсетіңіз",
@@ -100,10 +122,28 @@ const DICT = {
     errOrder: "Тапсырысты құру кезінде қате шықты",
     listingSent: "Хабарландыру модерацияға жіберілді!",
     errListing: "Хабарландыруды құру кезінде қате шықты",
+    attachPhone: "Нөмірді байланыстыру",
+    phoneNotLinked: "Нөмір байланыстырылмаған",
+    phoneRequestSent: "Telegram терезесін ашып, растаңыз — нөмір автоматты түрде байланысады.",
+    menuSettings: "Баптаулар",
+    menuNotifications: "Хабарламалар",
+    menuFaq: "Жиі қойылатын сұрақтар",
+    menuSupport: "Қолдау қызметі",
+    comingSoon: "Бөлім әзірленуде — жақында қолжетімді болады",
+    orderType_ready_quiz: "Дайын тест",
+    orderType_custom_quiz: "Жеке тест",
+    status_awaiting_payment: "Төлемді күтуде",
+    status_payment_review: "Чек тексерілуде",
+    status_in_progress: "Жұмыста",
+    status_done: "Дайын",
+    status_sent: "Жіберілді",
+    status_rejected: "Қабылданбады",
+    status_pending: "Модерацияда",
+    status_approved: "Жарияланды",
+    status_sold: "Сатылды",
     banners: [
       { icon: "🎓", text: "Дайын Quizizz тесттері бекітілген бағамен — 3000₸" },
       { icon: "⏱️", text: "Мерзімге тест керек пе? Жеке тапсырыс береміз — 5000₸" },
-      { icon: "🛒", text: "Оқулық, техника және қызметтерді сатып ал не сат" },
     ],
   },
   EN: {
@@ -129,13 +169,15 @@ const DICT = {
     lfPriceLabel: "Price (₸, optional)",
     lfContactLabel: "Contact (@username)",
     lfSubmit: "Send for moderation",
-    myTitle: "My orders and listings",
-    myHint: "Order status updates arrive as a direct message from the bot.",
-    navQuiz: "Quizzes", navMarket: "Market", navMy: "Profile",
+    myOrdersTitle: "My orders",
+    myListingsTitle: "My listings",
+    navHome: "Home", navCategories: "Categories", navOrders: "Orders", navProfile: "Profile",
     buyBtn: "Buy",
     contactSellerBtn: "Message seller",
     emptyCatalog: "Catalog is empty right now.",
     emptyListings: "No listings in this category yet.",
+    emptyOrders: "You don't have any orders yet.",
+    emptyMyListings: "You haven't posted any listings yet.",
     errCatalog: "Couldn't load the catalog. Check your connection.",
     errListings: "Couldn't load listings.",
     errDeadline: "Please set a deadline",
@@ -145,10 +187,93 @@ const DICT = {
     errOrder: "Error creating the order",
     listingSent: "Listing sent for moderation!",
     errListing: "Error creating the listing",
+    attachPhone: "Link phone number",
+    phoneNotLinked: "Phone not linked",
+    phoneRequestSent: "Open the Telegram prompt and confirm — your number will be linked automatically.",
+    menuSettings: "Settings",
+    menuNotifications: "Notifications",
+    menuFaq: "FAQ",
+    menuSupport: "Support",
+    comingSoon: "This section is coming soon",
+    orderType_ready_quiz: "Ready-made quiz",
+    orderType_custom_quiz: "Custom quiz",
+    status_awaiting_payment: "Awaiting payment",
+    status_payment_review: "Receipt under review",
+    status_in_progress: "In progress",
+    status_done: "Done",
+    status_sent: "Sent",
+    status_rejected: "Rejected",
+    status_pending: "Pending review",
+    status_approved: "Published",
+    status_sold: "Sold",
     banners: [
       { icon: "🎓", text: "Ready-made Quizizz tests at a fixed price — 3000₸" },
       { icon: "⏱️", text: "Need a quiz by a deadline? We'll do it custom — 5000₸" },
-      { icon: "🛒", text: "Buy and sell textbooks, gadgets and student services" },
+    ],
+  },
+  TM: {
+    appName: "StudHub",
+    readyQuizzes: "Taýýar testler",
+    noQuizFound: "Gerekli testiňiz ýokmy?",
+    orderCustomBtn: "Şahsy test sargyt et — 5000₸",
+    cfFileLabel: "Test soraglarynyň salgysy/beýany",
+    cfFilePlaceholder: "Faýla salgy ýa-da Quizizz",
+    cfDeadlineLabel: "Möhlet (sene we wagt)",
+    cfCommentLabel: "Islegler / görkezmeler",
+    cfCommentPlaceholder: "Mysal üçin: 90%+ dogry gerek",
+    cfSubmit: "Sargyt bermek — 5000₸",
+    catAll: "Ähli kategoriýalar",
+    catGoods: "Harytlar", catServices: "Hyzmatlar", catAds: "Mahabat",
+    catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat", catAdsSingle: "Mahabat",
+    newListingBtn: "+ Ýerleşdirmek",
+    lfCategoryLabel: "Kategoriýa",
+    lfTitleLabel: "Ady",
+    lfTitlePlaceholder: "Mysal üçin: Matanaliz kitaby",
+    lfDescLabel: "Beýany",
+    lfDescPlaceholder: "Ýagdaýy, jikme-jiklikler...",
+    lfPriceLabel: "Bahasy (₸, hökman däl)",
+    lfContactLabel: "Habarlaşmak (@username)",
+    lfSubmit: "Barlaga ibermek",
+    myOrdersTitle: "Meniň sargytlarym",
+    myListingsTitle: "Meniň bildirişlerim",
+    navHome: "Baş sahypa", navCategories: "Kategoriýalar", navOrders: "Sargytlar", navProfile: "Profil",
+    buyBtn: "Satyn almak",
+    contactSellerBtn: "Satyja ýazmak",
+    emptyCatalog: "Katalog häzirlikçe boş.",
+    emptyListings: "Bu kategoriýada bildirişler ýok.",
+    emptyOrders: "Sizde entek sargyt ýok.",
+    emptyMyListings: "Siz entek bildiriş ýerleşdirmediňiz.",
+    errCatalog: "Katalogy ýüklemek başartmady. Baglanyşygy barlaň.",
+    errListings: "Bildirişleri ýüklemek başartmady.",
+    errDeadline: "Möhleti görkeziň",
+    errFields: "Ady we habarlaşmagy dolduryň",
+    orderCreated: (id) => `#${id} sargydy döredildi! Bot bilen çata dolanyň — töleg maglumatlary şol ýerde.`,
+    orderPlaced: (id) => `#${id} sargydy resmileşdirildi! Tölemek üçin bot bilen çata dolanyň.`,
+    errOrder: "Sargyt döredilende ýalňyşlyk ýüze çykdy",
+    listingSent: "Bildiriş barlaga iberildi!",
+    errListing: "Bildiriş döredilende ýalňyşlyk ýüze çykdy",
+    attachPhone: "Belgini baglamak",
+    phoneNotLinked: "Belgi baglanmadyk",
+    phoneRequestSent: "Telegram penjiresini açyň we tassyklaň — belgi awtomatiki baglanar.",
+    menuSettings: "Sazlamalar",
+    menuNotifications: "Bildirişler",
+    menuFaq: "Ýygy-ýygydan soralýan soraglar",
+    menuSupport: "Goldaw",
+    comingSoon: "Bölüm ýakynda elýeterli bolar",
+    orderType_ready_quiz: "Taýýar test",
+    orderType_custom_quiz: "Şahsy test",
+    status_awaiting_payment: "Töleg garaşylýar",
+    status_payment_review: "Çek barlanýar",
+    status_in_progress: "Işlenýär",
+    status_done: "Taýýar",
+    status_sent: "Iberildi",
+    status_rejected: "Ret edildi",
+    status_pending: "Barlagda",
+    status_approved: "Çap edildi",
+    status_sold: "Satyldy",
+    banners: [
+      { icon: "🎓", text: "Bellenen bahadaky taýýar Quizizz testleri — 3000₸" },
+      { icon: "⏱️", text: "Möhlete test gerekmi? Şahsy taýýarlarys — 5000₸" },
     ],
   },
 };
@@ -156,7 +281,7 @@ const DICT = {
 let currentLang = "RU";
 
 function t(key) {
-  return DICT[currentLang][key] ?? DICT.RU[key];
+  return DICT[currentLang][key] ?? DICT.RU[key] ?? key;
 }
 
 function applyTranslations() {
@@ -169,15 +294,33 @@ function applyTranslations() {
     if (typeof val === "string") el.placeholder = val;
   });
   document.getElementById("lang-switch").textContent = currentLang;
+  document.querySelectorAll(".lang-option").forEach((el) => {
+    el.classList.toggle("active", el.dataset.lang === currentLang);
+  });
   renderBanner();
   loadCatalog();
   loadListings();
+  renderPhoneRow();
 }
 
-document.getElementById("lang-switch").addEventListener("click", () => {
-  const idx = LANGS.indexOf(currentLang);
-  currentLang = LANGS[(idx + 1) % LANGS.length];
-  applyTranslations();
+// ---------- Попап выбора языка ----------
+const langSwitchBtn = document.getElementById("lang-switch");
+const langOverlay = document.getElementById("lang-overlay");
+
+langSwitchBtn.addEventListener("click", () => {
+  langOverlay.classList.toggle("hidden");
+});
+
+langOverlay.addEventListener("click", (e) => {
+  if (e.target === langOverlay) langOverlay.classList.add("hidden");
+});
+
+document.querySelectorAll(".lang-option").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentLang = btn.dataset.lang;
+    langOverlay.classList.add("hidden");
+    applyTranslations();
+  });
 });
 
 function showToast(text) {
@@ -187,7 +330,7 @@ function showToast(text) {
   setTimeout(() => toast.classList.add("hidden"), 3000);
 }
 
-// ---------- Баннер-карусель ----------
+// ---------- Баннер-карусель (только на Главной) ----------
 let bannerTimer = null;
 let bannerIndex = 0;
 
@@ -216,13 +359,27 @@ function renderBanner() {
   }, 4000);
 }
 
-// ---------- Нижнее меню ----------
+function setBannerVisible(visible) {
+  document.getElementById("banner").classList.toggle("hidden", !visible);
+}
+
+// ---------- Нижнее меню (4 вкладки) ----------
 document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-item").forEach((b) => b.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+
+    setBannerVisible(btn.dataset.tab === "home");
+
+    if (btn.dataset.tab === "orders") {
+      loadMyOrders();
+      loadMyListings();
+    }
+    if (btn.dataset.tab === "profile") {
+      loadProfile();
+    }
   });
 });
 
@@ -300,7 +457,7 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
   }
 });
 
-// ---------- Маркетплейс: лента ----------
+// ---------- Маркетплейс: лента (вкладка «Категории») ----------
 async function loadListings() {
   const list = document.getElementById("market-list");
   const category = document.getElementById("market-filter").value;
@@ -369,5 +526,115 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
   }
 });
 
+// ---------- Вкладка «Заказы» ----------
+async function loadMyOrders() {
+  const list = document.getElementById("orders-list");
+  if (!currentUser.tg_id) {
+    list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/users/${currentUser.tg_id}/orders`);
+    const items = await res.json();
+    if (!items.length) {
+      list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`;
+      return;
+    }
+    list.innerHTML = items.map((o) => `
+      <div class="card">
+        <div class="card-title">#${o.id} · ${t("orderType_" + o.order_type)}</div>
+        <div class="card-desc">${o.price}₸</div>
+        <span class="status-badge">${t("status_" + o.status)}</span>
+      </div>
+    `).join("");
+  } catch (e) {
+    list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
+}
+
+async function loadMyListings() {
+  const list = document.getElementById("my-listings-list");
+  if (!currentUser.tg_id) {
+    list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/users/${currentUser.tg_id}/listings`);
+    const items = await res.json();
+    if (!items.length) {
+      list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`;
+      return;
+    }
+    list.innerHTML = items.map((l) => `
+      <div class="card">
+        <div class="card-title">${l.title}</div>
+        <div class="card-desc">${l.price ? l.price + "₸" : ""}</div>
+        <span class="status-badge">${t("status_" + l.status)}</span>
+      </div>
+    `).join("");
+  } catch (e) {
+    list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
+}
+
+// ---------- Вкладка «Профиль» ----------
+let profileData = null;
+
+async function loadProfile() {
+  const avatarImg = document.getElementById("profile-avatar");
+  const avatarFallback = document.getElementById("profile-avatar-fallback");
+  const nameEl = document.getElementById("profile-name");
+  const usernameEl = document.getElementById("profile-username");
+
+  nameEl.textContent = currentUser.full_name || "—";
+  usernameEl.textContent = currentUser.username ? "@" + currentUser.username : "—";
+
+  if (tgUser.photo_url) {
+    avatarImg.src = tgUser.photo_url;
+    avatarImg.style.display = "block";
+    avatarFallback.style.display = "none";
+  } else {
+    avatarImg.style.display = "none";
+    avatarFallback.style.display = "flex";
+    const initial = (currentUser.full_name || currentUser.username || "?").trim()[0]?.toUpperCase() || "?";
+    avatarFallback.textContent = initial;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/users/profile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentUser),
+    });
+    profileData = await res.json();
+  } catch (e) {
+    profileData = null;
+  }
+
+  renderPhoneRow();
+}
+
+function renderPhoneRow() {
+  const phoneEl = document.getElementById("profile-phone");
+  if (!phoneEl) return;
+  phoneEl.textContent = profileData?.phone || t("phoneNotLinked");
+}
+
+document.getElementById("btn-attach-phone").addEventListener("click", () => {
+  if (tg.requestContact) {
+    tg.requestContact((sent) => {
+      if (sent) showToast(t("phoneRequestSent"));
+    });
+  } else {
+    showToast(t("phoneRequestSent"));
+  }
+});
+
+// пункты меню профиля — MVP-заглушки
+["menu-settings", "menu-notifications", "menu-faq", "menu-support"].forEach((id) => {
+  document.getElementById(id).addEventListener("click", () => showToast(t("comingSoon")));
+});
+
 // ---------- Init ----------
 applyTranslations();
+setBannerVisible(true);

@@ -20,7 +20,25 @@
     <button id="lang-switch" class="lang-pill" type="button">RU</button>
   </header>
 
-  <!-- ===== БАННЕР ===== -->
+  <!-- ===== ВЫПАДАЮЩЕЕ МЕНЮ ЯЗЫКА ===== -->
+  <div id="lang-overlay" class="lang-overlay hidden">
+    <div class="lang-menu">
+      <button class="lang-option" data-lang="EN">
+        <span class="lang-flag">🇬🇧</span> English
+      </button>
+      <button class="lang-option" data-lang="RU">
+        <span class="lang-flag">🇷🇺</span> Русский
+      </button>
+      <button class="lang-option" data-lang="KZ">
+        <span class="lang-flag">🇰🇿</span> Қазақша
+      </button>
+      <button class="lang-option" data-lang="TM">
+        <span class="lang-flag">🇹🇲</span> Türkmençe
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== БАННЕР (только на Главной) ===== -->
   <div id="banner" class="banner">
     <div class="banner-track" id="banner-track"></div>
     <div class="banner-dots" id="banner-dots"></div>
@@ -28,11 +46,8 @@
 
   <main class="content">
 
-    <!-- ===== QUIZ TAB ===== -->
-    <section id="tab-quiz" class="tab-content active">
-      <h2 data-i18n="readyQuizzes">Готовые тесты</h2>
-      <div id="catalog-list" class="list">…</div>
-
+    <!-- ===== ГЛАВНАЯ ===== -->
+    <section id="tab-home" class="tab-content active">
       <h2 data-i18n="noQuizFound">Нет нужного теста?</h2>
       <button id="btn-custom-order" class="btn-primary" data-i18n="orderCustomBtn">Заказать индивидуальный тест — 5000₸</button>
 
@@ -48,10 +63,13 @@
 
         <button id="cf-submit" class="btn-primary" data-i18n="cfSubmit">Оформить заказ — 5000₸</button>
       </div>
+
+      <h2 data-i18n="readyQuizzes">Готовые тесты</h2>
+      <div id="catalog-list" class="list">…</div>
     </section>
 
-    <!-- ===== MARKET TAB ===== -->
-    <section id="tab-market" class="tab-content">
+    <!-- ===== КАТЕГОРИИ (маркетплейс) ===== -->
+    <section id="tab-categories" class="tab-content">
       <div class="filter-row">
         <select id="market-filter">
           <option value="" data-i18n="catAll">Все категории</option>
@@ -87,27 +105,71 @@
       </div>
     </section>
 
-    <!-- ===== MY TAB ===== -->
-    <section id="tab-my" class="tab-content">
-      <h2 data-i18n="myTitle">Мои заказы и объявления</h2>
-      <p class="hint" data-i18n="myHint">Статусы заказов приходят вам личным сообщением от бота.</p>
+    <!-- ===== ЗАКАЗЫ ===== -->
+    <section id="tab-orders" class="tab-content">
+      <h2 data-i18n="myOrdersTitle">Мои заказы</h2>
+      <div id="orders-list" class="list">…</div>
+
+      <h2 data-i18n="myListingsTitle">Мои объявления</h2>
+      <div id="my-listings-list" class="list">…</div>
+    </section>
+
+    <!-- ===== ПРОФИЛЬ ===== -->
+    <section id="tab-profile" class="tab-content">
+      <div class="profile-header">
+        <img id="profile-avatar" class="profile-avatar" src="" alt="">
+        <div id="profile-avatar-fallback" class="profile-avatar profile-avatar-fallback">?</div>
+        <div class="profile-name" id="profile-name">—</div>
+        <div class="profile-username" id="profile-username">—</div>
+        <div class="profile-phone-row">
+          <span id="profile-phone" class="profile-phone">—</span>
+          <button id="btn-attach-phone" class="btn-link" data-i18n="attachPhone">Привязать номер</button>
+        </div>
+      </div>
+
+      <div class="profile-menu">
+        <button class="profile-item" id="menu-settings">
+          <span class="profile-item-icon">⚙️</span>
+          <span class="profile-item-label" data-i18n="menuSettings">Настройки</span>
+          <span class="profile-item-arrow">›</span>
+        </button>
+        <button class="profile-item" id="menu-notifications">
+          <span class="profile-item-icon">🔔</span>
+          <span class="profile-item-label" data-i18n="menuNotifications">Уведомления</span>
+          <span class="profile-item-arrow">›</span>
+        </button>
+        <button class="profile-item" id="menu-faq">
+          <span class="profile-item-icon">❓</span>
+          <span class="profile-item-label" data-i18n="menuFaq">FAQ</span>
+          <span class="profile-item-arrow">›</span>
+        </button>
+        <button class="profile-item" id="menu-support">
+          <span class="profile-item-icon">💬</span>
+          <span class="profile-item-label" data-i18n="menuSupport">Поддержка</span>
+          <span class="profile-item-arrow">›</span>
+        </button>
+      </div>
     </section>
 
   </main>
 
   <!-- ===== НИЖНЕЕ МЕНЮ ===== -->
   <nav class="bottom-nav">
-    <button class="nav-item active" data-tab="quiz">
-      <span class="nav-icon">📚</span>
-      <span class="nav-label" data-i18n="navQuiz">Тесты</span>
+    <button class="nav-item active" data-tab="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label" data-i18n="navHome">Главная</span>
     </button>
-    <button class="nav-item" data-tab="market">
-      <span class="nav-icon">🛒</span>
-      <span class="nav-label" data-i18n="navMarket">Маркет</span>
+    <button class="nav-item" data-tab="categories">
+      <span class="nav-icon">🗂️</span>
+      <span class="nav-label" data-i18n="navCategories">Категории</span>
     </button>
-    <button class="nav-item" data-tab="my">
+    <button class="nav-item" data-tab="orders">
+      <span class="nav-icon">🧾</span>
+      <span class="nav-label" data-i18n="navOrders">Заказы</span>
+    </button>
+    <button class="nav-item" data-tab="profile">
       <span class="nav-icon">👤</span>
-      <span class="nav-label" data-i18n="navMy">Профиль</span>
+      <span class="nav-label" data-i18n="navProfile">Профиль</span>
     </button>
   </nav>
 

@@ -1,16 +1,48 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from config import DATABASE_URL
-from database.models import Base
+from database.models import Base, QuizCatalogItem
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
+EXAMPLE_CATALOG = [
+    dict(
+        title="Математический анализ — Модуль 1",
+        description="Пределы, производные, базовые теоремы",
+        subject="Математика",
+        file_url="https://example.com/quiz/math-1.pdf",
+        price=3000,
+    ),
+    dict(
+        title="История Казахстана — Тест 5",
+        description="XIX-XX века, ключевые даты и личности",
+        subject="История",
+        file_url="https://example.com/quiz/history-5.pdf",
+        price=3000,
+    ),
+    dict(
+        title="English Grammar — Quiz B1",
+        description="Времена, предлоги, условные предложения",
+        subject="Английский язык",
+        file_url="https://example.com/quiz/english-b1.pdf",
+        price=3000,
+    ),
+]
+
 
 async def init_db() -> None:
-    """Создаёт таблицы, если их ещё нет. Для MVP без Alembic — потом добавим миграции."""
+    """Создаёт таблицы, если их ещё нет, и добавляет примеры тестов в пустой каталог."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    async with async_session() as session:
+        result = await session.execute(select(QuizCatalogItem))
+        if result.first() is None:
+            for item in EXAMPLE_CATALOG:
+                session.add(QuizCatalogItem(**item))
+            await session.commit()
 
 
 async def get_session() -> AsyncSession:

@@ -2,14 +2,15 @@ import asyncio
 import logging
 
 from bot.loader import bot, dp
-from bot.handlers import start, payments, admin
+from bot.handlers import start, payments, admin, profile
 
 
 def setup_routers() -> None:
-    # порядок важен: admin фильтрует по ADMIN_CHAT_ID, payments — по "не ADMIN_CHAT_ID"
+    # порядок важен: admin фильтрует по ADMIN_CHAT_ID, payments/profile — по "не ADMIN_CHAT_ID"
     dp.include_router(admin.router)
     dp.include_router(start.router)
     dp.include_router(payments.router)
+    dp.include_router(profile.router)
 
 
 async def start_polling() -> None:

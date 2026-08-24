@@ -2,7 +2,6 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// ВАЖНО: на проде укажи реальный адрес бэкенда (тот же домен, куда задеплоил api/main.py)
 const API_BASE = window.location.origin + "/api";
 
 const tgUser = tg.initDataUnsafe?.user || {};
@@ -15,22 +14,26 @@ const currentUser = {
 // ---------- i18n ----------
 const LANGS = ["EN", "RU", "KZ", "TM"];
 
-const DICT = {
+const BASE_DICT = {
   RU: {
     appName: "StudHub",
     readyQuizzes: "Готовые тесты",
     noQuizFound: "Нет нужного теста?",
     orderCustomBtn: "Заказать индивидуальный тест — 5000₸",
-    cfFileLabel: "Ссылка/описание вопросов теста",
-    cfFilePlaceholder: "Ссылка на файл или Quizizz",
+    cfFileLabel: "Загрузить файл с вопросами (если нужно)",
     cfDeadlineLabel: "Дедлайн (дата и время)",
+    cfDeadlineHint: "Минимум через 24 часа от текущего момента",
     cfCommentLabel: "Пожелания / инструкции",
     cfCommentPlaceholder: "Например: нужно 90%+ правильных",
     cfSubmit: "Оформить заказ — 5000₸",
     catAll: "Все категории",
     catGoods: "Товары", catServices: "Услуги", catAds: "Реклама",
     catGoodsSingle: "Товар", catServicesSingle: "Услуга", catAdsSingle: "Реклама",
-    newListingBtn: "+ Разместить",
+    moreFilters: "🔍 Фильтры",
+    applyFilters: "Применить",
+    resetFilters: "Сбросить",
+    fCourse: "Курс", fGroup: "Группа", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Предмет",
+    newListingTitle: "Новое объявление",
     lfCategoryLabel: "Категория",
     lfTitleLabel: "Название",
     lfTitlePlaceholder: "Например: Учебник по матанализу",
@@ -41,7 +44,7 @@ const DICT = {
     lfSubmit: "Отправить на модерацию",
     myOrdersTitle: "Мои заказы",
     myListingsTitle: "Мои объявления",
-    navHome: "Главная", navCategories: "Категории", navOrders: "Заказы", navProfile: "Профиль",
+    navHome: "Главная", navCategories: "Категории", navPost: "Разместить", navOrders: "Заказы", navProfile: "Профиль",
     buyBtn: "Купить",
     contactSellerBtn: "Написать продавцу",
     emptyCatalog: "Каталог пока пуст.",
@@ -50,20 +53,20 @@ const DICT = {
     emptyMyListings: "Вы ещё не разместили объявлений.",
     errCatalog: "Не удалось загрузить каталог. Проверьте соединение.",
     errListings: "Не удалось загрузить объявления.",
-    errDeadline: "Укажите дедлайн",
+    errDeadline: "Дедлайн должен быть минимум через 24 часа",
     errFields: "Заполните название и контакт",
-    orderCreated: (id) => `Заказ #${id} создан! Вернитесь в чат с ботом — там реквизиты для оплаты.`,
-    orderPlaced: (id) => `Заказ #${id} оформлен! Вернитесь в чат с ботом для оплаты.`,
+    orderCreated: (id) => `Заказ #${id} создан! Реквизиты для оплаты пришли в чат с ботом.`,
+    orderPlaced: (id) => `Заказ #${id} оформлен! Реквизиты для оплаты пришли в чат с ботом.`,
     errOrder: "Ошибка при создании заказа",
     listingSent: "Объявление отправлено на модерацию!",
     errListing: "Ошибка при создании объявления",
+    uploading: "Загрузка файла...",
+    errUpload: "Не удалось загрузить файл",
     attachPhone: "Привязать номер",
     phoneNotLinked: "Номер не привязан",
-    phoneRequestSent: "Откройте всплывающее окно Telegram и подтвердите — номер привяжется автоматически.",
-    menuSettings: "Настройки",
-    menuNotifications: "Уведомления",
-    menuFaq: "FAQ",
-    menuSupport: "Поддержка",
+    phoneRequestSent: "Откройте окно Telegram и подтвердите — номер привяжется автоматически.",
+    phoneUpdated: "Номер обновлён!",
+    menuSettings: "Настройки", menuNotifications: "Уведомления", menuFaq: "FAQ", menuSupport: "Поддержка",
     comingSoon: "Раздел в разработке — скоро будет доступен",
     orderType_ready_quiz: "Готовый тест",
     orderType_custom_quiz: "Индивидуальный тест",
@@ -86,16 +89,20 @@ const DICT = {
     readyQuizzes: "Дайын тесттер",
     noQuizFound: "Керекті тест жоқ па?",
     orderCustomBtn: "Жеке тест тапсырыс беру — 5000₸",
-    cfFileLabel: "Тест сұрақтарының сілтемесі/сипаттамасы",
-    cfFilePlaceholder: "Файлға сілтеме немесе Quizizz",
+    cfFileLabel: "Сұрақтары бар файлды жүктеу (керек болса)",
     cfDeadlineLabel: "Мерзімі (күні мен уақыты)",
+    cfDeadlineHint: "Қазіргі уақыттан кемінде 24 сағат кейін",
     cfCommentLabel: "Тілектер / нұсқаулар",
     cfCommentPlaceholder: "Мысалы: 90%+ дұрыс керек",
     cfSubmit: "Тапсырыс беру — 5000₸",
     catAll: "Барлық санаттар",
     catGoods: "Тауарлар", catServices: "Қызметтер", catAds: "Жарнама",
     catGoodsSingle: "Тауар", catServicesSingle: "Қызмет", catAdsSingle: "Жарнама",
-    newListingBtn: "+ Хабарландыру беру",
+    moreFilters: "🔍 Сүзгілер",
+    applyFilters: "Қолдану",
+    resetFilters: "Тазалау",
+    fCourse: "Курс", fGroup: "Топ", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Пән",
+    newListingTitle: "Жаңа хабарландыру",
     lfCategoryLabel: "Санат",
     lfTitleLabel: "Атауы",
     lfTitlePlaceholder: "Мысалы: Матанализ оқулығы",
@@ -106,7 +113,7 @@ const DICT = {
     lfSubmit: "Модерацияға жіберу",
     myOrdersTitle: "Менің тапсырыстарым",
     myListingsTitle: "Менің хабарландыруларым",
-    navHome: "Басты бет", navCategories: "Санаттар", navOrders: "Тапсырыстар", navProfile: "Профиль",
+    navHome: "Басты бет", navCategories: "Санаттар", navPost: "Орналастыру", navOrders: "Тапсырыстар", navProfile: "Профиль",
     buyBtn: "Сатып алу",
     contactSellerBtn: "Сатушыға жазу",
     emptyCatalog: "Каталог әзірге бос.",
@@ -115,20 +122,20 @@ const DICT = {
     emptyMyListings: "Сіз әлі хабарландыру бермедіңіз.",
     errCatalog: "Каталогты жүктеу мүмкін болмады. Байланысты тексеріңіз.",
     errListings: "Хабарландыруларды жүктеу мүмкін болмады.",
-    errDeadline: "Мерзімді көрсетіңіз",
+    errDeadline: "Мерзім қазіргі уақыттан кемінде 24 сағат кейін болуы керек",
     errFields: "Атауы мен байланысты толтырыңыз",
-    orderCreated: (id) => `#${id} тапсырысы құрылды! Ботпен чатқа қайтыңыз — онда төлем деректемелері бар.`,
-    orderPlaced: (id) => `#${id} тапсырысы рәсімделді! Төлеу үшін ботпен чатқа қайтыңыз.`,
+    orderCreated: (id) => `#${id} тапсырысы құрылды! Төлем деректемелері ботпен чатқа келді.`,
+    orderPlaced: (id) => `#${id} тапсырысы рәсімделді! Төлем деректемелері ботпен чатқа келді.`,
     errOrder: "Тапсырысты құру кезінде қате шықты",
     listingSent: "Хабарландыру модерацияға жіберілді!",
     errListing: "Хабарландыруды құру кезінде қате шықты",
+    uploading: "Файл жүктелуде...",
+    errUpload: "Файлды жүктеу мүмкін болмады",
     attachPhone: "Нөмірді байланыстыру",
     phoneNotLinked: "Нөмір байланыстырылмаған",
     phoneRequestSent: "Telegram терезесін ашып, растаңыз — нөмір автоматты түрде байланысады.",
-    menuSettings: "Баптаулар",
-    menuNotifications: "Хабарламалар",
-    menuFaq: "Жиі қойылатын сұрақтар",
-    menuSupport: "Қолдау қызметі",
+    phoneUpdated: "Нөмір жаңартылды!",
+    menuSettings: "Баптаулар", menuNotifications: "Хабарламалар", menuFaq: "Жиі қойылатын сұрақтар", menuSupport: "Қолдау қызметі",
     comingSoon: "Бөлім әзірленуде — жақында қолжетімді болады",
     orderType_ready_quiz: "Дайын тест",
     orderType_custom_quiz: "Жеке тест",
@@ -151,16 +158,20 @@ const DICT = {
     readyQuizzes: "Ready-made quizzes",
     noQuizFound: "Can't find your quiz?",
     orderCustomBtn: "Order a custom quiz — 5000₸",
-    cfFileLabel: "Link/description of quiz questions",
-    cfFilePlaceholder: "Link to file or Quizizz",
+    cfFileLabel: "Upload a file with questions (if needed)",
     cfDeadlineLabel: "Deadline (date and time)",
+    cfDeadlineHint: "At least 24 hours from now",
     cfCommentLabel: "Notes / instructions",
     cfCommentPlaceholder: "E.g.: need 90%+ correct",
     cfSubmit: "Place order — 5000₸",
     catAll: "All categories",
     catGoods: "Goods", catServices: "Services", catAds: "Ads",
     catGoodsSingle: "Item", catServicesSingle: "Service", catAdsSingle: "Ad",
-    newListingBtn: "+ Post listing",
+    moreFilters: "🔍 Filters",
+    applyFilters: "Apply",
+    resetFilters: "Reset",
+    fCourse: "Course", fGroup: "Group", fFaculty: "Faculty", fDepartment: "Department", fSubject: "Subject",
+    newListingTitle: "New listing",
     lfCategoryLabel: "Category",
     lfTitleLabel: "Title",
     lfTitlePlaceholder: "E.g.: Calculus textbook",
@@ -171,7 +182,7 @@ const DICT = {
     lfSubmit: "Send for moderation",
     myOrdersTitle: "My orders",
     myListingsTitle: "My listings",
-    navHome: "Home", navCategories: "Categories", navOrders: "Orders", navProfile: "Profile",
+    navHome: "Home", navCategories: "Categories", navPost: "Post", navOrders: "Orders", navProfile: "Profile",
     buyBtn: "Buy",
     contactSellerBtn: "Message seller",
     emptyCatalog: "Catalog is empty right now.",
@@ -180,20 +191,20 @@ const DICT = {
     emptyMyListings: "You haven't posted any listings yet.",
     errCatalog: "Couldn't load the catalog. Check your connection.",
     errListings: "Couldn't load listings.",
-    errDeadline: "Please set a deadline",
+    errDeadline: "Deadline must be at least 24 hours from now",
     errFields: "Fill in the title and contact",
-    orderCreated: (id) => `Order #${id} created! Go back to the bot chat for payment details.`,
-    orderPlaced: (id) => `Order #${id} placed! Go back to the bot chat to pay.`,
+    orderCreated: (id) => `Order #${id} created! Payment details sent to the bot chat.`,
+    orderPlaced: (id) => `Order #${id} placed! Payment details sent to the bot chat.`,
     errOrder: "Error creating the order",
     listingSent: "Listing sent for moderation!",
     errListing: "Error creating the listing",
+    uploading: "Uploading file...",
+    errUpload: "Couldn't upload the file",
     attachPhone: "Link phone number",
     phoneNotLinked: "Phone not linked",
     phoneRequestSent: "Open the Telegram prompt and confirm — your number will be linked automatically.",
-    menuSettings: "Settings",
-    menuNotifications: "Notifications",
-    menuFaq: "FAQ",
-    menuSupport: "Support",
+    phoneUpdated: "Phone updated!",
+    menuSettings: "Settings", menuNotifications: "Notifications", menuFaq: "FAQ", menuSupport: "Support",
     comingSoon: "This section is coming soon",
     orderType_ready_quiz: "Ready-made quiz",
     orderType_custom_quiz: "Custom quiz",
@@ -216,16 +227,20 @@ const DICT = {
     readyQuizzes: "Taýýar testler",
     noQuizFound: "Gerekli testiňiz ýokmy?",
     orderCustomBtn: "Şahsy test sargyt et — 5000₸",
-    cfFileLabel: "Test soraglarynyň salgysy/beýany",
-    cfFilePlaceholder: "Faýla salgy ýa-da Quizizz",
+    cfFileLabel: "Soraglar bilen faýly ýükläň (gerek bolsa)",
     cfDeadlineLabel: "Möhlet (sene we wagt)",
+    cfDeadlineHint: "Häzirki wagtdan iň azyndan 24 sagat soň",
     cfCommentLabel: "Islegler / görkezmeler",
     cfCommentPlaceholder: "Mysal üçin: 90%+ dogry gerek",
     cfSubmit: "Sargyt bermek — 5000₸",
     catAll: "Ähli kategoriýalar",
     catGoods: "Harytlar", catServices: "Hyzmatlar", catAds: "Mahabat",
     catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat", catAdsSingle: "Mahabat",
-    newListingBtn: "+ Ýerleşdirmek",
+    moreFilters: "🔍 Filtrler",
+    applyFilters: "Ulanmak",
+    resetFilters: "Arassalamak",
+    fCourse: "Kurs", fGroup: "Topar", fFaculty: "Fakultet", fDepartment: "Kafedra", fSubject: "Dersi",
+    newListingTitle: "Täze bildiriş",
     lfCategoryLabel: "Kategoriýa",
     lfTitleLabel: "Ady",
     lfTitlePlaceholder: "Mysal üçin: Matanaliz kitaby",
@@ -236,7 +251,7 @@ const DICT = {
     lfSubmit: "Barlaga ibermek",
     myOrdersTitle: "Meniň sargytlarym",
     myListingsTitle: "Meniň bildirişlerim",
-    navHome: "Baş sahypa", navCategories: "Kategoriýalar", navOrders: "Sargytlar", navProfile: "Profil",
+    navHome: "Baş sahypa", navCategories: "Kategoriýalar", navPost: "Ýerleşdirmek", navOrders: "Sargytlar", navProfile: "Profil",
     buyBtn: "Satyn almak",
     contactSellerBtn: "Satyja ýazmak",
     emptyCatalog: "Katalog häzirlikçe boş.",
@@ -245,20 +260,20 @@ const DICT = {
     emptyMyListings: "Siz entek bildiriş ýerleşdirmediňiz.",
     errCatalog: "Katalogy ýüklemek başartmady. Baglanyşygy barlaň.",
     errListings: "Bildirişleri ýüklemek başartmady.",
-    errDeadline: "Möhleti görkeziň",
+    errDeadline: "Möhlet häzirki wagtdan iň azyndan 24 sagat soň bolmaly",
     errFields: "Ady we habarlaşmagy dolduryň",
-    orderCreated: (id) => `#${id} sargydy döredildi! Bot bilen çata dolanyň — töleg maglumatlary şol ýerde.`,
-    orderPlaced: (id) => `#${id} sargydy resmileşdirildi! Tölemek üçin bot bilen çata dolanyň.`,
+    orderCreated: (id) => `#${id} sargydy döredildi! Töleg maglumatlary bot çatyna geldi.`,
+    orderPlaced: (id) => `#${id} sargydy resmileşdirildi! Töleg maglumatlary bot çatyna geldi.`,
     errOrder: "Sargyt döredilende ýalňyşlyk ýüze çykdy",
     listingSent: "Bildiriş barlaga iberildi!",
     errListing: "Bildiriş döredilende ýalňyşlyk ýüze çykdy",
+    uploading: "Faýl ýüklenýär...",
+    errUpload: "Faýly ýüklemek başartmady",
     attachPhone: "Belgini baglamak",
     phoneNotLinked: "Belgi baglanmadyk",
     phoneRequestSent: "Telegram penjiresini açyň we tassyklaň — belgi awtomatiki baglanar.",
-    menuSettings: "Sazlamalar",
-    menuNotifications: "Bildirişler",
-    menuFaq: "Ýygy-ýygydan soralýan soraglar",
-    menuSupport: "Goldaw",
+    phoneUpdated: "Belgi täzelendi!",
+    menuSettings: "Sazlamalar", menuNotifications: "Bildirişler", menuFaq: "Ýygy-ýygydan soralýan soraglar", menuSupport: "Goldaw",
     comingSoon: "Bölüm ýakynda elýeterli bolar",
     orderType_ready_quiz: "Taýýar test",
     orderType_custom_quiz: "Şahsy test",
@@ -278,6 +293,7 @@ const DICT = {
   },
 };
 
+const DICT = BASE_DICT;
 let currentLang = "RU";
 
 function t(key) {
@@ -307,13 +323,8 @@ function applyTranslations() {
 const langSwitchBtn = document.getElementById("lang-switch");
 const langOverlay = document.getElementById("lang-overlay");
 
-langSwitchBtn.addEventListener("click", () => {
-  langOverlay.classList.toggle("hidden");
-});
-
-langOverlay.addEventListener("click", (e) => {
-  if (e.target === langOverlay) langOverlay.classList.add("hidden");
-});
+langSwitchBtn.addEventListener("click", () => langOverlay.classList.toggle("hidden"));
+langOverlay.addEventListener("click", (e) => { if (e.target === langOverlay) langOverlay.classList.add("hidden"); });
 
 document.querySelectorAll(".lang-option").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -345,7 +356,6 @@ function renderBanner() {
       <span class="banner-text">${s.text}</span>
     </div>
   `).join("");
-
   dots.innerHTML = slides.map((_, i) => `<span class="${i === 0 ? "active" : ""}"></span>`).join("");
 
   bannerIndex = 0;
@@ -363,7 +373,7 @@ function setBannerVisible(visible) {
   document.getElementById("banner").classList.toggle("hidden", !visible);
 }
 
-// ---------- Нижнее меню (4 вкладки) ----------
+// ---------- Нижнее меню (5 вкладок) ----------
 document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-item").forEach((b) => b.classList.remove("active"));
@@ -373,13 +383,8 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
 
     setBannerVisible(btn.dataset.tab === "home");
 
-    if (btn.dataset.tab === "orders") {
-      loadMyOrders();
-      loadMyListings();
-    }
-    if (btn.dataset.tab === "profile") {
-      loadProfile();
-    }
+    if (btn.dataset.tab === "orders") { loadMyOrders(); loadMyListings(); }
+    if (btn.dataset.tab === "profile") loadProfile();
   });
 });
 
@@ -389,10 +394,7 @@ async function loadCatalog() {
   try {
     const res = await fetch(`${API_BASE}/quiz/catalog`);
     const items = await res.json();
-    if (!items.length) {
-      list.innerHTML = `<p class="hint">${t("emptyCatalog")}</p>`;
-      return;
-    }
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyCatalog")}</p>`; return; }
     list.innerHTML = items.map((item) => `
       <div class="card">
         <div class="card-title">${item.title}</div>
@@ -427,13 +429,48 @@ document.getElementById("btn-custom-order").addEventListener("click", () => {
   document.getElementById("custom-form").classList.toggle("hidden");
 });
 
+// минимум 24 часа от текущего момента
+const deadlineInput = document.getElementById("cf-deadline");
+function refreshDeadlineMin() {
+  const min = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  min.setSeconds(0, 0);
+  deadlineInput.min = min.toISOString().slice(0, 16);
+}
+refreshDeadlineMin();
+
+let selectedQuestionFile = null;
+document.getElementById("cf-file").addEventListener("change", (e) => {
+  selectedQuestionFile = e.target.files[0] || null;
+  document.getElementById("cf-file-name").textContent = selectedQuestionFile ? selectedQuestionFile.name : "";
+});
+
+async function uploadSelectedFile() {
+  if (!selectedQuestionFile) return null;
+  const formData = new FormData();
+  formData.append("file", selectedQuestionFile);
+  const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
+  if (!res.ok) throw new Error("upload failed");
+  const data = await res.json();
+  return data.url ? window.location.origin + data.url : null;
+}
+
 document.getElementById("cf-submit").addEventListener("click", async () => {
-  const fileUrl = document.getElementById("cf-file").value.trim();
-  const deadline = document.getElementById("cf-deadline").value;
+  const deadline = deadlineInput.value;
   const comment = document.getElementById("cf-comment").value.trim();
 
-  if (!deadline) {
+  if (!deadline || new Date(deadline) < new Date(Date.now() + 24 * 60 * 60 * 1000 - 60000)) {
     showToast(t("errDeadline"));
+    return;
+  }
+
+  let fileUrl = null;
+  try {
+    if (selectedQuestionFile) {
+      showToast(t("uploading"));
+      fileUrl = await uploadSelectedFile();
+    }
+  } catch (e) {
+    showToast(t("errUpload"));
     return;
   }
 
@@ -443,12 +480,16 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentUser,
-        questions_file_url: fileUrl || null,
+        questions_file_url: fileUrl,
         deadline: new Date(deadline).toISOString(),
         comment: comment || null,
       }),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      showToast(err?.detail?.[0]?.msg || t("errOrder"));
+      return;
+    }
     const order = await res.json();
     showToast(t("orderPlaced")(order.id));
     tg.close();
@@ -458,20 +499,28 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
 });
 
 // ---------- Маркетплейс: лента (вкладка «Категории») ----------
+function currentFilters() {
+  return {
+    category: document.getElementById("market-filter").value,
+    course: document.getElementById("filter-course").value.trim(),
+    group_name: document.getElementById("filter-group").value.trim(),
+    faculty: document.getElementById("filter-faculty").value.trim(),
+    department: document.getElementById("filter-department").value.trim(),
+    subject: document.getElementById("filter-subject").value.trim(),
+  };
+}
+
 async function loadListings() {
   const list = document.getElementById("market-list");
-  const category = document.getElementById("market-filter").value;
-  const url = category
-    ? `${API_BASE}/marketplace/listings?category=${category}`
-    : `${API_BASE}/marketplace/listings`;
+  const f = currentFilters();
+  const params = new URLSearchParams();
+  Object.entries(f).forEach(([k, v]) => { if (v) params.set(k, v); });
+  const qs = params.toString();
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(`${API_BASE}/marketplace/listings${qs ? "?" + qs : ""}`);
     const items = await res.json();
-    if (!items.length) {
-      list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`;
-      return;
-    }
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
     list.innerHTML = items.map((item) => `
       <div class="card">
         <div class="card-title">${item.title}</div>
@@ -489,21 +538,32 @@ async function loadListings() {
 
 document.getElementById("market-filter").addEventListener("change", loadListings);
 
-document.getElementById("btn-new-listing").addEventListener("click", () => {
-  document.getElementById("listing-form").classList.toggle("hidden");
+document.getElementById("btn-toggle-filters").addEventListener("click", () => {
+  document.getElementById("extra-filters").classList.toggle("hidden");
 });
 
+document.getElementById("btn-apply-filters").addEventListener("click", loadListings);
+document.getElementById("btn-reset-filters").addEventListener("click", () => {
+  ["filter-course", "filter-group", "filter-faculty", "filter-department", "filter-subject"].forEach((id) => {
+    document.getElementById(id).value = "";
+  });
+  loadListings();
+});
+
+// ---------- Разместить (создание объявления) ----------
 document.getElementById("lf-submit").addEventListener("click", async () => {
   const category = document.getElementById("lf-category").value;
   const title = document.getElementById("lf-title").value.trim();
   const description = document.getElementById("lf-description").value.trim();
   const price = document.getElementById("lf-price").value;
   const contact = document.getElementById("lf-contact").value.trim();
+  const course = document.getElementById("lf-course").value.trim();
+  const group_name = document.getElementById("lf-group").value.trim();
+  const faculty = document.getElementById("lf-faculty").value.trim();
+  const department = document.getElementById("lf-department").value.trim();
+  const subject = document.getElementById("lf-subject").value.trim();
 
-  if (!title || !contact) {
-    showToast(t("errFields"));
-    return;
-  }
+  if (!title || !contact) { showToast(t("errFields")); return; }
 
   try {
     const res = await fetch(`${API_BASE}/marketplace/listings`, {
@@ -511,16 +571,21 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentUser,
-        category,
-        title,
+        category, title,
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
+        course: course || null,
+        group_name: group_name || null,
+        faculty: faculty || null,
+        department: department || null,
+        subject: subject || null,
       }),
     });
     if (!res.ok) throw new Error();
     showToast(t("listingSent"));
-    document.getElementById("listing-form").classList.add("hidden");
+    ["lf-title", "lf-description", "lf-price", "lf-contact", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
+      .forEach((id) => { document.getElementById(id).value = ""; });
   } catch (e) {
     showToast(t("errListing"));
   }
@@ -529,17 +594,11 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
 // ---------- Вкладка «Заказы» ----------
 async function loadMyOrders() {
   const list = document.getElementById("orders-list");
-  if (!currentUser.tg_id) {
-    list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`;
-    return;
-  }
+  if (!currentUser.tg_id) { list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`; return; }
   try {
     const res = await fetch(`${API_BASE}/users/${currentUser.tg_id}/orders`);
     const items = await res.json();
-    if (!items.length) {
-      list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`;
-      return;
-    }
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`; return; }
     list.innerHTML = items.map((o) => `
       <div class="card">
         <div class="card-title">#${o.id} · ${t("orderType_" + o.order_type)}</div>
@@ -554,17 +613,11 @@ async function loadMyOrders() {
 
 async function loadMyListings() {
   const list = document.getElementById("my-listings-list");
-  if (!currentUser.tg_id) {
-    list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`;
-    return;
-  }
+  if (!currentUser.tg_id) { list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`; return; }
   try {
     const res = await fetch(`${API_BASE}/users/${currentUser.tg_id}/listings`);
     const items = await res.json();
-    if (!items.length) {
-      list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`;
-      return;
-    }
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`; return; }
     list.innerHTML = items.map((l) => `
       <div class="card">
         <div class="card-title">${l.title}</div>
@@ -579,6 +632,15 @@ async function loadMyListings() {
 
 // ---------- Вкладка «Профиль» ----------
 let profileData = null;
+
+async function fetchProfile() {
+  const res = await fetch(`${API_BASE}/users/profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(currentUser),
+  });
+  return res.json();
+}
 
 async function loadProfile() {
   const avatarImg = document.getElementById("profile-avatar");
@@ -601,16 +663,10 @@ async function loadProfile() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/users/profile`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(currentUser),
-    });
-    profileData = await res.json();
+    profileData = await fetchProfile();
   } catch (e) {
     profileData = null;
   }
-
   renderPhoneRow();
 }
 
@@ -620,17 +676,44 @@ function renderPhoneRow() {
   phoneEl.textContent = profileData?.phone || t("phoneNotLinked");
 }
 
+document.getElementById("btn-refresh-profile").addEventListener("click", async () => {
+  try {
+    profileData = await fetchProfile();
+    renderPhoneRow();
+    showToast(t("phoneUpdated"));
+  } catch (e) { /* тихо игнорируем */ }
+});
+
 document.getElementById("btn-attach-phone").addEventListener("click", () => {
+  const poll = () => {
+    let attempts = 0;
+    const timer = setInterval(async () => {
+      attempts += 1;
+      try {
+        const fresh = await fetchProfile();
+        if (fresh.phone) {
+          profileData = fresh;
+          renderPhoneRow();
+          showToast(t("phoneUpdated"));
+          clearInterval(timer);
+        }
+      } catch (e) { /* игнор, попробуем ещё раз */ }
+      if (attempts >= 6) clearInterval(timer);
+    }, 1500);
+  };
+
   if (tg.requestContact) {
     tg.requestContact((sent) => {
-      if (sent) showToast(t("phoneRequestSent"));
+      if (sent) {
+        showToast(t("phoneRequestSent"));
+        poll();
+      }
     });
   } else {
     showToast(t("phoneRequestSent"));
   }
 });
 
-// пункты меню профиля — MVP-заглушки
 ["menu-settings", "menu-notifications", "menu-faq", "menu-support"].forEach((id) => {
   document.getElementById(id).addEventListener("click", () => showToast(t("comingSoon")));
 });

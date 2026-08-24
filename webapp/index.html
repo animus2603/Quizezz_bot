@@ -23,18 +23,10 @@
   <!-- ===== ВЫПАДАЮЩЕЕ МЕНЮ ЯЗЫКА ===== -->
   <div id="lang-overlay" class="lang-overlay hidden">
     <div class="lang-menu">
-      <button class="lang-option" data-lang="EN">
-        <span class="lang-flag">🇬🇧</span> English
-      </button>
-      <button class="lang-option" data-lang="RU">
-        <span class="lang-flag">🇷🇺</span> Русский
-      </button>
-      <button class="lang-option" data-lang="KZ">
-        <span class="lang-flag">🇰🇿</span> Қазақша
-      </button>
-      <button class="lang-option" data-lang="TM">
-        <span class="lang-flag">🇹🇲</span> Türkmençe
-      </button>
+      <button class="lang-option" data-lang="EN"><span class="lang-flag">🇬🇧</span> English</button>
+      <button class="lang-option" data-lang="RU"><span class="lang-flag">🇷🇺</span> Русский</button>
+      <button class="lang-option" data-lang="KZ"><span class="lang-flag">🇰🇿</span> Қазақша</button>
+      <button class="lang-option" data-lang="TM"><span class="lang-flag">🇹🇲</span> Türkmençe</button>
     </div>
   </div>
 
@@ -52,11 +44,13 @@
       <button id="btn-custom-order" class="btn-primary" data-i18n="orderCustomBtn">Заказать индивидуальный тест — 5000₸</button>
 
       <div id="custom-form" class="form hidden">
-        <label data-i18n="cfFileLabel">Ссылка/описание вопросов теста</label>
-        <input id="cf-file" type="text" data-i18n-placeholder="cfFilePlaceholder" placeholder="Ссылка на файл или Quizizz">
+        <label data-i18n="cfFileLabel">Загрузить файл с вопросами (если нужно)</label>
+        <input id="cf-file" type="file">
+        <div id="cf-file-name" class="file-name"></div>
 
         <label data-i18n="cfDeadlineLabel">Дедлайн (дата и время)</label>
         <input id="cf-deadline" type="datetime-local">
+        <div class="hint" id="cf-deadline-hint" data-i18n="cfDeadlineHint">Минимум через 24 часа от текущего момента</div>
 
         <label data-i18n="cfCommentLabel">Пожелания / инструкции</label>
         <textarea id="cf-comment" data-i18n-placeholder="cfCommentPlaceholder" placeholder="Например: нужно 90%+ правильных"></textarea>
@@ -77,11 +71,28 @@
           <option value="services" data-i18n="catServices">Услуги</option>
           <option value="ads" data-i18n="catAds">Реклама</option>
         </select>
-        <button id="btn-new-listing" class="btn-secondary" data-i18n="newListingBtn">+ Разместить</button>
+        <button id="btn-toggle-filters" class="btn-secondary" data-i18n="moreFilters">🔍 Фильтры</button>
       </div>
-      <div id="market-list" class="list">…</div>
 
-      <div id="listing-form" class="form hidden">
+      <div id="extra-filters" class="form hidden">
+        <input id="filter-course" type="text" data-i18n-placeholder="fCourse" placeholder="Курс">
+        <input id="filter-group" type="text" data-i18n-placeholder="fGroup" placeholder="Группа">
+        <input id="filter-faculty" type="text" data-i18n-placeholder="fFaculty" placeholder="Факультет">
+        <input id="filter-department" type="text" data-i18n-placeholder="fDepartment" placeholder="Кафедра">
+        <input id="filter-subject" type="text" data-i18n-placeholder="fSubject" placeholder="Предмет">
+        <div class="filter-btn-row">
+          <button id="btn-apply-filters" class="btn-primary" data-i18n="applyFilters">Применить</button>
+          <button id="btn-reset-filters" class="btn-secondary" data-i18n="resetFilters">Сбросить</button>
+        </div>
+      </div>
+
+      <div id="market-list" class="list">…</div>
+    </section>
+
+    <!-- ===== РАЗМЕСТИТЬ (создание объявления) ===== -->
+    <section id="tab-post" class="tab-content">
+      <h2 data-i18n="newListingTitle">Новое объявление</h2>
+      <div class="form">
         <label data-i18n="lfCategoryLabel">Категория</label>
         <select id="lf-category">
           <option value="goods" data-i18n="catGoodsSingle">Товар</option>
@@ -100,6 +111,29 @@
 
         <label data-i18n="lfContactLabel">Контакт (@username)</label>
         <input id="lf-contact" type="text" placeholder="@your_username">
+
+        <div class="form-row-2">
+          <div>
+            <label data-i18n="fCourse">Курс</label>
+            <input id="lf-course" type="text">
+          </div>
+          <div>
+            <label data-i18n="fGroup">Группа</label>
+            <input id="lf-group" type="text">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div>
+            <label data-i18n="fFaculty">Факультет</label>
+            <input id="lf-faculty" type="text">
+          </div>
+          <div>
+            <label data-i18n="fDepartment">Кафедра</label>
+            <input id="lf-department" type="text">
+          </div>
+        </div>
+        <label data-i18n="fSubject">Предмет</label>
+        <input id="lf-subject" type="text">
 
         <button id="lf-submit" class="btn-primary" data-i18n="lfSubmit">Отправить на модерацию</button>
       </div>
@@ -124,6 +158,7 @@
         <div class="profile-phone-row">
           <span id="profile-phone" class="profile-phone">—</span>
           <button id="btn-attach-phone" class="btn-link" data-i18n="attachPhone">Привязать номер</button>
+          <button id="btn-refresh-profile" class="btn-icon" title="Обновить" type="button">⟳</button>
         </div>
       </div>
 
@@ -156,19 +191,33 @@
   <!-- ===== НИЖНЕЕ МЕНЮ ===== -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-tab="home">
-      <span class="nav-icon">🏠</span>
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1h4v-6h3v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      </span>
       <span class="nav-label" data-i18n="navHome">Главная</span>
     </button>
     <button class="nav-item" data-tab="categories">
-      <span class="nav-icon">🗂️</span>
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </span>
       <span class="nav-label" data-i18n="navCategories">Категории</span>
     </button>
+    <button class="nav-item" data-tab="post">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      </span>
+      <span class="nav-label" data-i18n="navPost">Разместить</span>
+    </button>
     <button class="nav-item" data-tab="orders">
-      <span class="nav-icon">🧾</span>
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/></svg>
+      </span>
       <span class="nav-label" data-i18n="navOrders">Заказы</span>
     </button>
     <button class="nav-item" data-tab="profile">
-      <span class="nav-icon">👤</span>
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-4 4-6 7-6s5.5 2 7 6"/></svg>
+      </span>
       <span class="nav-label" data-i18n="navProfile">Профиль</span>
     </button>
   </nav>

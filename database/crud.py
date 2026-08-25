@@ -138,7 +138,6 @@ async def create_listing(
     price: int | None,
     photo_file_id: str | None,
     contact: str,
-    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -149,7 +148,6 @@ async def create_listing(
     listing = Listing(
         seller_id=seller_id,
         category=category,
-        subcategory=subcategory,
         title=title,
         description=description,
         price=price,
@@ -172,7 +170,6 @@ async def create_listing(
 async def get_approved_listings(
     session: AsyncSession,
     category: ListingCategory | None = None,
-    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -182,8 +179,6 @@ async def get_approved_listings(
     stmt = select(Listing).where(Listing.status == ListingStatus.approved)
     if category:
         stmt = stmt.where(Listing.category == category)
-    if subcategory:
-        stmt = stmt.where(Listing.subcategory == subcategory)
     if course:
         stmt = stmt.where(Listing.course == course)
     if group_name:

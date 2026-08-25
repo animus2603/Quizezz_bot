@@ -164,16 +164,6 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
 
 .card { background: var(--secondary-bg); border-radius: 12px; padding: 12px 14px; }
-.card-subcat-badge {
-  display: inline-block;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--accent-2);
-  background: color-mix(in srgb, var(--accent-2) 14%, var(--bg));
-  padding: 3px 9px;
-  border-radius: 999px;
-  margin-bottom: 6px;
-}
 .card-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
 .card-desc { font-size: 13px; color: var(--hint); margin-bottom: 8px; }
 .card-price { font-weight: 700; margin-bottom: 8px; color: var(--accent); }
@@ -419,112 +409,7 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 
 .full-width { width: 100%; }
 
-/* ===== СТРОКА КАТЕГОРИЙ + ФИЛЬТР (Категории: Все / Учебное / Товары) ===== */
-
-.cat-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.cat-chips {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.cat-chips::-webkit-scrollbar { display: none; }
-
-.cat-chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex: 0 0 auto;
-  border: 1.5px solid transparent;
-  background: var(--secondary-bg);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 9px 13px;
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.cat-chip-icon { font-size: 15px; line-height: 1; }
-
-.cat-chip.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--secondary-bg));
-  color: var(--accent);
-}
-
-.filter-icon-btn {
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-  background: var(--secondary-bg);
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
-
-.filter-icon-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--secondary-bg));
-}
-
-/* ===== ПРИМЕРЫ ПОДКАТЕГОРИЙ (Quizizz, СРС, Реферат... / Учебники, Техника...) ===== */
-
-.subcat-row {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  margin-bottom: 12px;
-  scrollbar-width: none;
-}
-.subcat-row::-webkit-scrollbar { display: none; }
-.subcat-row.hidden { display: none; }
-
-.subcat-chip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-  border: 1px solid #ddd;
-  background: var(--bg);
-  color: var(--hint);
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 7px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.subcat-chip-icon { font-size: 14px; line-height: 1; }
-
-.subcat-chip.active {
-  border-color: var(--accent-2);
-  background: color-mix(in srgb, var(--accent-2) 16%, var(--bg));
-  color: var(--accent-2);
-  font-weight: 700;
-}
-
 /* ===== КНОПКИ-ФИЛЬТРЫ С АВТОКОМПЛИТОМ ===== */
-
-.filter-fields { display: flex; flex-direction: column; gap: 8px; }
 
 .filter-field-btn {
   display: block;
@@ -538,8 +423,6 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   font-size: 14px;
   cursor: pointer;
 }
-
-.filter-field-btn.hidden { display: none; }
 
 .filter-field-btn.has-value {
   border-color: var(--accent);
@@ -593,34 +476,6 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 
 .search-result-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
 .search-result-empty { padding: 16px; text-align: center; color: var(--hint); font-size: 13px; }
-
-.search-examples-label {
-  padding: 12px 16px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--hint);
-}
-
-.search-examples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.example-chip {
-  border: 1px solid #ddd;
-  background: var(--secondary-bg);
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 6px 11px;
-  border-radius: 999px;
-  cursor: pointer;
-}
 
 /* ===== СЕГМЕНТ-ПЕРЕКЛЮЧАТЕЛЬ (Заказы / Объявления) ===== */
 

@@ -98,7 +98,6 @@ class FilterOptionsOut(BaseModel):
 class UserListingOut(BaseModel):
     id: int
     category: str
-    subcategory: str | None = None
     title: str
     price: int | None
     status: str
@@ -111,7 +110,6 @@ class UserListingOut(BaseModel):
 class ListingOut(BaseModel):
     id: int
     category: str
-    subcategory: str | None = None
     title: str
     description: str | None
     price: int | None
@@ -131,8 +129,7 @@ class CreateListingIn(BaseModel):
     tg_id: int
     username: str | None = None
     full_name: str | None = None
-    category: str  # goods | study
-    subcategory: str | None = None  # напр. quizizz, referat, textbooks...
+    category: str  # goods | services
     title: str
     description: str | None = None
     price: int | None = None

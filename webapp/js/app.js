@@ -26,21 +26,22 @@ const BASE_DICT = {
     cfCommentLabel: "Пожелания / инструкции",
     cfCommentPlaceholder: "Например: нужно 90%+ правильных",
     cfSubmit: "Оформить заказ — 5000₸",
-    catAll: "Все категории",
-    catGoods: "Товары", catServices: "Услуги", catAds: "Реклама",
-    catGoodsSingle: "Товар", catServicesSingle: "Услуга", catAdsSingle: "Реклама",
+    catAll: "Все",
+    catGoods: "Товары", catServices: "Услуги",
+    catGoodsSingle: "Товар", catServicesSingle: "Услуга",
     moreFilters: "🔍 Фильтры",
-    applyFilters: "Применить",
-    resetFilters: "Сбросить",
+    resetFilters: "Сбросить фильтры",
     fCourse: "Курс", fGroup: "Группа", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Предмет",
+    searchPlaceholder: "Начните вводить...",
+    noOptionsFound: "Ничего не найдено",
     newListingTitle: "Новое объявление",
-    lfCategoryLabel: "Категория",
     lfTitleLabel: "Название",
     lfTitlePlaceholder: "Например: Учебник по матанализу",
     lfDescLabel: "Описание",
     lfDescPlaceholder: "Состояние, детали...",
     lfPriceLabel: "Цена (₸, необязательно)",
-    lfContactLabel: "Контакт (@username)",
+    lfContactLabel: "Контакт",
+    lfFileLabel: "Файл/фото (по желанию)",
     lfSubmit: "Отправить на модерацию",
     myOrdersTitle: "Мои заказы",
     myListingsTitle: "Мои объявления",
@@ -76,9 +77,15 @@ const BASE_DICT = {
     status_done: "Готово",
     status_sent: "Отправлено",
     status_rejected: "Отклонено",
+    status_cancelled: "Отменён",
     status_pending: "На модерации",
     status_approved: "Опубликовано",
     status_sold: "Продано",
+    cardSubject: "Предмет", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
+    cancelBtn: (min) => `Отменить (осталось ${min} мин)`,
+    cancelConfirm: "Отменить этот заказ?",
+    cancelSuccess: "Заказ отменён",
+    cancelError: "Не удалось отменить заказ — время истекло",
     banners: [
       { icon: "🎓", text: "Готовые тесты Quizizz по фиксированной цене — 3000₸" },
       { icon: "⏱️", text: "Нужен тест к дедлайну? Закажем индивидуально — 5000₸" },
@@ -95,21 +102,22 @@ const BASE_DICT = {
     cfCommentLabel: "Тілектер / нұсқаулар",
     cfCommentPlaceholder: "Мысалы: 90%+ дұрыс керек",
     cfSubmit: "Тапсырыс беру — 5000₸",
-    catAll: "Барлық санаттар",
-    catGoods: "Тауарлар", catServices: "Қызметтер", catAds: "Жарнама",
-    catGoodsSingle: "Тауар", catServicesSingle: "Қызмет", catAdsSingle: "Жарнама",
+    catAll: "Барлығы",
+    catGoods: "Тауарлар", catServices: "Қызметтер",
+    catGoodsSingle: "Тауар", catServicesSingle: "Қызмет",
     moreFilters: "🔍 Сүзгілер",
-    applyFilters: "Қолдану",
-    resetFilters: "Тазалау",
+    resetFilters: "Сүзгілерді тазалау",
     fCourse: "Курс", fGroup: "Топ", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Пән",
+    searchPlaceholder: "Теруді бастаңыз...",
+    noOptionsFound: "Ештеңе табылмады",
     newListingTitle: "Жаңа хабарландыру",
-    lfCategoryLabel: "Санат",
     lfTitleLabel: "Атауы",
     lfTitlePlaceholder: "Мысалы: Матанализ оқулығы",
     lfDescLabel: "Сипаттама",
     lfDescPlaceholder: "Жағдайы, толығырақ...",
     lfPriceLabel: "Бағасы (₸, міндетті емес)",
-    lfContactLabel: "Байланыс (@username)",
+    lfContactLabel: "Байланыс",
+    lfFileLabel: "Файл/фото (қаласаңыз)",
     lfSubmit: "Модерацияға жіберу",
     myOrdersTitle: "Менің тапсырыстарым",
     myListingsTitle: "Менің хабарландыруларым",
@@ -145,9 +153,15 @@ const BASE_DICT = {
     status_done: "Дайын",
     status_sent: "Жіберілді",
     status_rejected: "Қабылданбады",
+    status_cancelled: "Бас тартылды",
     status_pending: "Модерацияда",
     status_approved: "Жарияланды",
     status_sold: "Сатылды",
+    cardSubject: "Пән", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
+    cancelBtn: (min) => `Бас тарту (${min} мин қалды)`,
+    cancelConfirm: "Осы тапсырысты бас тартасыз ба?",
+    cancelSuccess: "Тапсырыс бас тартылды",
+    cancelError: "Бас тарту мүмкін болмады — уақыт аяқталды",
     banners: [
       { icon: "🎓", text: "Дайын Quizizz тесттері бекітілген бағамен — 3000₸" },
       { icon: "⏱️", text: "Мерзімге тест керек пе? Жеке тапсырыс береміз — 5000₸" },
@@ -164,21 +178,22 @@ const BASE_DICT = {
     cfCommentLabel: "Notes / instructions",
     cfCommentPlaceholder: "E.g.: need 90%+ correct",
     cfSubmit: "Place order — 5000₸",
-    catAll: "All categories",
-    catGoods: "Goods", catServices: "Services", catAds: "Ads",
-    catGoodsSingle: "Item", catServicesSingle: "Service", catAdsSingle: "Ad",
+    catAll: "All",
+    catGoods: "Goods", catServices: "Services",
+    catGoodsSingle: "Item", catServicesSingle: "Service",
     moreFilters: "🔍 Filters",
-    applyFilters: "Apply",
-    resetFilters: "Reset",
+    resetFilters: "Reset filters",
     fCourse: "Course", fGroup: "Group", fFaculty: "Faculty", fDepartment: "Department", fSubject: "Subject",
+    searchPlaceholder: "Start typing...",
+    noOptionsFound: "Nothing found",
     newListingTitle: "New listing",
-    lfCategoryLabel: "Category",
     lfTitleLabel: "Title",
     lfTitlePlaceholder: "E.g.: Calculus textbook",
     lfDescLabel: "Description",
     lfDescPlaceholder: "Condition, details...",
     lfPriceLabel: "Price (₸, optional)",
-    lfContactLabel: "Contact (@username)",
+    lfContactLabel: "Contact",
+    lfFileLabel: "File/photo (optional)",
     lfSubmit: "Send for moderation",
     myOrdersTitle: "My orders",
     myListingsTitle: "My listings",
@@ -214,9 +229,15 @@ const BASE_DICT = {
     status_done: "Done",
     status_sent: "Sent",
     status_rejected: "Rejected",
+    status_cancelled: "Cancelled",
     status_pending: "Pending review",
     status_approved: "Published",
     status_sold: "Sold",
+    cardSubject: "Subject", cardCourse: "Course", cardFaculty: "Faculty", cardDepartment: "Department",
+    cancelBtn: (min) => `Cancel (${min} min left)`,
+    cancelConfirm: "Cancel this order?",
+    cancelSuccess: "Order cancelled",
+    cancelError: "Couldn't cancel — the window has expired",
     banners: [
       { icon: "🎓", text: "Ready-made Quizizz tests at a fixed price — 3000₸" },
       { icon: "⏱️", text: "Need a quiz by a deadline? We'll do it custom — 5000₸" },
@@ -233,21 +254,22 @@ const BASE_DICT = {
     cfCommentLabel: "Islegler / görkezmeler",
     cfCommentPlaceholder: "Mysal üçin: 90%+ dogry gerek",
     cfSubmit: "Sargyt bermek — 5000₸",
-    catAll: "Ähli kategoriýalar",
-    catGoods: "Harytlar", catServices: "Hyzmatlar", catAds: "Mahabat",
-    catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat", catAdsSingle: "Mahabat",
+    catAll: "Ählisi",
+    catGoods: "Harytlar", catServices: "Hyzmatlar",
+    catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat",
     moreFilters: "🔍 Filtrler",
-    applyFilters: "Ulanmak",
-    resetFilters: "Arassalamak",
+    resetFilters: "Filtrleri arassalamak",
     fCourse: "Kurs", fGroup: "Topar", fFaculty: "Fakultet", fDepartment: "Kafedra", fSubject: "Dersi",
+    searchPlaceholder: "Ýazyp başlaň...",
+    noOptionsFound: "Hiç zat tapylmady",
     newListingTitle: "Täze bildiriş",
-    lfCategoryLabel: "Kategoriýa",
     lfTitleLabel: "Ady",
     lfTitlePlaceholder: "Mysal üçin: Matanaliz kitaby",
     lfDescLabel: "Beýany",
     lfDescPlaceholder: "Ýagdaýy, jikme-jiklikler...",
     lfPriceLabel: "Bahasy (₸, hökman däl)",
-    lfContactLabel: "Habarlaşmak (@username)",
+    lfContactLabel: "Habarlaşmak",
+    lfFileLabel: "Faýl/surat (islege görä)",
     lfSubmit: "Barlaga ibermek",
     myOrdersTitle: "Meniň sargytlarym",
     myListingsTitle: "Meniň bildirişlerim",
@@ -283,9 +305,15 @@ const BASE_DICT = {
     status_done: "Taýýar",
     status_sent: "Iberildi",
     status_rejected: "Ret edildi",
+    status_cancelled: "Ýatyryldy",
     status_pending: "Barlagda",
     status_approved: "Çap edildi",
     status_sold: "Satyldy",
+    cardSubject: "Dersi", cardCourse: "Kurs", cardFaculty: "Fakultet", cardDepartment: "Kafedra",
+    cancelBtn: (min) => `Ýatyrmak (${min} min galdy)`,
+    cancelConfirm: "Bu sargydy ýatyrmalymy?",
+    cancelSuccess: "Sargyt ýatyryldy",
+    cancelError: "Ýatyryp bolmady — wagt gutardy",
     banners: [
       { icon: "🎓", text: "Bellenen bahadaky taýýar Quizizz testleri — 3000₸" },
       { icon: "⏱️", text: "Möhlete test gerekmi? Şahsy taýýarlarys — 5000₸" },
@@ -313,6 +341,7 @@ function applyTranslations() {
   document.querySelectorAll(".lang-option").forEach((el) => {
     el.classList.toggle("active", el.dataset.lang === currentLang);
   });
+  renderFilterButtonLabels();
   renderBanner();
   loadCatalog();
   loadListings();
@@ -398,7 +427,12 @@ async function loadCatalog() {
     list.innerHTML = items.map((item) => `
       <div class="card">
         <div class="card-title">${item.title}</div>
-        <div class="card-desc">${item.description || item.subject || ""}</div>
+        <div class="card-attrs">
+          ${item.subject ? `<div class="card-attr"><b>${t("cardSubject")}:</b> ${item.subject}</div>` : ""}
+          ${item.course ? `<div class="card-attr"><b>${t("cardCourse")}:</b> ${item.course}</div>` : ""}
+          ${item.faculty ? `<div class="card-attr"><b>${t("cardFaculty")}:</b> ${item.faculty}</div>` : ""}
+          ${item.department ? `<div class="card-attr"><b>${t("cardDepartment")}:</b> ${item.department}</div>` : ""}
+        </div>
         <div class="card-price">${item.price}₸</div>
         <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
       </div>
@@ -429,7 +463,6 @@ document.getElementById("btn-custom-order").addEventListener("click", () => {
   document.getElementById("custom-form").classList.toggle("hidden");
 });
 
-// минимум 24 часа от текущего момента
 const deadlineInput = document.getElementById("cf-deadline");
 function refreshDeadlineMin() {
   const min = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -444,10 +477,9 @@ document.getElementById("cf-file").addEventListener("change", (e) => {
   document.getElementById("cf-file-name").textContent = selectedQuestionFile ? selectedQuestionFile.name : "";
 });
 
-async function uploadSelectedFile() {
-  if (!selectedQuestionFile) return null;
+async function uploadFile(file) {
   const formData = new FormData();
-  formData.append("file", selectedQuestionFile);
+  formData.append("file", file);
   const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
   if (!res.ok) throw new Error("upload failed");
   const data = await res.json();
@@ -467,7 +499,7 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
   try {
     if (selectedQuestionFile) {
       showToast(t("uploading"));
-      fileUrl = await uploadSelectedFile();
+      fileUrl = await uploadFile(selectedQuestionFile);
     }
   } catch (e) {
     showToast(t("errUpload"));
@@ -498,23 +530,102 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
   }
 });
 
-// ---------- Маркетплейс: лента (вкладка «Категории») ----------
-function currentFilters() {
-  return {
-    category: document.getElementById("market-filter").value,
-    course: document.getElementById("filter-course").value.trim(),
-    group_name: document.getElementById("filter-group").value.trim(),
-    faculty: document.getElementById("filter-faculty").value.trim(),
-    department: document.getElementById("filter-department").value.trim(),
-    subject: document.getElementById("filter-subject").value.trim(),
-  };
+// ---------- Категории: плитки + фильтры с автокомплитом ----------
+let selectedCategory = "";
+const filters = { course: "", group_name: "", faculty: "", department: "", subject: "" };
+
+document.querySelectorAll("#cat-tiles .cat-tile").forEach((tile) => {
+  tile.addEventListener("click", () => {
+    document.querySelectorAll("#cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
+    tile.classList.add("active");
+    selectedCategory = tile.dataset.category;
+    loadListings();
+  });
+});
+
+document.getElementById("btn-toggle-filters").addEventListener("click", () => {
+  document.getElementById("extra-filters").classList.toggle("hidden");
+});
+
+function renderFilterButtonLabels() {
+  document.querySelectorAll(".filter-field-btn").forEach((btn) => {
+    const field = btn.dataset.field;
+    const value = filters[field];
+    const label = t(btn.dataset.i18n) || field;
+    btn.textContent = value ? `${label}: ${value}` : label;
+    btn.classList.toggle("has-value", !!value);
+  });
 }
 
+document.getElementById("btn-reset-filters").addEventListener("click", () => {
+  Object.keys(filters).forEach((k) => (filters[k] = ""));
+  renderFilterButtonLabels();
+  loadListings();
+});
+
+// ---------- Попап автокомплита ----------
+const searchOverlay = document.getElementById("search-overlay");
+const searchInput = document.getElementById("search-input");
+const searchResults = document.getElementById("search-results");
+let activeSearchField = null;
+let searchDebounce = null;
+
+async function runSearch(field, query) {
+  try {
+    const res = await fetch(`${API_BASE}/marketplace/filter-options/${field}?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    return data.options || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderSearchResults(options) {
+  if (!options.length) {
+    searchResults.innerHTML = `<div class="search-result-empty">${t("noOptionsFound")}</div>`;
+    return;
+  }
+  searchResults.innerHTML = options.map((opt) => `
+    <button class="search-result-item" data-value="${opt}">${opt}</button>
+  `).join("");
+  searchResults.querySelectorAll(".search-result-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      filters[activeSearchField] = el.dataset.value;
+      renderFilterButtonLabels();
+      searchOverlay.classList.add("hidden");
+      loadListings();
+    });
+  });
+}
+
+document.querySelectorAll(".filter-field-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    activeSearchField = btn.dataset.field;
+    searchInput.value = "";
+    searchOverlay.classList.remove("hidden");
+    searchInput.focus();
+    renderSearchResults(await runSearch(activeSearchField, ""));
+  });
+});
+
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchDebounce);
+  const query = searchInput.value.trim();
+  searchDebounce = setTimeout(async () => {
+    renderSearchResults(await runSearch(activeSearchField, query));
+  }, 250);
+});
+
+searchOverlay.addEventListener("click", (e) => {
+  if (e.target === searchOverlay) searchOverlay.classList.add("hidden");
+});
+
+// ---------- Маркетплейс: лента ----------
 async function loadListings() {
   const list = document.getElementById("market-list");
-  const f = currentFilters();
   const params = new URLSearchParams();
-  Object.entries(f).forEach(([k, v]) => { if (v) params.set(k, v); });
+  if (selectedCategory) params.set("category", selectedCategory);
+  Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
   const qs = params.toString();
 
   try {
@@ -536,23 +647,32 @@ async function loadListings() {
   }
 }
 
-document.getElementById("market-filter").addEventListener("change", loadListings);
+// ---------- Разместить: категория → показать форму, автоподстановка контакта ----------
+let postCategory = null;
+let selectedListingFile = null;
 
-document.getElementById("btn-toggle-filters").addEventListener("click", () => {
-  document.getElementById("extra-filters").classList.toggle("hidden");
-});
+document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((tile) => {
+  tile.addEventListener("click", () => {
+    document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
+    tile.classList.add("active");
+    postCategory = tile.dataset.category;
+    document.getElementById("post-form").classList.remove("hidden");
 
-document.getElementById("btn-apply-filters").addEventListener("click", loadListings);
-document.getElementById("btn-reset-filters").addEventListener("click", () => {
-  ["filter-course", "filter-group", "filter-faculty", "filter-department", "filter-subject"].forEach((id) => {
-    document.getElementById(id).value = "";
+    const contactField = document.getElementById("lf-contact");
+    if (!contactField.value && currentUser.username) {
+      contactField.value = "@" + currentUser.username;
+    }
   });
-  loadListings();
 });
 
-// ---------- Разместить (создание объявления) ----------
+document.getElementById("lf-file").addEventListener("change", (e) => {
+  selectedListingFile = e.target.files[0] || null;
+  document.getElementById("lf-file-name").textContent = selectedListingFile ? selectedListingFile.name : "";
+});
+
 document.getElementById("lf-submit").addEventListener("click", async () => {
-  const category = document.getElementById("lf-category").value;
+  if (!postCategory) return;
+
   const title = document.getElementById("lf-title").value.trim();
   const description = document.getElementById("lf-description").value.trim();
   const price = document.getElementById("lf-price").value;
@@ -565,16 +685,28 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
 
   if (!title || !contact) { showToast(t("errFields")); return; }
 
+  let attachmentUrl = null;
+  try {
+    if (selectedListingFile) {
+      showToast(t("uploading"));
+      attachmentUrl = await uploadFile(selectedListingFile);
+    }
+  } catch (e) {
+    showToast(t("errUpload"));
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/marketplace/listings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentUser,
-        category, title,
+        category: postCategory, title,
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
+        attachment_url: attachmentUrl,
         course: course || null,
         group_name: group_name || null,
         faculty: faculty || null,
@@ -584,14 +716,35 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
     });
     if (!res.ok) throw new Error();
     showToast(t("listingSent"));
-    ["lf-title", "lf-description", "lf-price", "lf-contact", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
+    ["lf-title", "lf-description", "lf-price", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
       .forEach((id) => { document.getElementById(id).value = ""; });
+    selectedListingFile = null;
+    document.getElementById("lf-file-name").textContent = "";
+    document.getElementById("lf-file").value = "";
   } catch (e) {
     showToast(t("errListing"));
   }
 });
 
-// ---------- Вкладка «Заказы» ----------
+// ---------- Заказы / Объявления: сегмент-переключатель ----------
+document.querySelectorAll("#orders-segmented .segmented-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#orders-segmented .segmented-item").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".segment-content").forEach((c) => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("segment-" + btn.dataset.segment).classList.add("active");
+  });
+});
+
+function renderOrderAttrs(o) {
+  const rows = [];
+  if (o.subject) rows.push(`<div class="card-attr"><b>${t("cardSubject")}:</b> ${o.subject}</div>`);
+  if (o.course) rows.push(`<div class="card-attr"><b>${t("cardCourse")}:</b> ${o.course}</div>`);
+  if (o.faculty) rows.push(`<div class="card-attr"><b>${t("cardFaculty")}:</b> ${o.faculty}</div>`);
+  if (o.department) rows.push(`<div class="card-attr"><b>${t("cardDepartment")}:</b> ${o.department}</div>`);
+  return rows.join("");
+}
+
 async function loadMyOrders() {
   const list = document.getElementById("orders-list");
   if (!currentUser.tg_id) { list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`; return; }
@@ -600,14 +753,34 @@ async function loadMyOrders() {
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`; return; }
     list.innerHTML = items.map((o) => `
-      <div class="card">
-        <div class="card-title">#${o.id} · ${t("orderType_" + o.order_type)}</div>
-        <div class="card-desc">${o.price}₸</div>
-        <span class="status-badge">${t("status_" + o.status)}</span>
+      <div class="card" data-order-id="${o.id}">
+        <div class="card-title">#${o.id} · ${o.title || t("orderType_" + o.order_type)}</div>
+        <div class="card-attrs">${renderOrderAttrs(o)}</div>
+        <div class="card-price">${o.price}₸</div>
+        <div class="card-footer-row">
+          <span class="status-badge">${t("status_" + o.status)}</span>
+          ${o.can_cancel ? `<button class="btn-cancel" onclick="cancelOrder(${o.id})">${t("cancelBtn")(Math.ceil(o.cancel_seconds_left / 60))}</button>` : ""}
+        </div>
       </div>
     `).join("");
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm(t("cancelConfirm"))) return;
+  try {
+    const res = await fetch(`${API_BASE}/quiz/order/${orderId}/cancel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tg_id: currentUser.tg_id }),
+    });
+    if (!res.ok) throw new Error();
+    showToast(t("cancelSuccess"));
+    loadMyOrders();
+  } catch (e) {
+    showToast(t("cancelError"));
   }
 }
 

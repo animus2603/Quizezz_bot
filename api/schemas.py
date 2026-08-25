@@ -1,5 +1,7 @@
 import datetime as dt
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+MIN_DEADLINE_HOURS = 24
 
 
 class CatalogItemOut(BaseModel):
@@ -7,6 +9,9 @@ class CatalogItemOut(BaseModel):
     title: str
     description: str | None
     subject: str | None
+    course: str | None = None
+    faculty: str | None = None
+    department: str | None = None
     price: int
 
     class Config:
@@ -27,6 +32,15 @@ class CreateCustomOrderIn(BaseModel):
     questions_file_url: str | None = None
     deadline: dt.datetime
     comment: str | None = None
+
+    @field_validator("deadline")
+    @classmethod
+    def deadline_min_lead_time(cls, value: dt.datetime) -> dt.datetime:
+        now = dt.datetime.now(value.tzinfo) if value.tzinfo else dt.datetime.utcnow()
+        min_allowed = now + dt.timedelta(hours=MIN_DEADLINE_HOURS)
+        if value < min_allowed:
+            raise ValueError(f"Дедлайн должен быть минимум через {MIN_DEADLINE_HOURS} часов")
+        return value
 
 
 class OrderOut(BaseModel):
@@ -61,9 +75,24 @@ class UserOrderOut(BaseModel):
     status: str
     price: int
     created_at: dt.datetime
+    title: str | None = None
+    subject: str | None = None
+    course: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    can_cancel: bool = False
+    cancel_seconds_left: int = 0
 
     class Config:
         from_attributes = True
+
+
+class CancelOrderIn(BaseModel):
+    tg_id: int
+
+
+class FilterOptionsOut(BaseModel):
+    options: list[str]
 
 
 class UserListingOut(BaseModel):
@@ -85,6 +114,12 @@ class ListingOut(BaseModel):
     description: str | None
     price: int | None
     contact: str
+    course: str | None = None
+    group_name: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    subject: str | None = None
+    attachment_url: str | None = None
 
     class Config:
         from_attributes = True
@@ -94,9 +129,15 @@ class CreateListingIn(BaseModel):
     tg_id: int
     username: str | None = None
     full_name: str | None = None
-    category: str  # goods | services | ads
+    category: str  # goods | services
     title: str
     description: str | None = None
     price: int | None = None
     contact: str
     photo_file_id: str | None = None
+    attachment_url: str | None = None
+    course: str | None = None
+    group_name: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    subject: str | None = None

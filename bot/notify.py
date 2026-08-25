@@ -5,18 +5,34 @@ from bot.loader import bot
 from config import ADMIN_CHAT_ID, KASPI_PHONE, KASPI_NAME
 from database.models import Order, User, Listing
 
+ORDER_TYPE_LABELS = {
+    "ready_quiz": "Готовый тест (3000₸)",
+    "custom_quiz": "Индивидуальный заказ (5000₸)",
+}
 
-async def notify_admin_new_order(order: Order, user: User, kind: str) -> None:
-    """Уведомление админу о новом заказе (ждём оплату — реквизиты уже видны пользователю в WebApp)."""
+
+def order_action_keyboard(order_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="✅ Подтвердить", callback_data=f"order_confirm:{order_id}"),
+        InlineKeyboardButton(text="❌ Отказать", callback_data=f"order_reject:{order_id}"),
+    ]])
+
+
+async def notify_admin_new_order(order: Order, user: User, kind: str, subject: str = "") -> None:
+    """Уведомление админу о новом заказе — сразу с кнопками подтвердить/отказать."""
     if not ADMIN_CHAT_ID:
         return
 
-    label = "Готовый тест (3000₸)" if kind == "ready_quiz" else "Индивидуальный заказ (5000₸)"
+    label = ORDER_TYPE_LABELS.get(kind, kind)
     text = (
         f"🆕 <b>Новый заказ #{order.id}</b>\n"
         f"Тип: {label}\n"
+    )
+    if subject:
+        text += f"Предмет/тест: {subject}\n"
+    text += (
         f"Студент: {user.full_name or ''} (@{user.username or '—'}, id {user.tg_id})\n"
-        f"Статус: ожидает оплаты (Kaspi)\n"
+        f"Статус: ожидает оплаты\n"
     )
     if order.deadline:
         text += f"Дедлайн: {order.deadline.strftime('%d.%m.%Y %H:%M')}\n"
@@ -24,7 +40,25 @@ async def notify_admin_new_order(order: Order, user: User, kind: str) -> None:
         text += f"Комментарий: {order.comment}\n"
 
     try:
-        await bot.send_message(ADMIN_CHAT_ID, text)
+        await bot.send_message(ADMIN_CHAT_ID, text, reply_markup=order_action_keyboard(order.id))
+    except TelegramAPIError:
+        pass
+
+
+async def notify_client_new_order(order: Order, user: User, kind: str, subject: str = "") -> None:
+    """Клиенту сразу после оформления заказа: номер, тип, предмет, статус + реквизиты Kaspi."""
+    label = ORDER_TYPE_LABELS.get(kind, kind)
+    text = (
+        f"🧾 <b>Заказ #{order.id} создан</b>\n"
+        f"Тип: {label}\n"
+    )
+    if subject:
+        text += f"Предмет/тест: {subject}\n"
+    text += f"Статус: ожидает оплаты\n\n"
+    text += kaspi_requisites_text(order.price)
+
+    try:
+        await bot.send_message(user.tg_id, text)
     except TelegramAPIError:
         pass
 
@@ -34,11 +68,6 @@ async def notify_admin_receipt(order: Order, user: User) -> None:
     if not ADMIN_CHAT_ID:
         return
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="✅ Подтвердить оплату", callback_data=f"order_confirm:{order.id}"),
-        InlineKeyboardButton(text="❌ Отклонить", callback_data=f"order_reject:{order.id}"),
-    ]])
-
     caption = (
         f"💳 Чек по заказу #{order.id}\n"
         f"Студент: @{user.username or '—'} (id {user.tg_id})\n"
@@ -46,7 +75,10 @@ async def notify_admin_receipt(order: Order, user: User) -> None:
     )
 
     try:
-        await bot.send_photo(ADMIN_CHAT_ID, order.receipt_file_id, caption=caption, reply_markup=kb)
+        await bot.send_photo(
+            ADMIN_CHAT_ID, order.receipt_file_id, caption=caption,
+            reply_markup=order_action_keyboard(order.id),
+        )
     except TelegramAPIError:
         pass
 

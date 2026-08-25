@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy import select
 
 from database.engine import async_session
-from database.models import Order, OrderStatus, OrderType, User, Listing, ListingStatus
+from database.models import Order, OrderStatus, OrderType, User, Listing, ListingStatus, QuizCatalogItem
 from database import crud
 from config import ADMIN_CHAT_ID
 
@@ -17,6 +17,21 @@ router.callback_query.filter(F.message.chat.id == ADMIN_CHAT_ID)
 
 class CompleteOrder(StatesGroup):
     waiting_result = State()
+
+
+class RejectOrder(StatesGroup):
+    waiting_reason = State()
+
+
+async def _mark_message(call: CallbackQuery, suffix: str) -> None:
+    """Дописывает статус к исходному сообщению — работает и для текста, и для фото с подписью."""
+    try:
+        if call.message.caption is not None:
+            await call.message.edit_caption(caption=call.message.caption + suffix)
+        else:
+            await call.message.edit_text(call.message.text + suffix)
+    except Exception:
+        pass  # сообщение могло уже поменяться — не критично
 
 
 # ---------- Оплата заказов Quizizz ----------
@@ -34,54 +49,71 @@ async def confirm_order(call: CallbackQuery):
         user = user_result.scalar_one()
 
         if order.order_type == OrderType.ready_quiz:
-            catalog_result = await session.execute(
-                select(Order.catalog_item_id).where(Order.id == order.id)
+            item_result = await session.execute(
+                select(QuizCatalogItem).where(QuizCatalogItem.id == order.catalog_item_id)
             )
-            item_id = catalog_result.scalar_one()
-            from database.models import QuizCatalogItem
-            item_result = await session.execute(select(QuizCatalogItem).where(QuizCatalogItem.id == item_id))
             item = item_result.scalar_one()
 
             order = await crud.set_order_status(session, order, OrderStatus.sent)
             await call.bot.send_message(
                 user.tg_id,
-                f"✅ Оплата подтверждена!\nВаш тест «{item.title}»:\n{item.file_url}",
+                f"✅ Оплата по заказу #{order.id} подтверждена!\nВаш тест «{item.title}»:\n{item.file_url}",
             )
-            await call.message.edit_caption(caption=call.message.caption + "\n\n✅ ОПЛАЧЕНО, файл отправлен студенту")
+            await _mark_message(call, "\n\n✅ ОПЛАЧЕНО, файл отправлен студенту")
         else:
             order = await crud.set_order_status(session, order, OrderStatus.in_progress)
             deadline_str = order.deadline.strftime("%d.%m.%Y %H:%M") if order.deadline else "—"
             await call.bot.send_message(
                 user.tg_id,
-                f"✅ Оплата подтверждена! Ваш индивидуальный заказ #{order.id} взят в работу.\n"
+                f"✅ Оплата по заказу #{order.id} подтверждена! Заказ взят в работу.\n"
                 f"Дедлайн: {deadline_str}",
             )
-            await call.message.edit_caption(
-                caption=call.message.caption + f"\n\n✅ ОПЛАЧЕНО, в работе. Когда закончите: /complete {order.id}"
-            )
+            await _mark_message(call, f"\n\n✅ ОПЛАЧЕНО, в работе. Когда закончите: /complete {order.id}")
 
     await call.answer("Подтверждено")
 
 
 @router.callback_query(F.data.startswith("order_reject:"))
-async def reject_order(call: CallbackQuery):
+async def reject_order_start(call: CallbackQuery, state: FSMContext):
     order_id = int(call.data.split(":")[1])
+    await state.update_data(
+        order_id=order_id,
+        origin_chat_id=call.message.chat.id,
+        origin_message_id=call.message.message_id,
+        origin_has_caption=call.message.caption is not None,
+    )
+    await state.set_state(RejectOrder.waiting_reason)
+    await call.answer()
+    await call.message.answer(
+        f"Напишите причину отказа по заказу #{order_id} — она сразу уйдёт студенту."
+    )
+
+
+@router.message(RejectOrder.waiting_reason)
+async def reject_order_finish(message: Message, state: FSMContext):
+    data = await state.get_data()
+    order_id = data["order_id"]
+    reason = message.text or "без указания причины"
+
     async with async_session() as session:
         order = await crud.get_order(session, order_id)
         if not order:
-            await call.answer("Заказ не найден", show_alert=True)
+            await message.answer("Заказ не найден — возможно, уже обработан.")
+            await state.clear()
             return
+
         user_result = await session.execute(select(User).where(User.id == order.user_id))
         user = user_result.scalar_one()
 
         order = await crud.set_order_status(session, order, OrderStatus.rejected)
-        await call.bot.send_message(
+        await message.bot.send_message(
             user.tg_id,
-            f"❌ Чек по заказу #{order.id} не подтверждён. Свяжитесь с оператором или пришлите чек ещё раз.",
+            f"❌ Заказ #{order.id} отклонён.\nПричина: {reason}\n\n"
+            f"Если это ошибка — свяжитесь с оператором или оформите заказ заново.",
         )
-        await call.message.edit_caption(caption=call.message.caption + "\n\n❌ ОТКЛОНЕНО")
 
-    await call.answer("Отклонено")
+    await state.clear()
+    await message.answer(f"Готово — заказ #{order_id} отклонён, студент уведомлён.")
 
 
 @router.message(Command("complete"), StateFilter(None))
@@ -145,10 +177,7 @@ async def approve_listing(call: CallbackQuery):
         user = user_result.scalar_one()
         await call.bot.send_message(user.tg_id, f"✅ Ваше объявление «{listing.title}» опубликовано!")
 
-    if call.message.caption:
-        await call.message.edit_caption(caption=call.message.caption + "\n\n✅ ОПУБЛИКОВАНО")
-    else:
-        await call.message.edit_text(call.message.text + "\n\n✅ ОПУБЛИКОВАНО")
+    await _mark_message(call, "\n\n✅ ОПУБЛИКОВАНО")
     await call.answer("Опубликовано")
 
 
@@ -166,8 +195,5 @@ async def reject_listing(call: CallbackQuery):
         user = user_result.scalar_one()
         await call.bot.send_message(user.tg_id, f"❌ Ваше объявление «{listing.title}» отклонено модератором.")
 
-    if call.message.caption:
-        await call.message.edit_caption(caption=call.message.caption + "\n\n❌ ОТКЛОНЕНО")
-    else:
-        await call.message.edit_text(call.message.text + "\n\n❌ ОТКЛОНЕНО")
+    await _mark_message(call, "\n\n❌ ОТКЛОНЕНО")
     await call.answer("Отклонено")

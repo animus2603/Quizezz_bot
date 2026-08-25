@@ -111,6 +111,24 @@ async def set_order_status(session: AsyncSession, order: Order, status: OrderSta
     return order
 
 
+CANCEL_WINDOW_SECONDS = 3600  # 1 час
+
+
+def order_cancel_seconds_left(order: Order) -> int:
+    if order.status != OrderStatus.awaiting_payment:
+        return 0
+    elapsed = (dt.datetime.utcnow() - order.created_at).total_seconds()
+    left = CANCEL_WINDOW_SECONDS - elapsed
+    return max(0, int(left))
+
+
+async def cancel_order(session: AsyncSession, order: Order) -> Order:
+    order.status = OrderStatus.cancelled
+    await session.commit()
+    await session.refresh(order)
+    return order
+
+
 async def create_listing(
     session: AsyncSession,
     seller_id: int,
@@ -120,6 +138,12 @@ async def create_listing(
     price: int | None,
     photo_file_id: str | None,
     contact: str,
+    course: str | None = None,
+    group_name: str | None = None,
+    faculty: str | None = None,
+    department: str | None = None,
+    subject: str | None = None,
+    attachment_url: str | None = None,
 ) -> Listing:
     listing = Listing(
         seller_id=seller_id,
@@ -128,7 +152,13 @@ async def create_listing(
         description=description,
         price=price,
         photo_file_id=photo_file_id,
+        attachment_url=attachment_url,
         contact=contact,
+        course=course,
+        group_name=group_name,
+        faculty=faculty,
+        department=department,
+        subject=subject,
         status=ListingStatus.pending,
     )
     session.add(listing)
@@ -137,10 +167,28 @@ async def create_listing(
     return listing
 
 
-async def get_approved_listings(session: AsyncSession, category: ListingCategory | None = None) -> list[Listing]:
+async def get_approved_listings(
+    session: AsyncSession,
+    category: ListingCategory | None = None,
+    course: str | None = None,
+    group_name: str | None = None,
+    faculty: str | None = None,
+    department: str | None = None,
+    subject: str | None = None,
+) -> list[Listing]:
     stmt = select(Listing).where(Listing.status == ListingStatus.approved)
     if category:
         stmt = stmt.where(Listing.category == category)
+    if course:
+        stmt = stmt.where(Listing.course == course)
+    if group_name:
+        stmt = stmt.where(Listing.group_name == group_name)
+    if faculty:
+        stmt = stmt.where(Listing.faculty == faculty)
+    if department:
+        stmt = stmt.where(Listing.department == department)
+    if subject:
+        stmt = stmt.where(Listing.subject == subject)
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
@@ -155,3 +203,24 @@ async def set_listing_status(session: AsyncSession, listing: Listing, status: Li
     await session.commit()
     await session.refresh(listing)
     return listing
+
+
+FILTERABLE_FIELDS = {"course", "group_name", "faculty", "department", "subject"}
+
+
+async def search_listing_filter_options(session: AsyncSession, field: str, query: str = "") -> list[str]:
+    """Автокомплит: уникальные непустые значения поля из опубликованных объявлений,
+    отфильтрованные по подстроке query (регистронезависимо)."""
+    if field not in FILTERABLE_FIELDS:
+        return []
+    column = getattr(Listing, field)
+    stmt = (
+        select(column)
+        .where(Listing.status == ListingStatus.approved, column.is_not(None), column != "")
+        .distinct()
+    )
+    if query:
+        stmt = stmt.where(column.ilike(f"%{query}%"))
+    stmt = stmt.limit(20)
+    result = await session.execute(stmt)
+    return [row[0] for row in result.all() if row[0]]

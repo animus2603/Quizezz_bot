@@ -30,6 +30,14 @@
     </div>
   </div>
 
+  <!-- ===== ПОПАП АВТОКОМПЛИТ-ПОИСКА ДЛЯ ФИЛЬТРОВ ===== -->
+  <div id="search-overlay" class="lang-overlay search-overlay hidden">
+    <div class="search-sheet">
+      <input id="search-input" type="text" class="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Начните вводить...">
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
   <!-- ===== БАННЕР (только на Главной) ===== -->
   <div id="banner" class="banner">
     <div class="banner-track" id="banner-track"></div>
@@ -50,7 +58,7 @@
 
         <label data-i18n="cfDeadlineLabel">Дедлайн (дата и время)</label>
         <input id="cf-deadline" type="datetime-local">
-        <div class="hint" id="cf-deadline-hint" data-i18n="cfDeadlineHint">Минимум через 24 часа от текущего момента</div>
+        <div class="hint" data-i18n="cfDeadlineHint">Минимум через 24 часа от текущего момента</div>
 
         <label data-i18n="cfCommentLabel">Пожелания / инструкции</label>
         <textarea id="cf-comment" data-i18n-placeholder="cfCommentPlaceholder" placeholder="Например: нужно 90%+ правильных"></textarea>
@@ -64,24 +72,32 @@
 
     <!-- ===== КАТЕГОРИИ (маркетплейс) ===== -->
     <section id="tab-categories" class="tab-content">
+      <div class="cat-tiles" id="cat-tiles">
+        <button class="cat-tile active" data-category="">
+          <span class="cat-tile-icon">🗂️</span>
+          <span data-i18n="catAll">Все</span>
+        </button>
+        <button class="cat-tile" data-category="goods">
+          <span class="cat-tile-icon">📦</span>
+          <span data-i18n="catGoods">Товары</span>
+        </button>
+        <button class="cat-tile" data-category="services">
+          <span class="cat-tile-icon">🛠️</span>
+          <span data-i18n="catServices">Услуги</span>
+        </button>
+      </div>
+
       <div class="filter-row">
-        <select id="market-filter">
-          <option value="" data-i18n="catAll">Все категории</option>
-          <option value="goods" data-i18n="catGoods">Товары</option>
-          <option value="services" data-i18n="catServices">Услуги</option>
-          <option value="ads" data-i18n="catAds">Реклама</option>
-        </select>
-        <button id="btn-toggle-filters" class="btn-secondary" data-i18n="moreFilters">🔍 Фильтры</button>
+        <button id="btn-toggle-filters" class="btn-secondary full-width" data-i18n="moreFilters">🔍 Фильтры</button>
       </div>
 
       <div id="extra-filters" class="form hidden">
-        <input id="filter-course" type="text" data-i18n-placeholder="fCourse" placeholder="Курс">
-        <input id="filter-group" type="text" data-i18n-placeholder="fGroup" placeholder="Группа">
-        <input id="filter-faculty" type="text" data-i18n-placeholder="fFaculty" placeholder="Факультет">
-        <input id="filter-department" type="text" data-i18n-placeholder="fDepartment" placeholder="Кафедра">
-        <input id="filter-subject" type="text" data-i18n-placeholder="fSubject" placeholder="Предмет">
+        <button class="filter-field-btn" data-field="course" data-i18n="fCourse">Курс</button>
+        <button class="filter-field-btn" data-field="group_name" data-i18n="fGroup">Группа</button>
+        <button class="filter-field-btn" data-field="faculty" data-i18n="fFaculty">Факультет</button>
+        <button class="filter-field-btn" data-field="department" data-i18n="fDepartment">Кафедра</button>
+        <button class="filter-field-btn" data-field="subject" data-i18n="fSubject">Предмет</button>
         <div class="filter-btn-row">
-          <button id="btn-apply-filters" class="btn-primary" data-i18n="applyFilters">Применить</button>
           <button id="btn-reset-filters" class="btn-secondary" data-i18n="resetFilters">Сбросить</button>
         </div>
       </div>
@@ -92,14 +108,19 @@
     <!-- ===== РАЗМЕСТИТЬ (создание объявления) ===== -->
     <section id="tab-post" class="tab-content">
       <h2 data-i18n="newListingTitle">Новое объявление</h2>
-      <div class="form">
-        <label data-i18n="lfCategoryLabel">Категория</label>
-        <select id="lf-category">
-          <option value="goods" data-i18n="catGoodsSingle">Товар</option>
-          <option value="services" data-i18n="catServicesSingle">Услуга</option>
-          <option value="ads" data-i18n="catAdsSingle">Реклама</option>
-        </select>
 
+      <div class="cat-tiles cat-tiles-2" id="post-cat-tiles">
+        <button class="cat-tile" data-category="goods">
+          <span class="cat-tile-icon">📦</span>
+          <span data-i18n="catGoodsSingle">Товар</span>
+        </button>
+        <button class="cat-tile" data-category="services">
+          <span class="cat-tile-icon">🛠️</span>
+          <span data-i18n="catServicesSingle">Услуга</span>
+        </button>
+      </div>
+
+      <div id="post-form" class="form hidden">
         <label data-i18n="lfTitleLabel">Название</label>
         <input id="lf-title" type="text" data-i18n-placeholder="lfTitlePlaceholder" placeholder="Например: Учебник по матанализу">
 
@@ -109,8 +130,12 @@
         <label data-i18n="lfPriceLabel">Цена (₸, необязательно)</label>
         <input id="lf-price" type="number" placeholder="5000">
 
-        <label data-i18n="lfContactLabel">Контакт (@username)</label>
+        <label data-i18n="lfContactLabel">Контакт</label>
         <input id="lf-contact" type="text" placeholder="@your_username">
+
+        <label data-i18n="lfFileLabel">Файл/фото (по желанию)</label>
+        <input id="lf-file" type="file">
+        <div id="lf-file-name" class="file-name"></div>
 
         <div class="form-row-2">
           <div>
@@ -139,13 +164,19 @@
       </div>
     </section>
 
-    <!-- ===== ЗАКАЗЫ ===== -->
+    <!-- ===== ЗАКАЗЫ / ОБЪЯВЛЕНИЯ ===== -->
     <section id="tab-orders" class="tab-content">
-      <h2 data-i18n="myOrdersTitle">Мои заказы</h2>
-      <div id="orders-list" class="list">…</div>
+      <div class="segmented" id="orders-segmented">
+        <button class="segmented-item active" data-segment="orders" data-i18n="myOrdersTitle">Мои заказы</button>
+        <button class="segmented-item" data-segment="listings" data-i18n="myListingsTitle">Мои объявления</button>
+      </div>
 
-      <h2 data-i18n="myListingsTitle">Мои объявления</h2>
-      <div id="my-listings-list" class="list">…</div>
+      <div id="segment-orders" class="segment-content active">
+        <div id="orders-list" class="list">…</div>
+      </div>
+      <div id="segment-listings" class="segment-content">
+        <div id="my-listings-list" class="list">…</div>
+      </div>
     </section>
 
     <!-- ===== ПРОФИЛЬ ===== -->

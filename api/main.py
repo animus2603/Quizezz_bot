@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,10 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database.engine import init_db
-from api.routers import quiz, marketplace, users
+from api.routers import quiz, marketplace, users, uploads
 from bot.main import start_polling
 
 logging.basicConfig(level=logging.INFO)
+
+Path("uploads").mkdir(exist_ok=True)
 
 
 @asynccontextmanager
@@ -33,9 +36,11 @@ app.add_middleware(
 app.include_router(quiz.router, prefix="/api")
 app.include_router(marketplace.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(uploads.router, prefix="/api")
 
 # отдаём статику Mini App прямо с бэкенда (проще для MVP, чем отдельный хостинг)
 app.mount("/webapp", StaticFiles(directory="webapp", html=True), name="webapp")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")

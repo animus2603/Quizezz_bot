@@ -3,10 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import get_session
 from database import crud
-from database.models import OrderStatus
-from api.schemas import CatalogItemOut, CreateReadyOrderIn, CreateCustomOrderIn, OrderOut
+from api.schemas import CatalogItemOut, CreateReadyOrderIn, CreateCustomOrderIn, OrderOut, CancelOrderIn
 from config import PRICE_CUSTOM_QUIZ
-from bot.notify import notify_admin_new_order
+from bot.notify import notify_admin_new_order, notify_client_new_order
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -25,7 +24,8 @@ async def order_ready_quiz(data: CreateReadyOrderIn, session: AsyncSession = Dep
         raise HTTPException(404, "Тест не найден в каталоге")
 
     order = await crud.create_ready_quiz_order(session, user.id, item)
-    await notify_admin_new_order(order, user, kind="ready_quiz")
+    await notify_admin_new_order(order, user, kind="ready_quiz", subject=item.title)
+    await notify_client_new_order(order, user, kind="ready_quiz", subject=item.title)
     return order
 
 
@@ -40,7 +40,9 @@ async def order_custom_quiz(data: CreateCustomOrderIn, session: AsyncSession = D
         comment=data.comment,
         price=PRICE_CUSTOM_QUIZ,
     )
-    await notify_admin_new_order(order, user, kind="custom_quiz")
+    subject = data.comment or "Индивидуальный тест"
+    await notify_admin_new_order(order, user, kind="custom_quiz", subject=subject)
+    await notify_client_new_order(order, user, kind="custom_quiz", subject=subject)
     return order
 
 
@@ -50,3 +52,20 @@ async def get_order_status(order_id: int, session: AsyncSession = Depends(get_se
     if not order:
         raise HTTPException(404, "Заказ не найден")
     return order
+
+
+@router.post("/order/{order_id}/cancel", response_model=OrderOut)
+async def cancel_order(order_id: int, data: CancelOrderIn, session: AsyncSession = Depends(get_session)):
+    order = await crud.get_order(session, order_id)
+    if not order:
+        raise HTTPException(404, "Заказ не найден")
+
+    user = await crud.get_user_by_tg_id(session, data.tg_id)
+    if not user or order.user_id != user.id:
+        raise HTTPException(403, "Это не ваш заказ")
+
+    seconds_left = crud.order_cancel_seconds_left(order)
+    if seconds_left <= 0:
+        raise HTTPException(400, "Время на отмену истекло или заказ уже в обработке")
+
+    return await crud.cancel_order(session, order)

@@ -35,6 +35,9 @@ class QuizCatalogItem(Base):
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     subject: Mapped[str | None] = mapped_column(String(128), nullable=True)  # предмет/дисциплина
+    course: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    faculty: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(128), nullable=True)
     file_url: Mapped[str] = mapped_column(Text)  # ссылка на файл с ответами/доступ
     price: Mapped[int] = mapped_column(Integer, default=3000)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -52,7 +55,8 @@ class OrderStatus(str, enum.Enum):
     in_progress = "in_progress"             # В обработке (для custom_quiz)
     done = "done"                           # Готово
     sent = "sent"                           # Отправлено студенту
-    rejected = "rejected"                   # чек отклонён / отменено
+    rejected = "rejected"                   # чек отклонён
+    cancelled = "cancelled"                 # отменён самим клиентом (в течение часа)
 
 
 class Order(Base):
@@ -86,7 +90,6 @@ class Order(Base):
 class ListingCategory(str, enum.Enum):
     goods = "goods"        # товары
     services = "services"  # услуги
-    ads = "ads"             # реклама
 
 
 class ListingStatus(str, enum.Enum):
@@ -106,7 +109,16 @@ class Listing(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[int | None] = mapped_column(Integer, nullable=True)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    attachment_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     contact: Mapped[str] = mapped_column(String(255))  # @username или ссылка
+
+    # академические фильтры — заполняются продавцом опционально
+    course: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    group_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    faculty: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    subject: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
     status: Mapped[ListingStatus] = mapped_column(Enum(ListingStatus), default=ListingStatus.pending)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 

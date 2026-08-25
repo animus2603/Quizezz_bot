@@ -1,7 +1,8 @@
-fastapi
-uvicorn
-aiogram
-pydantic
-python-dotenv
-aiosqlite
-sqlalchemy
+aiogram==3.30.0
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+sqlalchemy==2.0.52
+aiosqlite==0.22.1
+python-dotenv==1.0.1
+pydantic==2.13.4
+python-multipart==0.0.20

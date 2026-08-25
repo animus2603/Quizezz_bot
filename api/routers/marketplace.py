@@ -13,6 +13,7 @@ router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 @router.get("/listings", response_model=list[ListingOut])
 async def list_listings(
     category: str | None = None,
+    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -22,7 +23,7 @@ async def list_listings(
 ):
     cat = ListingCategory(category) if category else None
     return await crud.get_approved_listings(
-        session, cat, course, group_name, faculty, department, subject
+        session, cat, subcategory, course, group_name, faculty, department, subject
     )
 
 
@@ -45,6 +46,7 @@ async def create_listing(data: CreateListingIn, session: AsyncSession = Depends(
         session,
         seller_id=user.id,
         category=category,
+        subcategory=data.subcategory,
         title=data.title,
         description=data.description,
         price=data.price,

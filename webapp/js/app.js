@@ -27,13 +27,18 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Например: нужно 90%+ правильных",
     cfSubmit: "Оформить заказ — 5000₸",
     catAll: "Все",
-    catGoods: "Товары", catServices: "Услуги",
-    catGoodsSingle: "Товар", catServicesSingle: "Услуга",
-    moreFilters: "🔍 Фильтры",
+    catGoods: "Товары", catStudy: "Учебное",
+    catGoodsSingle: "Товар", catStudySingle: "Учебное",
+    moreFilters: "Фильтры",
     resetFilters: "Сбросить фильтры",
     fCourse: "Курс", fGroup: "Группа", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Предмет",
     searchPlaceholder: "Начните вводить...",
     noOptionsFound: "Ничего не найдено",
+    examplesLabel: "Примеры",
+    sub_quizizz: "Quizizz", sub_srs: "СРС", sub_referat: "Реферат", sub_doklad: "Доклад",
+    sub_shpargalka: "Шпаргалки", sub_scan: "Сканирование", sub_coursework: "Курсовая", sub_study_other: "Другое",
+    sub_textbooks: "Учебники", sub_electronics: "Техника", sub_clothing: "Одежда",
+    sub_furniture: "Мебель/быт", sub_stationery: "Канцелярия", sub_goods_other: "Разное",
     newListingTitle: "Новое объявление",
     lfTitleLabel: "Название",
     lfTitlePlaceholder: "Например: Учебник по матанализу",
@@ -103,13 +108,18 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Мысалы: 90%+ дұрыс керек",
     cfSubmit: "Тапсырыс беру — 5000₸",
     catAll: "Барлығы",
-    catGoods: "Тауарлар", catServices: "Қызметтер",
-    catGoodsSingle: "Тауар", catServicesSingle: "Қызмет",
-    moreFilters: "🔍 Сүзгілер",
+    catGoods: "Тауарлар", catStudy: "Оқу материалдары",
+    catGoodsSingle: "Тауар", catStudySingle: "Оқу материалы",
+    moreFilters: "Сүзгілер",
     resetFilters: "Сүзгілерді тазалау",
     fCourse: "Курс", fGroup: "Топ", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Пән",
     searchPlaceholder: "Теруді бастаңыз...",
     noOptionsFound: "Ештеңе табылмады",
+    examplesLabel: "Мысалдар",
+    sub_quizizz: "Quizizz", sub_srs: "СӨЖ", sub_referat: "Реферат", sub_doklad: "Баяндама",
+    sub_shpargalka: "Шпаргалка", sub_scan: "Сканерлеу", sub_coursework: "Курстық жұмыс", sub_study_other: "Басқа",
+    sub_textbooks: "Оқулықтар", sub_electronics: "Техника", sub_clothing: "Киім",
+    sub_furniture: "Жиһаз/тұрмыс", sub_stationery: "Кеңсе тауарлары", sub_goods_other: "Әртүрлі",
     newListingTitle: "Жаңа хабарландыру",
     lfTitleLabel: "Атауы",
     lfTitlePlaceholder: "Мысалы: Матанализ оқулығы",
@@ -179,13 +189,18 @@ const BASE_DICT = {
     cfCommentPlaceholder: "E.g.: need 90%+ correct",
     cfSubmit: "Place order — 5000₸",
     catAll: "All",
-    catGoods: "Goods", catServices: "Services",
-    catGoodsSingle: "Item", catServicesSingle: "Service",
-    moreFilters: "🔍 Filters",
+    catGoods: "Goods", catStudy: "Study",
+    catGoodsSingle: "Item", catStudySingle: "Study",
+    moreFilters: "Filters",
     resetFilters: "Reset filters",
     fCourse: "Course", fGroup: "Group", fFaculty: "Faculty", fDepartment: "Department", fSubject: "Subject",
     searchPlaceholder: "Start typing...",
     noOptionsFound: "Nothing found",
+    examplesLabel: "Examples",
+    sub_quizizz: "Quizizz", sub_srs: "Independent study work", sub_referat: "Essay", sub_doklad: "Presentation",
+    sub_shpargalka: "Cheat sheets", sub_scan: "Scanning", sub_coursework: "Coursework", sub_study_other: "Other",
+    sub_textbooks: "Textbooks", sub_electronics: "Electronics", sub_clothing: "Clothing",
+    sub_furniture: "Furniture/home", sub_stationery: "Stationery", sub_goods_other: "Other",
     newListingTitle: "New listing",
     lfTitleLabel: "Title",
     lfTitlePlaceholder: "E.g.: Calculus textbook",
@@ -255,13 +270,18 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Mysal üçin: 90%+ dogry gerek",
     cfSubmit: "Sargyt bermek — 5000₸",
     catAll: "Ählisi",
-    catGoods: "Harytlar", catServices: "Hyzmatlar",
-    catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat",
-    moreFilters: "🔍 Filtrler",
+    catGoods: "Harytlar", catStudy: "Okuw",
+    catGoodsSingle: "Harydy", catStudySingle: "Okuw",
+    moreFilters: "Filtrler",
     resetFilters: "Filtrleri arassalamak",
     fCourse: "Kurs", fGroup: "Topar", fFaculty: "Fakultet", fDepartment: "Kafedra", fSubject: "Dersi",
     searchPlaceholder: "Ýazyp başlaň...",
     noOptionsFound: "Hiç zat tapylmady",
+    examplesLabel: "Mysallar",
+    sub_quizizz: "Quizizz", sub_srs: "Özbaşdak iş", sub_referat: "Referat", sub_doklad: "Dokladym",
+    sub_shpargalka: "Şpargalka", sub_scan: "Skanirlemek", sub_coursework: "Kurs işi", sub_study_other: "Başga",
+    sub_textbooks: "Kitaplar", sub_electronics: "Tehnika", sub_clothing: "Egin-eşik",
+    sub_furniture: "Mebel/hojalyk", sub_stationery: "Kanselýariýa", sub_goods_other: "Dürli",
     newListingTitle: "Täze bildiriş",
     lfTitleLabel: "Ady",
     lfTitlePlaceholder: "Mysal üçin: Matanaliz kitaby",
@@ -337,11 +357,17 @@ function applyTranslations() {
     const val = t(el.dataset.i18nPlaceholder);
     if (typeof val === "string") el.placeholder = val;
   });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const val = t(el.dataset.i18nTitle);
+    if (typeof val === "string") el.title = val;
+  });
   document.getElementById("lang-switch").textContent = currentLang;
   document.querySelectorAll(".lang-option").forEach((el) => {
     el.classList.toggle("active", el.dataset.lang === currentLang);
   });
   renderFilterButtonLabels();
+  renderSubcatRow();
+  renderPostSubcatRow();
   renderBanner();
   loadCatalog();
   loadListings();
@@ -530,21 +556,112 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
   }
 });
 
+// ---------- Категории: примеры подкатегорий (Учебное / Товары) ----------
+const SUBCATS = {
+  study: [
+    { v: "quizizz", icon: "🧩", key: "sub_quizizz" },
+    { v: "srs", icon: "📝", key: "sub_srs" },
+    { v: "referat", icon: "📄", key: "sub_referat" },
+    { v: "doklad", icon: "🎤", key: "sub_doklad" },
+    { v: "shpargalka", icon: "🗒️", key: "sub_shpargalka" },
+    { v: "scan", icon: "🖨️", key: "sub_scan" },
+    { v: "coursework", icon: "📚", key: "sub_coursework" },
+    { v: "study_other", icon: "➕", key: "sub_study_other" },
+  ],
+  goods: [
+    { v: "textbooks", icon: "📖", key: "sub_textbooks" },
+    { v: "electronics", icon: "💻", key: "sub_electronics" },
+    { v: "clothing", icon: "👕", key: "sub_clothing" },
+    { v: "furniture", icon: "🛋️", key: "sub_furniture" },
+    { v: "stationery", icon: "✏️", key: "sub_stationery" },
+    { v: "goods_other", icon: "➕", key: "sub_goods_other" },
+  ],
+};
+
+// Какие поля фильтра показывать для каждой категории (фильтр «универсальный»)
+const FILTER_FIELDS_BY_CATEGORY = {
+  "": ["course", "group_name", "faculty", "department", "subject"],
+  study: ["course", "group_name", "faculty", "department", "subject"],
+  goods: ["course", "subject"],
+};
+
+// Примеры значений для попапа автокомплита (показываются, пока поле пустое)
+const FIELD_EXAMPLES = {
+  course: {
+    RU: ["1 курс", "2 курс", "3 курс", "4 курс"],
+    KZ: ["1 курс", "2 курс", "3 курс", "4 курс"],
+    EN: ["Year 1", "Year 2", "Year 3", "Year 4"],
+    TM: ["1 kurs", "2 kurs", "3 kurs", "4 kurs"],
+  },
+  subject: {
+    RU: ["Математика", "Физика", "Информатика", "Английский язык", "История Казахстана"],
+    KZ: ["Математика", "Физика", "Информатика", "Ағылшын тілі", "Қазақстан тарихы"],
+    EN: ["Mathematics", "Physics", "Computer Science", "English", "History of Kazakhstan"],
+    TM: ["Matematika", "Fizika", "Informatika", "Iňlis dili", "Gazagystan taryhy"],
+  },
+};
+
+function getFieldExamples(field) {
+  return FIELD_EXAMPLES[field]?.[currentLang] || [];
+}
+
 // ---------- Категории: плитки + фильтры с автокомплитом ----------
 let selectedCategory = "";
+let selectedSubcategory = "";
 const filters = { course: "", group_name: "", faculty: "", department: "", subject: "" };
 
-document.querySelectorAll("#cat-tiles .cat-tile").forEach((tile) => {
+function renderSubcatRow() {
+  const row = document.getElementById("subcat-row");
+  const list = SUBCATS[selectedCategory];
+  if (!list) {
+    row.classList.add("hidden");
+    row.innerHTML = "";
+    return;
+  }
+  row.classList.remove("hidden");
+  row.innerHTML = list.map((s) => `
+    <button class="subcat-chip ${selectedSubcategory === s.v ? "active" : ""}" data-value="${s.v}">
+      <span class="subcat-chip-icon">${s.icon}</span>${t(s.key)}
+    </button>
+  `).join("");
+  row.querySelectorAll(".subcat-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedSubcategory = selectedSubcategory === btn.dataset.value ? "" : btn.dataset.value;
+      renderSubcatRow();
+      loadListings();
+    });
+  });
+}
+
+function renderExtraFilterFields() {
+  const allowed = FILTER_FIELDS_BY_CATEGORY[selectedCategory] || FILTER_FIELDS_BY_CATEGORY[""];
+  document.querySelectorAll(".filter-field-btn").forEach((btn) => {
+    btn.classList.toggle("hidden", !allowed.includes(btn.dataset.field));
+  });
+}
+
+document.querySelectorAll("#cat-tiles .cat-chip").forEach((tile) => {
   tile.addEventListener("click", () => {
-    document.querySelectorAll("#cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll("#cat-tiles .cat-chip").forEach((b) => b.classList.remove("active"));
     tile.classList.add("active");
     selectedCategory = tile.dataset.category;
+    selectedSubcategory = "";
+
+    const allowed = FILTER_FIELDS_BY_CATEGORY[selectedCategory] || FILTER_FIELDS_BY_CATEGORY[""];
+    Object.keys(filters).forEach((k) => { if (!allowed.includes(k)) filters[k] = ""; });
+
+    renderExtraFilterFields();
+    renderFilterButtonLabels();
+    renderSubcatRow();
     loadListings();
   });
 });
 
-document.getElementById("btn-toggle-filters").addEventListener("click", () => {
-  document.getElementById("extra-filters").classList.toggle("hidden");
+const filterToggleBtn = document.getElementById("btn-toggle-filters");
+filterToggleBtn.addEventListener("click", () => {
+  const panel = document.getElementById("extra-filters");
+  panel.classList.toggle("hidden");
+  filterToggleBtn.classList.toggle("active", !panel.classList.contains("hidden"));
 });
 
 function renderFilterButtonLabels() {
@@ -555,6 +672,8 @@ function renderFilterButtonLabels() {
     btn.textContent = value ? `${label}: ${value}` : label;
     btn.classList.toggle("has-value", !!value);
   });
+  const anyActive = Object.values(filters).some(Boolean);
+  filterToggleBtn.classList.toggle("active", anyActive || !document.getElementById("extra-filters").classList.contains("hidden"));
 }
 
 document.getElementById("btn-reset-filters").addEventListener("click", () => {
@@ -580,15 +699,23 @@ async function runSearch(field, query) {
   }
 }
 
-function renderSearchResults(options) {
-  if (!options.length) {
-    searchResults.innerHTML = `<div class="search-result-empty">${t("noOptionsFound")}</div>`;
-    return;
+function renderSearchResults(options, exampleValues) {
+  const examples = exampleValues || [];
+  const rest = options.filter((o) => !examples.includes(o));
+
+  let html = "";
+  if (examples.length) {
+    html += `<div class="search-examples-label">${t("examplesLabel")}</div>`;
+    html += `<div class="search-examples">${examples.map((v) => `<button class="example-chip" data-value="${v}">${v}</button>`).join("")}</div>`;
   }
-  searchResults.innerHTML = options.map((opt) => `
-    <button class="search-result-item" data-value="${opt}">${opt}</button>
-  `).join("");
-  searchResults.querySelectorAll(".search-result-item").forEach((el) => {
+  if (rest.length) {
+    html += rest.map((opt) => `<button class="search-result-item" data-value="${opt}">${opt}</button>`).join("");
+  } else if (!examples.length) {
+    html += `<div class="search-result-empty">${t("noOptionsFound")}</div>`;
+  }
+  searchResults.innerHTML = html;
+
+  searchResults.querySelectorAll(".example-chip, .search-result-item").forEach((el) => {
     el.addEventListener("click", () => {
       filters[activeSearchField] = el.dataset.value;
       renderFilterButtonLabels();
@@ -598,13 +725,19 @@ function renderSearchResults(options) {
   });
 }
 
+async function renderFieldOptions(field, query) {
+  const examples = !query ? getFieldExamples(field) : [];
+  const live = await runSearch(field, query);
+  renderSearchResults(live, examples);
+}
+
 document.querySelectorAll(".filter-field-btn").forEach((btn) => {
   btn.addEventListener("click", async () => {
     activeSearchField = btn.dataset.field;
     searchInput.value = "";
     searchOverlay.classList.remove("hidden");
     searchInput.focus();
-    renderSearchResults(await runSearch(activeSearchField, ""));
+    await renderFieldOptions(activeSearchField, "");
   });
 });
 
@@ -612,7 +745,7 @@ searchInput.addEventListener("input", () => {
   clearTimeout(searchDebounce);
   const query = searchInput.value.trim();
   searchDebounce = setTimeout(async () => {
-    renderSearchResults(await runSearch(activeSearchField, query));
+    await renderFieldOptions(activeSearchField, query);
   }, 250);
 });
 
@@ -621,10 +754,17 @@ searchOverlay.addEventListener("click", (e) => {
 });
 
 // ---------- Маркетплейс: лента ----------
+function subcatLabel(value) {
+  const all = [...SUBCATS.study, ...SUBCATS.goods];
+  const found = all.find((s) => s.v === value);
+  return found ? `${found.icon} ${t(found.key)}` : null;
+}
+
 async function loadListings() {
   const list = document.getElementById("market-list");
   const params = new URLSearchParams();
   if (selectedCategory) params.set("category", selectedCategory);
+  if (selectedSubcategory) params.set("subcategory", selectedSubcategory);
   Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
   const qs = params.toString();
 
@@ -634,6 +774,7 @@ async function loadListings() {
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
     list.innerHTML = items.map((item) => `
       <div class="card">
+        ${item.subcategory && subcatLabel(item.subcategory) ? `<div class="card-subcat-badge">${subcatLabel(item.subcategory)}</div>` : ""}
         <div class="card-title">${item.title}</div>
         <div class="card-desc">${item.description || ""}</div>
         ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
@@ -649,13 +790,38 @@ async function loadListings() {
 
 // ---------- Разместить: категория → показать форму, автоподстановка контакта ----------
 let postCategory = null;
+let postSubcategory = "";
 let selectedListingFile = null;
+
+function renderPostSubcatRow() {
+  const row = document.getElementById("post-subcat-row");
+  const list = SUBCATS[postCategory];
+  if (!list) {
+    row.classList.add("hidden");
+    row.innerHTML = "";
+    return;
+  }
+  row.classList.remove("hidden");
+  row.innerHTML = list.map((s) => `
+    <button class="subcat-chip ${postSubcategory === s.v ? "active" : ""}" data-value="${s.v}">
+      <span class="subcat-chip-icon">${s.icon}</span>${t(s.key)}
+    </button>
+  `).join("");
+  row.querySelectorAll(".subcat-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      postSubcategory = postSubcategory === btn.dataset.value ? "" : btn.dataset.value;
+      renderPostSubcatRow();
+    });
+  });
+}
 
 document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((tile) => {
   tile.addEventListener("click", () => {
     document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
     tile.classList.add("active");
     postCategory = tile.dataset.category;
+    postSubcategory = "";
+    renderPostSubcatRow();
     document.getElementById("post-form").classList.remove("hidden");
 
     const contactField = document.getElementById("lf-contact");
@@ -702,7 +868,9 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentUser,
-        category: postCategory, title,
+        category: postCategory,
+        subcategory: postSubcategory || null,
+        title,
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
@@ -718,6 +886,8 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
     showToast(t("listingSent"));
     ["lf-title", "lf-description", "lf-price", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
       .forEach((id) => { document.getElementById(id).value = ""; });
+    postSubcategory = "";
+    renderPostSubcatRow();
     selectedListingFile = null;
     document.getElementById("lf-file-name").textContent = "";
     document.getElementById("lf-file").value = "";
@@ -892,5 +1062,6 @@ document.getElementById("btn-attach-phone").addEventListener("click", () => {
 });
 
 // ---------- Init ----------
+renderExtraFilterFields();
 applyTranslations();
 setBannerVisible(true);

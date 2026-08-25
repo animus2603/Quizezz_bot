@@ -72,31 +72,36 @@
 
     <!-- ===== КАТЕГОРИИ (маркетплейс) ===== -->
     <section id="tab-categories" class="tab-content">
-      <div class="cat-tiles" id="cat-tiles">
-        <button class="cat-tile active" data-category="">
-          <span class="cat-tile-icon">🗂️</span>
-          <span data-i18n="catAll">Все</span>
-        </button>
-        <button class="cat-tile" data-category="goods">
-          <span class="cat-tile-icon">📦</span>
-          <span data-i18n="catGoods">Товары</span>
-        </button>
-        <button class="cat-tile" data-category="services">
-          <span class="cat-tile-icon">🛠️</span>
-          <span data-i18n="catServices">Услуги</span>
+      <div class="cat-bar">
+        <div class="cat-chips" id="cat-tiles">
+          <button class="cat-chip active" data-category="">
+            <span class="cat-chip-icon">🗂️</span>
+            <span data-i18n="catAll">Все</span>
+          </button>
+          <button class="cat-chip" data-category="study">
+            <span class="cat-chip-icon">🎓</span>
+            <span data-i18n="catStudy">Учебное</span>
+          </button>
+          <button class="cat-chip" data-category="goods">
+            <span class="cat-chip-icon">📦</span>
+            <span data-i18n="catGoods">Товары</span>
+          </button>
+        </div>
+        <button id="btn-toggle-filters" class="filter-icon-btn" type="button" title="Фильтры" data-i18n-title="moreFilters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
         </button>
       </div>
 
-      <div class="filter-row">
-        <button id="btn-toggle-filters" class="btn-secondary full-width" data-i18n="moreFilters">🔍 Фильтры</button>
-      </div>
+      <div id="subcat-row" class="subcat-row hidden"></div>
 
       <div id="extra-filters" class="form hidden">
-        <button class="filter-field-btn" data-field="course" data-i18n="fCourse">Курс</button>
-        <button class="filter-field-btn" data-field="group_name" data-i18n="fGroup">Группа</button>
-        <button class="filter-field-btn" data-field="faculty" data-i18n="fFaculty">Факультет</button>
-        <button class="filter-field-btn" data-field="department" data-i18n="fDepartment">Кафедра</button>
-        <button class="filter-field-btn" data-field="subject" data-i18n="fSubject">Предмет</button>
+        <div class="filter-fields" id="filter-fields">
+          <button class="filter-field-btn" data-field="course" data-i18n="fCourse">Курс</button>
+          <button class="filter-field-btn" data-field="group_name" data-i18n="fGroup">Группа</button>
+          <button class="filter-field-btn" data-field="faculty" data-i18n="fFaculty">Факультет</button>
+          <button class="filter-field-btn" data-field="department" data-i18n="fDepartment">Кафедра</button>
+          <button class="filter-field-btn" data-field="subject" data-i18n="fSubject">Предмет</button>
+        </div>
         <div class="filter-btn-row">
           <button id="btn-reset-filters" class="btn-secondary" data-i18n="resetFilters">Сбросить</button>
         </div>
@@ -110,15 +115,17 @@
       <h2 data-i18n="newListingTitle">Новое объявление</h2>
 
       <div class="cat-tiles cat-tiles-2" id="post-cat-tiles">
+        <button class="cat-tile" data-category="study">
+          <span class="cat-tile-icon">🎓</span>
+          <span data-i18n="catStudySingle">Учебное</span>
+        </button>
         <button class="cat-tile" data-category="goods">
           <span class="cat-tile-icon">📦</span>
           <span data-i18n="catGoodsSingle">Товар</span>
         </button>
-        <button class="cat-tile" data-category="services">
-          <span class="cat-tile-icon">🛠️</span>
-          <span data-i18n="catServicesSingle">Услуга</span>
-        </button>
       </div>
+
+      <div id="post-subcat-row" class="subcat-row hidden"></div>
 
       <div id="post-form" class="form hidden">
         <label data-i18n="lfTitleLabel">Название</label>

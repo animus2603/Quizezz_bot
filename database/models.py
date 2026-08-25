@@ -88,8 +88,8 @@ class Order(Base):
 # ---------- Маркетплейс ----------
 
 class ListingCategory(str, enum.Enum):
-    goods = "goods"        # товары
-    services = "services"  # услуги
+    goods = "goods"  # товары — студенты продают что угодно
+    study = "study"  # учебное — Quizizz, СРС, рефераты, доклады, шпаргалки и т.д.
 
 
 class ListingStatus(str, enum.Enum):
@@ -105,6 +105,8 @@ class Listing(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     category: Mapped[ListingCategory] = mapped_column(Enum(ListingCategory))
+    # подкатегория — конкретный тип внутри "Учебное"/"Товары" (quizizz, referat, textbooks, ...)
+    subcategory: Mapped[str | None] = mapped_column(String(64), nullable=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[int | None] = mapped_column(Integer, nullable=True)

@@ -27,8 +27,9 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Например: нужно 90%+ правильных",
     cfSubmit: "Оформить заказ — 5000₸",
     catAll: "Все",
-    catGoods: "Товары", catServices: "Услуги",
-    catGoodsSingle: "Товар", catServicesSingle: "Услуга",
+    catGoods: "Товары", catStudy: "Учебное",
+    catGoodsSingle: "Товар", catStudySingle: "Учебное",
+    fSubcategory: "Тип", fSubcategoryPlaceholder: "Или впишите свой вариант",
     moreFilters: "🔍 Фильтры",
     resetFilters: "Сбросить фильтры",
     fCourse: "Курс", fGroup: "Группа", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Предмет",
@@ -103,8 +104,9 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Мысалы: 90%+ дұрыс керек",
     cfSubmit: "Тапсырыс беру — 5000₸",
     catAll: "Барлығы",
-    catGoods: "Тауарлар", catServices: "Қызметтер",
-    catGoodsSingle: "Тауар", catServicesSingle: "Қызмет",
+    catGoods: "Тауарлар", catStudy: "Оқу",
+    catGoodsSingle: "Тауар", catStudySingle: "Оқу",
+    fSubcategory: "Түрі", fSubcategoryPlaceholder: "Немесе өз нұсқаңызды жазыңыз",
     moreFilters: "🔍 Сүзгілер",
     resetFilters: "Сүзгілерді тазалау",
     fCourse: "Курс", fGroup: "Топ", fFaculty: "Факультет", fDepartment: "Кафедра", fSubject: "Пән",
@@ -179,8 +181,9 @@ const BASE_DICT = {
     cfCommentPlaceholder: "E.g.: need 90%+ correct",
     cfSubmit: "Place order — 5000₸",
     catAll: "All",
-    catGoods: "Goods", catServices: "Services",
-    catGoodsSingle: "Item", catServicesSingle: "Service",
+    catGoods: "Goods", catStudy: "Study",
+    catGoodsSingle: "Item", catStudySingle: "Study",
+    fSubcategory: "Type", fSubcategoryPlaceholder: "Or type your own",
     moreFilters: "🔍 Filters",
     resetFilters: "Reset filters",
     fCourse: "Course", fGroup: "Group", fFaculty: "Faculty", fDepartment: "Department", fSubject: "Subject",
@@ -255,8 +258,9 @@ const BASE_DICT = {
     cfCommentPlaceholder: "Mysal üçin: 90%+ dogry gerek",
     cfSubmit: "Sargyt bermek — 5000₸",
     catAll: "Ählisi",
-    catGoods: "Harytlar", catServices: "Hyzmatlar",
-    catGoodsSingle: "Harydy", catServicesSingle: "Hyzmat",
+    catGoods: "Harytlar", catStudy: "Okuw",
+    catGoodsSingle: "Harydy", catStudySingle: "Okuw",
+    fSubcategory: "Görnüşi", fSubcategoryPlaceholder: "Ýa-da öz wariantyňyzy ýazyň",
     moreFilters: "🔍 Filtrler",
     resetFilters: "Filtrleri arassalamak",
     fCourse: "Kurs", fGroup: "Topar", fFaculty: "Fakultet", fDepartment: "Kafedra", fSubject: "Dersi",
@@ -342,6 +346,7 @@ function applyTranslations() {
     el.classList.toggle("active", el.dataset.lang === currentLang);
   });
   renderFilterButtonLabels();
+  renderSubcategoryChips();
   renderBanner();
   loadCatalog();
   loadListings();
@@ -530,18 +535,30 @@ document.getElementById("cf-submit").addEventListener("click", async () => {
   }
 });
 
-// ---------- Категории: плитки + фильтры с автокомплитом ----------
+// ---------- Категории: пилюли + фильтры с автокомплитом ----------
 let selectedCategory = "";
-const filters = { course: "", group_name: "", faculty: "", department: "", subject: "" };
+const filters = { subcategory: "", course: "", group_name: "", faculty: "", department: "", subject: "" };
 
-document.querySelectorAll("#cat-tiles .cat-tile").forEach((tile) => {
-  tile.addEventListener("click", () => {
-    document.querySelectorAll("#cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
-    tile.classList.add("active");
-    selectedCategory = tile.dataset.category;
+const ACADEMIC_FIELDS = ["course", "group_name", "faculty", "department", "subject"];
+
+document.querySelectorAll("#cat-row .cat-pill[data-category]").forEach((pill) => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll("#cat-row .cat-pill[data-category]").forEach((b) => b.classList.remove("active"));
+    pill.classList.add("active");
+    selectedCategory = pill.dataset.category;
+    updateAcademicFieldsVisibility();
+    renderSubcategoryChips();
     loadListings();
   });
 });
+
+function updateAcademicFieldsVisibility() {
+  const show = selectedCategory !== "goods";
+  ACADEMIC_FIELDS.forEach((field) => {
+    const btn = document.querySelector(`.filter-field-btn[data-field="${field}"]`);
+    if (btn) btn.classList.toggle("hidden", !show);
+  });
+}
 
 document.getElementById("btn-toggle-filters").addEventListener("click", () => {
   document.getElementById("extra-filters").classList.toggle("hidden");
@@ -560,8 +577,26 @@ function renderFilterButtonLabels() {
 document.getElementById("btn-reset-filters").addEventListener("click", () => {
   Object.keys(filters).forEach((k) => (filters[k] = ""));
   renderFilterButtonLabels();
+  renderSubcategoryChips();
   loadListings();
 });
+
+// ---------- Чипы примеров подкатегорий ----------
+async function renderSubcategoryChips() {
+  const container = document.getElementById("subcategory-chips");
+  const options = await runSearch("subcategory", "");
+  container.innerHTML = options.map((opt) => `
+    <button class="chip ${filters.subcategory === opt ? "active" : ""}" data-value="${opt}">${opt}</button>
+  `).join("");
+  container.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      filters.subcategory = filters.subcategory === chip.dataset.value ? "" : chip.dataset.value;
+      renderFilterButtonLabels();
+      renderSubcategoryChips();
+      loadListings();
+    });
+  });
+}
 
 // ---------- Попап автокомплита ----------
 const searchOverlay = document.getElementById("search-overlay");
@@ -572,7 +607,9 @@ let searchDebounce = null;
 
 async function runSearch(field, query) {
   try {
-    const res = await fetch(`${API_BASE}/marketplace/filter-options/${field}?q=${encodeURIComponent(query)}`);
+    const params = new URLSearchParams({ q: query });
+    if (selectedCategory) params.set("category", selectedCategory);
+    const res = await fetch(`${API_BASE}/marketplace/filter-options/${field}?${params.toString()}`);
     const data = await res.json();
     return data.options || [];
   } catch (e) {
@@ -592,6 +629,7 @@ function renderSearchResults(options) {
     el.addEventListener("click", () => {
       filters[activeSearchField] = el.dataset.value;
       renderFilterButtonLabels();
+      if (activeSearchField === "subcategory") renderSubcategoryChips();
       searchOverlay.classList.add("hidden");
       loadListings();
     });
@@ -650,13 +688,38 @@ async function loadListings() {
 // ---------- Разместить: категория → показать форму, автоподстановка контакта ----------
 let postCategory = null;
 let selectedListingFile = null;
+let postSelectedSubcategory = "";
+
+async function renderPostSubcategoryChips() {
+  const container = document.getElementById("post-subcategory-chips");
+  const options = await runSearch("subcategory", "");
+  container.innerHTML = options.map((opt) => `
+    <button type="button" class="chip ${postSelectedSubcategory === opt ? "active" : ""}" data-value="${opt}">${opt}</button>
+  `).join("");
+  container.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      postSelectedSubcategory = postSelectedSubcategory === chip.dataset.value ? "" : chip.dataset.value;
+      document.getElementById("lf-subcategory").value = postSelectedSubcategory;
+      renderPostSubcategoryChips();
+    });
+  });
+}
 
 document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((tile) => {
-  tile.addEventListener("click", () => {
+  tile.addEventListener("click", async () => {
     document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
     tile.classList.add("active");
     postCategory = tile.dataset.category;
     document.getElementById("post-form").classList.remove("hidden");
+    document.getElementById("post-academic-fields").classList.toggle("hidden", postCategory === "goods");
+
+    postSelectedSubcategory = "";
+    document.getElementById("lf-subcategory").value = "";
+    // временно используем postCategory как контекст поиска примеров подкатегорий
+    const prevSelected = selectedCategory;
+    selectedCategory = postCategory;
+    await renderPostSubcategoryChips();
+    selectedCategory = prevSelected;
 
     const contactField = document.getElementById("lf-contact");
     if (!contactField.value && currentUser.username) {
@@ -673,6 +736,7 @@ document.getElementById("lf-file").addEventListener("change", (e) => {
 document.getElementById("lf-submit").addEventListener("click", async () => {
   if (!postCategory) return;
 
+  const subcategory = document.getElementById("lf-subcategory").value.trim();
   const title = document.getElementById("lf-title").value.trim();
   const description = document.getElementById("lf-description").value.trim();
   const price = document.getElementById("lf-price").value;
@@ -703,6 +767,7 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
       body: JSON.stringify({
         ...currentUser,
         category: postCategory, title,
+        subcategory: subcategory || null,
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
@@ -716,8 +781,10 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
     });
     if (!res.ok) throw new Error();
     showToast(t("listingSent"));
-    ["lf-title", "lf-description", "lf-price", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
+    ["lf-title", "lf-description", "lf-price", "lf-subcategory", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
       .forEach((id) => { document.getElementById(id).value = ""; });
+    postSelectedSubcategory = "";
+    renderPostSubcategoryChips();
     selectedListingFile = null;
     document.getElementById("lf-file-name").textContent = "";
     document.getElementById("lf-file").value = "";

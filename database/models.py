@@ -88,8 +88,8 @@ class Order(Base):
 # ---------- Маркетплейс ----------
 
 class ListingCategory(str, enum.Enum):
-    goods = "goods"        # товары
-    services = "services"  # услуги
+    study = "study"    # учебное: Quizizz, СРС, рефераты, доклады, шпаргалки и т.д.
+    goods = "goods"     # товары: всё, что угодно
 
 
 class ListingStatus(str, enum.Enum):
@@ -111,6 +111,7 @@ class Listing(Base):
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     attachment_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     contact: Mapped[str] = mapped_column(String(255))  # @username или ссылка
+    subcategory: Mapped[str | None] = mapped_column(String(64), nullable=True)  # Quizizz, СРС, Учебники и т.д.
 
     # академические фильтры — заполняются продавцом опционально
     course: Mapped[str | None] = mapped_column(String(64), nullable=True)

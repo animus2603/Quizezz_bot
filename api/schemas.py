@@ -114,6 +114,7 @@ class ListingOut(BaseModel):
     description: str | None
     price: int | None
     contact: str
+    subcategory: str | None = None
     course: str | None = None
     group_name: str | None = None
     faculty: str | None = None
@@ -129,13 +130,14 @@ class CreateListingIn(BaseModel):
     tg_id: int
     username: str | None = None
     full_name: str | None = None
-    category: str  # goods | services
+    category: str  # study | goods
     title: str
     description: str | None = None
     price: int | None = None
     contact: str
     photo_file_id: str | None = None
     attachment_url: str | None = None
+    subcategory: str | None = None
     course: str | None = None
     group_name: str | None = None
     faculty: str | None = None

@@ -369,7 +369,7 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   z-index: 30;
 }
 
-.toast.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* ===== ПЛИТКИ КАТЕГОРИЙ (3 в ряд / 2 в ряд) ===== */
 
@@ -525,4 +525,71 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   font-weight: 600;
   cursor: pointer;
   padding: 4px 0;
+}
+
+/* ===== РЯД КАТЕГОРИЙ + КНОПКА ФИЛЬТРА (одна строка) ===== */
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.cat-pill {
+  flex: 1;
+  border: none;
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 10px 6px;
+  border-radius: 999px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cat-pill.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.cat-pill-filter {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* ===== ЧИПЫ ПРИМЕРОВ ПОДКАТЕГОРИЙ ===== */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+.chip {
+  border: 1px solid #ddd;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }

@@ -138,6 +138,7 @@ async def create_listing(
     price: int | None,
     photo_file_id: str | None,
     contact: str,
+    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -154,6 +155,7 @@ async def create_listing(
         photo_file_id=photo_file_id,
         attachment_url=attachment_url,
         contact=contact,
+        subcategory=subcategory,
         course=course,
         group_name=group_name,
         faculty=faculty,
@@ -170,6 +172,7 @@ async def create_listing(
 async def get_approved_listings(
     session: AsyncSession,
     category: ListingCategory | None = None,
+    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -179,6 +182,8 @@ async def get_approved_listings(
     stmt = select(Listing).where(Listing.status == ListingStatus.approved)
     if category:
         stmt = stmt.where(Listing.category == category)
+    if subcategory:
+        stmt = stmt.where(Listing.subcategory == subcategory)
     if course:
         stmt = stmt.where(Listing.course == course)
     if group_name:
@@ -205,22 +210,56 @@ async def set_listing_status(session: AsyncSession, listing: Listing, status: Li
     return listing
 
 
-FILTERABLE_FIELDS = {"course", "group_name", "faculty", "department", "subject"}
+FILTERABLE_FIELDS = {"subcategory", "course", "group_name", "faculty", "department", "subject"}
+
+# Примеры подкатегорий — показываются в попапе фильтра/формы, даже если в БД
+# ещё нет ни одного объявления с таким значением.
+SUBCATEGORY_EXAMPLES = {
+    "study": [
+        "Quizizz", "СРС", "Реферат", "Доклад", "Шпаргалки", "Сканер",
+        "Курсовая работа", "Дипломная работа", "Презентация", "Конспект", "Лабораторная работа",
+    ],
+    "goods": [
+        "Учебники", "Электроника", "Одежда", "Мебель", "Канцелярия", "Спортивные товары", "Прочее",
+    ],
+}
 
 
-async def search_listing_filter_options(session: AsyncSession, field: str, query: str = "") -> list[str]:
-    """Автокомплит: уникальные непустые значения поля из опубликованных объявлений,
-    отфильтрованные по подстроке query (регистронезависимо)."""
+def get_subcategory_examples(category: str | None) -> list[str]:
+    if category in SUBCATEGORY_EXAMPLES:
+        return SUBCATEGORY_EXAMPLES[category]
+    # категория не выбрана ("Все") — отдаём объединённый список
+    return SUBCATEGORY_EXAMPLES["study"] + SUBCATEGORY_EXAMPLES["goods"]
+
+
+async def search_listing_filter_options(
+    session: AsyncSession, field: str, query: str = "", category: str | None = None
+) -> list[str]:
+    """Автокомплит: уникальные непустые значения поля из опубликованных объявлений
+    (с учётом выбранной категории), отфильтрованные по подстроке query.
+    Для поля subcategory дополнительно подмешиваются готовые примеры."""
     if field not in FILTERABLE_FIELDS:
         return []
+
     column = getattr(Listing, field)
-    stmt = (
-        select(column)
-        .where(Listing.status == ListingStatus.approved, column.is_not(None), column != "")
-        .distinct()
-    )
+    stmt = select(column).where(Listing.status == ListingStatus.approved, column.is_not(None), column != "")
+    if category:
+        stmt = stmt.where(Listing.category == category)
+    stmt = stmt.distinct()
     if query:
         stmt = stmt.where(column.ilike(f"%{query}%"))
     stmt = stmt.limit(20)
     result = await session.execute(stmt)
-    return [row[0] for row in result.all() if row[0]]
+    db_values = [row[0] for row in result.all() if row[0]]
+
+    if field != "subcategory":
+        return db_values
+
+    examples = get_subcategory_examples(category)
+    if query:
+        q_lower = query.lower()
+        examples = [e for e in examples if q_lower in e.lower()]
+
+    # объединяем, сохраняя порядок и убирая дубликаты
+    combined = list(dict.fromkeys(examples + db_values))
+    return combined[:20]

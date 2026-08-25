@@ -13,6 +13,7 @@ router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 @router.get("/listings", response_model=list[ListingOut])
 async def list_listings(
     category: str | None = None,
+    subcategory: str | None = None,
     course: str | None = None,
     group_name: str | None = None,
     faculty: str | None = None,
@@ -22,14 +23,17 @@ async def list_listings(
 ):
     cat = ListingCategory(category) if category else None
     return await crud.get_approved_listings(
-        session, cat, course, group_name, faculty, department, subject
+        session, cat, subcategory, course, group_name, faculty, department, subject
     )
 
 
 @router.get("/filter-options/{field}", response_model=FilterOptionsOut)
-async def filter_options(field: str, q: str = "", session: AsyncSession = Depends(get_session)):
-    """Автокомплит для попапа фильтра: уникальные значения поля, отфильтрованные по q."""
-    options = await crud.search_listing_filter_options(session, field, q)
+async def filter_options(
+    field: str, q: str = "", category: str | None = None, session: AsyncSession = Depends(get_session)
+):
+    """Автокомплит для попапа фильтра: значения поля (+ примеры для subcategory),
+    с учётом выбранной категории (Учебное/Товары) и подстроки q."""
+    options = await crud.search_listing_filter_options(session, field, q, category)
     return FilterOptionsOut(options=options)
 
 
@@ -50,6 +54,7 @@ async def create_listing(data: CreateListingIn, session: AsyncSession = Depends(
         price=data.price,
         photo_file_id=data.photo_file_id,
         contact=data.contact,
+        subcategory=data.subcategory,
         course=data.course,
         group_name=data.group_name,
         faculty=data.faculty,

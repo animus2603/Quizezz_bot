@@ -72,26 +72,23 @@
 
     <!-- ===== КАТЕГОРИИ (маркетплейс) ===== -->
     <section id="tab-categories" class="tab-content">
-      <div class="cat-tiles" id="cat-tiles">
-        <button class="cat-tile active" data-category="">
-          <span class="cat-tile-icon">🗂️</span>
+      <div class="cat-row" id="cat-row">
+        <button class="cat-pill active" data-category="">
           <span data-i18n="catAll">Все</span>
         </button>
-        <button class="cat-tile" data-category="goods">
-          <span class="cat-tile-icon">📦</span>
+        <button class="cat-pill" data-category="study">
+          <span data-i18n="catStudy">Учебное</span>
+        </button>
+        <button class="cat-pill" data-category="goods">
           <span data-i18n="catGoods">Товары</span>
         </button>
-        <button class="cat-tile" data-category="services">
-          <span class="cat-tile-icon">🛠️</span>
-          <span data-i18n="catServices">Услуги</span>
-        </button>
-      </div>
-
-      <div class="filter-row">
-        <button id="btn-toggle-filters" class="btn-secondary full-width" data-i18n="moreFilters">🔍 Фильтры</button>
+        <button id="btn-toggle-filters" class="cat-pill cat-pill-filter" title="Фильтры" type="button">🔍</button>
       </div>
 
       <div id="extra-filters" class="form hidden">
+        <button class="filter-field-btn" data-field="subcategory" data-i18n="fSubcategory">Тип</button>
+        <div id="subcategory-chips" class="chip-row"></div>
+
         <button class="filter-field-btn" data-field="course" data-i18n="fCourse">Курс</button>
         <button class="filter-field-btn" data-field="group_name" data-i18n="fGroup">Группа</button>
         <button class="filter-field-btn" data-field="faculty" data-i18n="fFaculty">Факультет</button>
@@ -110,17 +107,21 @@
       <h2 data-i18n="newListingTitle">Новое объявление</h2>
 
       <div class="cat-tiles cat-tiles-2" id="post-cat-tiles">
+        <button class="cat-tile" data-category="study">
+          <span class="cat-tile-icon">📚</span>
+          <span data-i18n="catStudySingle">Учебное</span>
+        </button>
         <button class="cat-tile" data-category="goods">
           <span class="cat-tile-icon">📦</span>
           <span data-i18n="catGoodsSingle">Товар</span>
         </button>
-        <button class="cat-tile" data-category="services">
-          <span class="cat-tile-icon">🛠️</span>
-          <span data-i18n="catServicesSingle">Услуга</span>
-        </button>
       </div>
 
       <div id="post-form" class="form hidden">
+        <label data-i18n="fSubcategory">Тип</label>
+        <div id="post-subcategory-chips" class="chip-row"></div>
+        <input id="lf-subcategory" type="text" data-i18n-placeholder="fSubcategoryPlaceholder" placeholder="Или впишите свой вариант">
+
         <label data-i18n="lfTitleLabel">Название</label>
         <input id="lf-title" type="text" data-i18n-placeholder="lfTitlePlaceholder" placeholder="Например: Учебник по матанализу">
 
@@ -137,28 +138,30 @@
         <input id="lf-file" type="file">
         <div id="lf-file-name" class="file-name"></div>
 
-        <div class="form-row-2">
-          <div>
-            <label data-i18n="fCourse">Курс</label>
-            <input id="lf-course" type="text">
+        <div id="post-academic-fields">
+          <div class="form-row-2">
+            <div>
+              <label data-i18n="fCourse">Курс</label>
+              <input id="lf-course" type="text">
+            </div>
+            <div>
+              <label data-i18n="fGroup">Группа</label>
+              <input id="lf-group" type="text">
+            </div>
           </div>
-          <div>
-            <label data-i18n="fGroup">Группа</label>
-            <input id="lf-group" type="text">
+          <div class="form-row-2">
+            <div>
+              <label data-i18n="fFaculty">Факультет</label>
+              <input id="lf-faculty" type="text">
+            </div>
+            <div>
+              <label data-i18n="fDepartment">Кафедра</label>
+              <input id="lf-department" type="text">
+            </div>
           </div>
+          <label data-i18n="fSubject">Предмет</label>
+          <input id="lf-subject" type="text">
         </div>
-        <div class="form-row-2">
-          <div>
-            <label data-i18n="fFaculty">Факультет</label>
-            <input id="lf-faculty" type="text">
-          </div>
-          <div>
-            <label data-i18n="fDepartment">Кафедра</label>
-            <input id="lf-department" type="text">
-          </div>
-        </div>
-        <label data-i18n="fSubject">Предмет</label>
-        <input id="lf-subject" type="text">
 
         <button id="lf-submit" class="btn-primary" data-i18n="lfSubmit">Отправить на модерацию</button>
       </div>

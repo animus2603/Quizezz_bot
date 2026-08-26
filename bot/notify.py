@@ -110,6 +110,19 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
         pass
 
 
+async def notify_client_listing_submitted(listing: Listing, user: User) -> None:
+    """Клиенту сразу после отправки объявления — подтверждение, что оно ушло на модерацию."""
+    text = (
+        f"📤 <b>Объявление отправлено на модерацию</b>\n"
+        f"{listing.title}\n"
+        f"Как только администратор проверит — вам придёт уведомление."
+    )
+    try:
+        await bot.send_message(user.tg_id, text)
+    except TelegramAPIError:
+        pass
+
+
 def kaspi_requisites_text(amount: int) -> str:
     return (
         f"Переведите <b>{amount}₸</b> на Kaspi:\n"

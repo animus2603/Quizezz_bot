@@ -43,6 +43,7 @@ const BASE_DICT = {
     lfPriceLabel: "Цена (₸, необязательно)",
     lfContactLabel: "Контакт",
     lfFileLabel: "Файл/фото (по желанию)",
+    contactAutoHint: "Подставляется автоматически из вашего Telegram-профиля",
     lfSubmit: "Отправить на модерацию",
     myOrdersTitle: "Мои заказы",
     myListingsTitle: "Мои объявления",
@@ -120,6 +121,7 @@ const BASE_DICT = {
     lfPriceLabel: "Бағасы (₸, міндетті емес)",
     lfContactLabel: "Байланыс",
     lfFileLabel: "Файл/фото (қаласаңыз)",
+    contactAutoHint: "Telegram профиліңізден автоматты түрде қойылады",
     lfSubmit: "Модерацияға жіберу",
     myOrdersTitle: "Менің тапсырыстарым",
     myListingsTitle: "Менің хабарландыруларым",
@@ -197,6 +199,7 @@ const BASE_DICT = {
     lfPriceLabel: "Price (₸, optional)",
     lfContactLabel: "Contact",
     lfFileLabel: "File/photo (optional)",
+    contactAutoHint: "Filled in automatically from your Telegram profile",
     lfSubmit: "Send for moderation",
     myOrdersTitle: "My orders",
     myListingsTitle: "My listings",
@@ -274,6 +277,7 @@ const BASE_DICT = {
     lfPriceLabel: "Bahasy (₸, hökman däl)",
     lfContactLabel: "Habarlaşmak",
     lfFileLabel: "Faýl/surat (islege görä)",
+    contactAutoHint: "Telegram profiliňizden awtomatiki goýulýar",
     lfSubmit: "Barlaga ibermek",
     myOrdersTitle: "Meniň sargytlarym",
     myListingsTitle: "Meniň bildirişlerim",
@@ -347,6 +351,7 @@ function applyTranslations() {
   });
   renderFilterButtonLabels();
   renderSubcategoryChips();
+  renderPostFieldLabels();
   renderBanner();
   loadCatalog();
   loadListings();
@@ -598,17 +603,19 @@ async function renderSubcategoryChips() {
   });
 }
 
-// ---------- Попап автокомплита ----------
+// ---------- Попап автокомплита (два режима: фильтр категорий и форма «Разместить») ----------
 const searchOverlay = document.getElementById("search-overlay");
 const searchInput = document.getElementById("search-input");
 const searchResults = document.getElementById("search-results");
 let activeSearchField = null;
+let activeSearchMode = "filter"; // "filter" | "post"
 let searchDebounce = null;
 
-async function runSearch(field, query) {
+async function runSearch(field, query, categoryOverride) {
   try {
     const params = new URLSearchParams({ q: query });
-    if (selectedCategory) params.set("category", selectedCategory);
+    const cat = categoryOverride !== undefined ? categoryOverride : selectedCategory;
+    if (cat) params.set("category", cat);
     const res = await fetch(`${API_BASE}/marketplace/filter-options/${field}?${params.toString()}`);
     const data = await res.json();
     return data.options || [];
@@ -627,17 +634,23 @@ function renderSearchResults(options) {
   `).join("");
   searchResults.querySelectorAll(".search-result-item").forEach((el) => {
     el.addEventListener("click", () => {
-      filters[activeSearchField] = el.dataset.value;
-      renderFilterButtonLabels();
-      if (activeSearchField === "subcategory") renderSubcategoryChips();
+      if (activeSearchMode === "filter") {
+        filters[activeSearchField] = el.dataset.value;
+        renderFilterButtonLabels();
+        if (activeSearchField === "subcategory") renderSubcategoryChips();
+        loadListings();
+      } else {
+        postFields[activeSearchField] = el.dataset.value;
+        renderPostFieldLabels();
+      }
       searchOverlay.classList.add("hidden");
-      loadListings();
     });
   });
 }
 
-document.querySelectorAll(".filter-field-btn").forEach((btn) => {
+document.querySelectorAll(".filter-field-btn[data-field]").forEach((btn) => {
   btn.addEventListener("click", async () => {
+    activeSearchMode = "filter";
     activeSearchField = btn.dataset.field;
     searchInput.value = "";
     searchOverlay.classList.remove("hidden");
@@ -646,11 +659,24 @@ document.querySelectorAll(".filter-field-btn").forEach((btn) => {
   });
 });
 
+document.querySelectorAll(".filter-field-btn[data-post-field]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    if (!postCategory) return;
+    activeSearchMode = "post";
+    activeSearchField = btn.dataset.postField;
+    searchInput.value = "";
+    searchOverlay.classList.remove("hidden");
+    searchInput.focus();
+    renderSearchResults(await runSearch(activeSearchField, "", postCategory));
+  });
+});
+
 searchInput.addEventListener("input", () => {
   clearTimeout(searchDebounce);
   const query = searchInput.value.trim();
   searchDebounce = setTimeout(async () => {
-    renderSearchResults(await runSearch(activeSearchField, query));
+    const cat = activeSearchMode === "post" ? postCategory : undefined;
+    renderSearchResults(await runSearch(activeSearchField, query, cat));
   }, 250);
 });
 
@@ -688,43 +714,39 @@ async function loadListings() {
 // ---------- Разместить: категория → показать форму, автоподстановка контакта ----------
 let postCategory = null;
 let selectedListingFile = null;
-let postSelectedSubcategory = "";
+const postFields = { subcategory: "", course: "", group_name: "", faculty: "", department: "", subject: "" };
 
-async function renderPostSubcategoryChips() {
-  const container = document.getElementById("post-subcategory-chips");
-  const options = await runSearch("subcategory", "");
-  container.innerHTML = options.map((opt) => `
-    <button type="button" class="chip ${postSelectedSubcategory === opt ? "active" : ""}" data-value="${opt}">${opt}</button>
-  `).join("");
-  container.querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      postSelectedSubcategory = postSelectedSubcategory === chip.dataset.value ? "" : chip.dataset.value;
-      document.getElementById("lf-subcategory").value = postSelectedSubcategory;
-      renderPostSubcategoryChips();
-    });
+const POST_FIELD_LABEL_KEYS = {
+  subcategory: "fSubcategory", course: "fCourse", group_name: "fGroup",
+  faculty: "fFaculty", department: "fDepartment", subject: "fSubject",
+};
+
+function renderPostFieldLabels() {
+  document.querySelectorAll(".filter-field-btn[data-post-field]").forEach((btn) => {
+    const field = btn.dataset.postField;
+    const value = postFields[field];
+    const label = t(POST_FIELD_LABEL_KEYS[field]) || field;
+    btn.textContent = value ? `${label}: ${value}` : label;
+    btn.classList.toggle("has-value", !!value);
   });
 }
 
-document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((tile) => {
-  tile.addEventListener("click", async () => {
-    document.querySelectorAll("#post-cat-tiles .cat-tile").forEach((b) => b.classList.remove("active"));
-    tile.classList.add("active");
-    postCategory = tile.dataset.category;
+function fillContactField() {
+  const contactField = document.getElementById("lf-contact");
+  contactField.value = currentUser.username ? "@" + currentUser.username : (currentUser.full_name || "—");
+}
+
+document.querySelectorAll("#post-cat-tiles .cat-pill").forEach((pill) => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll("#post-cat-tiles .cat-pill").forEach((b) => b.classList.remove("active"));
+    pill.classList.add("active");
+    postCategory = pill.dataset.category;
     document.getElementById("post-form").classList.remove("hidden");
     document.getElementById("post-academic-fields").classList.toggle("hidden", postCategory === "goods");
 
-    postSelectedSubcategory = "";
-    document.getElementById("lf-subcategory").value = "";
-    // временно используем postCategory как контекст поиска примеров подкатегорий
-    const prevSelected = selectedCategory;
-    selectedCategory = postCategory;
-    await renderPostSubcategoryChips();
-    selectedCategory = prevSelected;
-
-    const contactField = document.getElementById("lf-contact");
-    if (!contactField.value && currentUser.username) {
-      contactField.value = "@" + currentUser.username;
-    }
+    Object.keys(postFields).forEach((k) => (postFields[k] = ""));
+    renderPostFieldLabels();
+    fillContactField();
   });
 });
 
@@ -736,16 +758,10 @@ document.getElementById("lf-file").addEventListener("change", (e) => {
 document.getElementById("lf-submit").addEventListener("click", async () => {
   if (!postCategory) return;
 
-  const subcategory = document.getElementById("lf-subcategory").value.trim();
   const title = document.getElementById("lf-title").value.trim();
   const description = document.getElementById("lf-description").value.trim();
   const price = document.getElementById("lf-price").value;
   const contact = document.getElementById("lf-contact").value.trim();
-  const course = document.getElementById("lf-course").value.trim();
-  const group_name = document.getElementById("lf-group").value.trim();
-  const faculty = document.getElementById("lf-faculty").value.trim();
-  const department = document.getElementById("lf-department").value.trim();
-  const subject = document.getElementById("lf-subject").value.trim();
 
   if (!title || !contact) { showToast(t("errFields")); return; }
 
@@ -767,24 +783,23 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
       body: JSON.stringify({
         ...currentUser,
         category: postCategory, title,
-        subcategory: subcategory || null,
+        subcategory: postFields.subcategory || null,
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
         attachment_url: attachmentUrl,
-        course: course || null,
-        group_name: group_name || null,
-        faculty: faculty || null,
-        department: department || null,
-        subject: subject || null,
+        course: postFields.course || null,
+        group_name: postFields.group_name || null,
+        faculty: postFields.faculty || null,
+        department: postFields.department || null,
+        subject: postFields.subject || null,
       }),
     });
     if (!res.ok) throw new Error();
     showToast(t("listingSent"));
-    ["lf-title", "lf-description", "lf-price", "lf-subcategory", "lf-course", "lf-group", "lf-faculty", "lf-department", "lf-subject"]
-      .forEach((id) => { document.getElementById(id).value = ""; });
-    postSelectedSubcategory = "";
-    renderPostSubcategoryChips();
+    ["lf-title", "lf-description", "lf-price"].forEach((id) => { document.getElementById(id).value = ""; });
+    Object.keys(postFields).forEach((k) => (postFields[k] = ""));
+    renderPostFieldLabels();
     selectedListingFile = null;
     document.getElementById("lf-file-name").textContent = "";
     document.getElementById("lf-file").value = "";

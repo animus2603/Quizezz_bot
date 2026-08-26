@@ -204,6 +204,12 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   width: 100%;
 }
 
+.form input[readonly] {
+  background: var(--secondary-bg);
+  color: var(--hint);
+  cursor: not-allowed;
+}
+
 .form-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;

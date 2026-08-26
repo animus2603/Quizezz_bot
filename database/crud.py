@@ -218,11 +218,17 @@ SUBCATEGORY_EXAMPLES = {
     "study": [
         "Quizizz", "СРС", "Реферат", "Доклад", "Шпаргалки", "Сканер",
         "Курсовая работа", "Дипломная работа", "Презентация", "Конспект", "Лабораторная работа",
+        "Прочее",
     ],
     "goods": [
         "Учебники", "Электроника", "Одежда", "Мебель", "Канцелярия", "Спортивные товары", "Прочее",
     ],
 }
+
+# Базовые примеры курса — чтобы форма не была пустой при первом объявлении.
+COURSE_EXAMPLES = ["1", "2", "3", "4", "5", "6"]
+
+FALLBACK_OTHER = "Прочее"
 
 
 def get_subcategory_examples(category: str | None) -> list[str]:
@@ -237,7 +243,9 @@ async def search_listing_filter_options(
 ) -> list[str]:
     """Автокомплит: уникальные непустые значения поля из опубликованных объявлений
     (с учётом выбранной категории), отфильтрованные по подстроке query.
-    Для поля subcategory дополнительно подмешиваются готовые примеры."""
+    Для subcategory и course подмешиваются готовые примеры; для всех select-полей
+    гарантированно доступен вариант «Прочее» — так поле всегда можно выбрать,
+    даже если в БД ещё нет ни одного значения."""
     if field not in FILTERABLE_FIELDS:
         return []
 
@@ -252,14 +260,20 @@ async def search_listing_filter_options(
     result = await session.execute(stmt)
     db_values = [row[0] for row in result.all() if row[0]]
 
-    if field != "subcategory":
-        return db_values
+    examples: list[str] = []
+    if field == "subcategory":
+        examples = get_subcategory_examples(category)
+    elif field == "course":
+        examples = COURSE_EXAMPLES
 
-    examples = get_subcategory_examples(category)
     if query:
         q_lower = query.lower()
         examples = [e for e in examples if q_lower in e.lower()]
 
-    # объединяем, сохраняя порядок и убирая дубликаты
     combined = list(dict.fromkeys(examples + db_values))
+
+    if not query or FALLBACK_OTHER.lower().startswith(query.lower()):
+        if FALLBACK_OTHER not in combined:
+            combined.append(FALLBACK_OTHER)
+
     return combined[:20]

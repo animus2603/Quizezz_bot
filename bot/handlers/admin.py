@@ -34,6 +34,19 @@ async def _mark_message(call: CallbackQuery, suffix: str) -> None:
         pass  # сообщение могло уже поменяться — не критично
 
 
+async def _remove_processed_message(call: CallbackQuery) -> None:
+    """После решения админа (подтвердить/отклонить) убираем сообщение с кнопками,
+    чтобы по нему нельзя было нажать повторно. Если удалить нельзя (например,
+    прошло больше 48 часов) — хотя бы снимаем инлайн-кнопки."""
+    try:
+        await call.message.delete()
+    except Exception:
+        try:
+            await call.message.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+
+
 # ---------- Оплата заказов Quizizz ----------
 
 @router.callback_query(F.data.startswith("order_confirm:"))
@@ -177,7 +190,7 @@ async def approve_listing(call: CallbackQuery):
         user = user_result.scalar_one()
         await call.bot.send_message(user.tg_id, f"✅ Ваше объявление «{listing.title}» опубликовано!")
 
-    await _mark_message(call, "\n\n✅ ОПУБЛИКОВАНО")
+    await _remove_processed_message(call)
     await call.answer("Опубликовано")
 
 
@@ -195,5 +208,5 @@ async def reject_listing(call: CallbackQuery):
         user = user_result.scalar_one()
         await call.bot.send_message(user.tg_id, f"❌ Ваше объявление «{listing.title}» отклонено модератором.")
 
-    await _mark_message(call, "\n\n❌ ОТКЛОНЕНО")
+    await _remove_processed_message(call)
     await call.answer("Отклонено")

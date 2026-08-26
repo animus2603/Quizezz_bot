@@ -5,7 +5,7 @@ from database.engine import get_session
 from database import crud
 from database.models import ListingCategory
 from api.schemas import ListingOut, CreateListingIn, FilterOptionsOut
-from bot.notify import notify_admin_new_listing
+from bot.notify import notify_admin_new_listing, notify_client_listing_submitted
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
@@ -63,4 +63,5 @@ async def create_listing(data: CreateListingIn, session: AsyncSession = Depends(
         attachment_url=data.attachment_url,
     )
     await notify_admin_new_listing(listing, user)
+    await notify_client_listing_submitted(listing, user)
     return listing

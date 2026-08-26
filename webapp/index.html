@@ -106,21 +106,17 @@
     <section id="tab-post" class="tab-content">
       <h2 data-i18n="newListingTitle">Новое объявление</h2>
 
-      <div class="cat-tiles cat-tiles-2" id="post-cat-tiles">
-        <button class="cat-tile" data-category="study">
-          <span class="cat-tile-icon">📚</span>
+      <div class="cat-row" id="post-cat-tiles">
+        <button class="cat-pill" data-category="study">
           <span data-i18n="catStudySingle">Учебное</span>
         </button>
-        <button class="cat-tile" data-category="goods">
-          <span class="cat-tile-icon">📦</span>
+        <button class="cat-pill" data-category="goods">
           <span data-i18n="catGoodsSingle">Товар</span>
         </button>
       </div>
 
       <div id="post-form" class="form hidden">
-        <label data-i18n="fSubcategory">Тип</label>
-        <div id="post-subcategory-chips" class="chip-row"></div>
-        <input id="lf-subcategory" type="text" data-i18n-placeholder="fSubcategoryPlaceholder" placeholder="Или впишите свой вариант">
+        <button class="filter-field-btn" data-post-field="subcategory" data-i18n="fSubcategory">Тип</button>
 
         <label data-i18n="lfTitleLabel">Название</label>
         <input id="lf-title" type="text" data-i18n-placeholder="lfTitlePlaceholder" placeholder="Например: Учебник по матанализу">
@@ -132,35 +128,19 @@
         <input id="lf-price" type="number" placeholder="5000">
 
         <label data-i18n="lfContactLabel">Контакт</label>
-        <input id="lf-contact" type="text" placeholder="@your_username">
+        <input id="lf-contact" type="text" readonly>
+        <div class="hint" data-i18n="contactAutoHint">Подставляется автоматически из вашего Telegram-профиля</div>
 
         <label data-i18n="lfFileLabel">Файл/фото (по желанию)</label>
         <input id="lf-file" type="file">
         <div id="lf-file-name" class="file-name"></div>
 
         <div id="post-academic-fields">
-          <div class="form-row-2">
-            <div>
-              <label data-i18n="fCourse">Курс</label>
-              <input id="lf-course" type="text">
-            </div>
-            <div>
-              <label data-i18n="fGroup">Группа</label>
-              <input id="lf-group" type="text">
-            </div>
-          </div>
-          <div class="form-row-2">
-            <div>
-              <label data-i18n="fFaculty">Факультет</label>
-              <input id="lf-faculty" type="text">
-            </div>
-            <div>
-              <label data-i18n="fDepartment">Кафедра</label>
-              <input id="lf-department" type="text">
-            </div>
-          </div>
-          <label data-i18n="fSubject">Предмет</label>
-          <input id="lf-subject" type="text">
+          <button class="filter-field-btn" data-post-field="course" data-i18n="fCourse">Курс</button>
+          <button class="filter-field-btn" data-post-field="group_name" data-i18n="fGroup">Группа</button>
+          <button class="filter-field-btn" data-post-field="faculty" data-i18n="fFaculty">Факультет</button>
+          <button class="filter-field-btn" data-post-field="department" data-i18n="fDepartment">Кафедра</button>
+          <button class="filter-field-btn" data-post-field="subject" data-i18n="fSubject">Предмет</button>
         </div>
 
         <button id="lf-submit" class="btn-primary" data-i18n="lfSubmit">Отправить на модерацию</button>

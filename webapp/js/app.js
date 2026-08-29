@@ -44,6 +44,7 @@ const BASE_DICT = {
     lfContactLabel: "Контакт",
     lfFileLabel: "Файл/фото (по желанию)",
     contactAutoHint: "Подставляется автоматически из вашего Telegram-профиля",
+    fillPreviousField: (label) => `Сначала выберите: ${label}`,
     lfSubmit: "Отправить на модерацию",
     myOrdersTitle: "Мои заказы",
     myListingsTitle: "Мои объявления",
@@ -75,7 +76,7 @@ const BASE_DICT = {
     orderType_custom_quiz: "Индивидуальный тест",
     status_awaiting_payment: "Ждёт оплаты",
     status_payment_review: "Чек на проверке",
-    status_in_progress: "В работе",
+    status_in_progress: "Принято",
     status_done: "Готово",
     status_sent: "Отправлено",
     status_rejected: "Отклонено",
@@ -122,6 +123,7 @@ const BASE_DICT = {
     lfContactLabel: "Байланыс",
     lfFileLabel: "Файл/фото (қаласаңыз)",
     contactAutoHint: "Telegram профиліңізден автоматты түрде қойылады",
+    fillPreviousField: (label) => `Алдымен таңдаңыз: ${label}`,
     lfSubmit: "Модерацияға жіберу",
     myOrdersTitle: "Менің тапсырыстарым",
     myListingsTitle: "Менің хабарландыруларым",
@@ -153,7 +155,7 @@ const BASE_DICT = {
     orderType_custom_quiz: "Жеке тест",
     status_awaiting_payment: "Төлемді күтуде",
     status_payment_review: "Чек тексерілуде",
-    status_in_progress: "Жұмыста",
+    status_in_progress: "Қабылданды",
     status_done: "Дайын",
     status_sent: "Жіберілді",
     status_rejected: "Қабылданбады",
@@ -200,6 +202,7 @@ const BASE_DICT = {
     lfContactLabel: "Contact",
     lfFileLabel: "File/photo (optional)",
     contactAutoHint: "Filled in automatically from your Telegram profile",
+    fillPreviousField: (label) => `Please select first: ${label}`,
     lfSubmit: "Send for moderation",
     myOrdersTitle: "My orders",
     myListingsTitle: "My listings",
@@ -231,7 +234,7 @@ const BASE_DICT = {
     orderType_custom_quiz: "Custom quiz",
     status_awaiting_payment: "Awaiting payment",
     status_payment_review: "Receipt under review",
-    status_in_progress: "In progress",
+    status_in_progress: "Accepted",
     status_done: "Done",
     status_sent: "Sent",
     status_rejected: "Rejected",
@@ -278,6 +281,7 @@ const BASE_DICT = {
     lfContactLabel: "Habarlaşmak",
     lfFileLabel: "Faýl/surat (islege görä)",
     contactAutoHint: "Telegram profiliňizden awtomatiki goýulýar",
+    fillPreviousField: (label) => `Ilki saýlaň: ${label}`,
     lfSubmit: "Barlaga ibermek",
     myOrdersTitle: "Meniň sargytlarym",
     myListingsTitle: "Meniň bildirişlerim",
@@ -309,7 +313,7 @@ const BASE_DICT = {
     orderType_custom_quiz: "Şahsy test",
     status_awaiting_payment: "Töleg garaşylýar",
     status_payment_review: "Çek barlanýar",
-    status_in_progress: "Işlenýär",
+    status_in_progress: "Kabul edildi",
     status_done: "Taýýar",
     status_sent: "Iberildi",
     status_rejected: "Ret edildi",
@@ -611,11 +615,14 @@ let activeSearchField = null;
 let activeSearchMode = "filter"; // "filter" | "post"
 let searchDebounce = null;
 
-async function runSearch(field, query, categoryOverride) {
+async function runSearch(field, query, categoryOverride, cascadeParams) {
   try {
     const params = new URLSearchParams({ q: query });
     const cat = categoryOverride !== undefined ? categoryOverride : selectedCategory;
     if (cat) params.set("category", cat);
+    if (cascadeParams) {
+      Object.entries(cascadeParams).forEach(([k, v]) => { if (v) params.set(k, v); });
+    }
     const res = await fetch(`${API_BASE}/marketplace/filter-options/${field}?${params.toString()}`);
     const data = await res.json();
     return data.options || [];
@@ -641,6 +648,7 @@ function renderSearchResults(options) {
         loadListings();
       } else {
         postFields[activeSearchField] = el.dataset.value;
+        resetDownstreamFields(activeSearchField);
         renderPostFieldLabels();
       }
       searchOverlay.classList.add("hidden");
@@ -662,12 +670,24 @@ document.querySelectorAll(".filter-field-btn[data-field]").forEach((btn) => {
 document.querySelectorAll(".filter-field-btn[data-post-field]").forEach((btn) => {
   btn.addEventListener("click", async () => {
     if (!postCategory) return;
+    if (btn.classList.contains("disabled")) {
+      const idx = CASCADE_ORDER.indexOf(btn.dataset.postField);
+      const prevField = idx > 0 ? CASCADE_ORDER[idx - 1] : null;
+      const prevLabel = prevField ? t(POST_FIELD_LABEL_KEYS[prevField]) : "";
+      showToast(t("fillPreviousField")(prevLabel));
+      return;
+    }
     activeSearchMode = "post";
     activeSearchField = btn.dataset.postField;
     searchInput.value = "";
     searchOverlay.classList.remove("hidden");
     searchInput.focus();
-    renderSearchResults(await runSearch(activeSearchField, "", postCategory));
+    renderSearchResults(await runSearch(activeSearchField, "", postCategory, {
+      faculty: postFields.faculty,
+      department: postFields.department,
+      course: postFields.course,
+      group_name: postFields.group_name,
+    }));
   });
 });
 
@@ -721,6 +741,10 @@ const POST_FIELD_LABEL_KEYS = {
   faculty: "fFaculty", department: "fDepartment", subject: "fSubject",
 };
 
+// Цепочка зависимости: каждое следующее поле требует, чтобы предыдущее было заполнено,
+// и его варианты сужаются по уже выбранным значениям слева.
+const CASCADE_ORDER = ["faculty", "department", "course", "group_name", "subject"];
+
 function renderPostFieldLabels() {
   document.querySelectorAll(".filter-field-btn[data-post-field]").forEach((btn) => {
     const field = btn.dataset.postField;
@@ -728,7 +752,17 @@ function renderPostFieldLabels() {
     const label = t(POST_FIELD_LABEL_KEYS[field]) || field;
     btn.textContent = value ? `${label}: ${value}` : label;
     btn.classList.toggle("has-value", !!value);
+
+    const idx = CASCADE_ORDER.indexOf(field);
+    const isGated = idx > 0 && !postFields[CASCADE_ORDER[idx - 1]];
+    btn.classList.toggle("disabled", isGated);
   });
+}
+
+function resetDownstreamFields(field) {
+  const idx = CASCADE_ORDER.indexOf(field);
+  if (idx === -1) return;
+  CASCADE_ORDER.slice(idx + 1).forEach((f) => { postFields[f] = ""; });
 }
 
 function fillContactField() {

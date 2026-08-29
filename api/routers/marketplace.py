@@ -29,11 +29,20 @@ async def list_listings(
 
 @router.get("/filter-options/{field}", response_model=FilterOptionsOut)
 async def filter_options(
-    field: str, q: str = "", category: str | None = None, session: AsyncSession = Depends(get_session)
+    field: str,
+    q: str = "",
+    category: str | None = None,
+    faculty: str | None = None,
+    department: str | None = None,
+    course: str | None = None,
+    group_name: str | None = None,
+    session: AsyncSession = Depends(get_session),
 ):
-    """Автокомплит для попапа фильтра: значения поля (+ примеры для subcategory),
-    с учётом выбранной категории (Учебное/Товары) и подстроки q."""
-    options = await crud.search_listing_filter_options(session, field, q, category)
+    """Автокомплит для попапа фильтра/формы: значения поля (+ примеры), с учётом
+    выбранной категории и каскадной зависимости факультет → кафедра → курс → группа → предмет."""
+    options = await crud.search_listing_filter_options(
+        session, field, q, category, faculty, department, course, group_name
+    )
     return FilterOptionsOut(options=options)
 
 

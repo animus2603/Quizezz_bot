@@ -225,10 +225,14 @@ SUBCATEGORY_EXAMPLES = {
     ],
 }
 
-# Базовые примеры курса — чтобы форма не была пустой при первом объявлении.
-COURSE_EXAMPLES = ["1", "2", "3", "4", "5", "6"]
+# Базовые примеры курса — чтобы форма не была пустой при первом объявлении. Максимум 4.
+COURSE_EXAMPLES = ["1", "2", "3", "4"]
 
 FALLBACK_OTHER = "Прочее"
+
+# Порядок зависимости для каскадных полей: каждое следующее поле сужается
+# по значениям всех предыдущих (факультет → кафедра → курс → группа → предмет).
+CASCADE_ORDER = ["faculty", "department", "course", "group_name", "subject"]
 
 
 def get_subcategory_examples(category: str | None) -> list[str]:
@@ -239,10 +243,18 @@ def get_subcategory_examples(category: str | None) -> list[str]:
 
 
 async def search_listing_filter_options(
-    session: AsyncSession, field: str, query: str = "", category: str | None = None
+    session: AsyncSession,
+    field: str,
+    query: str = "",
+    category: str | None = None,
+    faculty: str | None = None,
+    department: str | None = None,
+    course: str | None = None,
+    group_name: str | None = None,
 ) -> list[str]:
     """Автокомплит: уникальные непустые значения поля из опубликованных объявлений
-    (с учётом выбранной категории), отфильтрованные по подстроке query.
+    (с учётом выбранной категории и уже выбранных полей выше по цепочке зависимости
+    факультет → кафедра → курс → группа → предмет), отфильтрованные по подстроке query.
     Для subcategory и course подмешиваются готовые примеры; для всех select-полей
     гарантированно доступен вариант «Прочее» — так поле всегда можно выбрать,
     даже если в БД ещё нет ни одного значения."""
@@ -253,6 +265,17 @@ async def search_listing_filter_options(
     stmt = select(column).where(Listing.status == ListingStatus.approved, column.is_not(None), column != "")
     if category:
         stmt = stmt.where(Listing.category == category)
+
+    # каскадные ограничения: применяем значение поля X, только если X стоит
+    # РАНЬШЕ запрашиваемого field в CASCADE_ORDER
+    scoped_values = {"faculty": faculty, "department": department, "course": course, "group_name": group_name}
+    if field in CASCADE_ORDER:
+        field_position = CASCADE_ORDER.index(field)
+        for prior_field in CASCADE_ORDER[:field_position]:
+            value = scoped_values.get(prior_field)
+            if value:
+                stmt = stmt.where(getattr(Listing, prior_field) == value)
+
     stmt = stmt.distinct()
     if query:
         stmt = stmt.where(column.ilike(f"%{query}%"))

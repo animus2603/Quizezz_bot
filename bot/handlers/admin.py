@@ -113,7 +113,7 @@ async def reject_order_finish(message: Message, state: FSMContext):
         user_result = await session.execute(select(User).where(User.id == order.user_id))
         user = user_result.scalar_one()
 
-        order = await crud.set_order_status(session, order, OrderStatus.rejected)
+        order = await crud.reject_order_with_reason(session, order, reason)
         await message.bot.send_message(
             user.tg_id,
             f"❌ Заказ #{order.id} отклонён.\nПричина: {reason}\n\n"

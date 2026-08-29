@@ -111,6 +111,14 @@ async def set_order_status(session: AsyncSession, order: Order, status: OrderSta
     return order
 
 
+async def reject_order_with_reason(session: AsyncSession, order: Order, reason: str) -> Order:
+    order.status = OrderStatus.rejected
+    order.rejection_reason = reason
+    await session.commit()
+    await session.refresh(order)
+    return order
+
+
 CANCEL_WINDOW_SECONDS = 3600  # 1 час
 
 

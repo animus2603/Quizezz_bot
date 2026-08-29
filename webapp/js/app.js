@@ -71,6 +71,7 @@ const BASE_DICT = {
     phoneRequestSent: "Откройте окно Telegram и подтвердите — номер привяжется автоматически.",
     phoneUpdated: "Номер обновлён!",
     menuSettings: "Настройки", menuNotifications: "Уведомления", menuFaq: "FAQ", menuSupport: "Поддержка",
+    statOrders: "Заказов", statListings: "Объявлений",
     comingSoon: "Раздел в разработке — скоро будет доступен",
     orderType_ready_quiz: "Готовый тест",
     orderType_custom_quiz: "Индивидуальный тест",
@@ -85,6 +86,7 @@ const BASE_DICT = {
     status_approved: "Опубликовано",
     status_sold: "Продано",
     cardSubject: "Предмет", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
+    cardOrderNumber: "Заказ", cardStatus: "Статус", cardPrice: "Цена",
     cancelBtn: (min) => `Отменить (осталось ${min} мин)`,
     cancelConfirm: "Отменить этот заказ?",
     cancelSuccess: "Заказ отменён",
@@ -150,6 +152,7 @@ const BASE_DICT = {
     phoneRequestSent: "Telegram терезесін ашып, растаңыз — нөмір автоматты түрде байланысады.",
     phoneUpdated: "Нөмір жаңартылды!",
     menuSettings: "Баптаулар", menuNotifications: "Хабарламалар", menuFaq: "Жиі қойылатын сұрақтар", menuSupport: "Қолдау қызметі",
+    statOrders: "Тапсырыс", statListings: "Хабарландыру",
     comingSoon: "Бөлім әзірленуде — жақында қолжетімді болады",
     orderType_ready_quiz: "Дайын тест",
     orderType_custom_quiz: "Жеке тест",
@@ -164,6 +167,7 @@ const BASE_DICT = {
     status_approved: "Жарияланды",
     status_sold: "Сатылды",
     cardSubject: "Пән", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
+    cardOrderNumber: "Тапсырыс", cardStatus: "Мәртебе", cardPrice: "Бағасы",
     cancelBtn: (min) => `Бас тарту (${min} мин қалды)`,
     cancelConfirm: "Осы тапсырысты бас тартасыз ба?",
     cancelSuccess: "Тапсырыс бас тартылды",
@@ -229,6 +233,7 @@ const BASE_DICT = {
     phoneRequestSent: "Open the Telegram prompt and confirm — your number will be linked automatically.",
     phoneUpdated: "Phone updated!",
     menuSettings: "Settings", menuNotifications: "Notifications", menuFaq: "FAQ", menuSupport: "Support",
+    statOrders: "Orders", statListings: "Listings",
     comingSoon: "This section is coming soon",
     orderType_ready_quiz: "Ready-made quiz",
     orderType_custom_quiz: "Custom quiz",
@@ -243,6 +248,7 @@ const BASE_DICT = {
     status_approved: "Published",
     status_sold: "Sold",
     cardSubject: "Subject", cardCourse: "Course", cardFaculty: "Faculty", cardDepartment: "Department",
+    cardOrderNumber: "Order", cardStatus: "Status", cardPrice: "Price",
     cancelBtn: (min) => `Cancel (${min} min left)`,
     cancelConfirm: "Cancel this order?",
     cancelSuccess: "Order cancelled",
@@ -308,6 +314,7 @@ const BASE_DICT = {
     phoneRequestSent: "Telegram penjiresini açyň we tassyklaň — belgi awtomatiki baglanar.",
     phoneUpdated: "Belgi täzelendi!",
     menuSettings: "Sazlamalar", menuNotifications: "Bildirişler", menuFaq: "Ýygy-ýygydan soralýan soraglar", menuSupport: "Goldaw",
+    statOrders: "Sargytlar", statListings: "Bildirişler",
     comingSoon: "Bölüm ýakynda elýeterli bolar",
     orderType_ready_quiz: "Taýýar test",
     orderType_custom_quiz: "Şahsy test",
@@ -322,6 +329,7 @@ const BASE_DICT = {
     status_approved: "Çap edildi",
     status_sold: "Satyldy",
     cardSubject: "Dersi", cardCourse: "Kurs", cardFaculty: "Fakultet", cardDepartment: "Kafedra",
+    cardOrderNumber: "Sargyt", cardStatus: "Ýagdaýy", cardPrice: "Bahasy",
     cancelBtn: (min) => `Ýatyrmak (${min} min galdy)`,
     cancelConfirm: "Bu sargydy ýatyrmalymy?",
     cancelSuccess: "Sargyt ýatyryldy",
@@ -852,13 +860,41 @@ document.querySelectorAll("#orders-segmented .segmented-item").forEach((btn) => 
   });
 });
 
-function renderOrderAttrs(o) {
-  const rows = [];
-  if (o.subject) rows.push(`<div class="card-attr"><b>${t("cardSubject")}:</b> ${o.subject}</div>`);
-  if (o.course) rows.push(`<div class="card-attr"><b>${t("cardCourse")}:</b> ${o.course}</div>`);
-  if (o.faculty) rows.push(`<div class="card-attr"><b>${t("cardFaculty")}:</b> ${o.faculty}</div>`);
-  if (o.department) rows.push(`<div class="card-attr"><b>${t("cardDepartment")}:</b> ${o.department}</div>`);
-  return rows.join("");
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function renderOrderCard(o) {
+  const dash = "—";
+  const rows = [
+    [t("cardFaculty"), o.faculty || dash],
+    [t("cardDepartment"), o.department || dash],
+    [t("cardCourse"), o.course || dash],
+    [t("fGroup"), o.group_name || dash],
+  ];
+
+  const rowsHtml = rows.map(([label, value]) =>
+    `<div class="order-row"><b>${label}:</b> ${escapeHtml(value)}</div>`
+  ).join("");
+
+  const statusRow = `<div class="order-row"><b>${t("cardStatus")}:</b> ${t("status_" + o.status)}</div>`;
+  const reasonRow = (o.status === "rejected" && o.rejection_reason)
+    ? `<div class="order-row order-reject-reason">${escapeHtml(o.rejection_reason)}</div>`
+    : "";
+
+  return `
+    <div class="card" data-order-id="${o.id}">
+      <div class="order-row order-number"><b>${t("cardOrderNumber")} №${o.id}</b></div>
+      <div class="order-row order-title">${escapeHtml(o.title || t("orderType_" + o.order_type))}</div>
+      ${rowsHtml}
+      <div class="order-row"><b>${t("cardPrice")}:</b> ${o.price}₸</div>
+      ${statusRow}
+      ${reasonRow}
+      ${o.can_cancel ? `<button class="btn-cancel" onclick="cancelOrder(${o.id})">${t("cancelBtn")(Math.ceil(o.cancel_seconds_left / 60))}</button>` : ""}
+    </div>
+  `;
 }
 
 async function loadMyOrders() {
@@ -868,17 +904,7 @@ async function loadMyOrders() {
     const res = await fetch(`${API_BASE}/users/${currentUser.tg_id}/orders`);
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyOrders")}</p>`; return; }
-    list.innerHTML = items.map((o) => `
-      <div class="card" data-order-id="${o.id}">
-        <div class="card-title">#${o.id} · ${o.title || t("orderType_" + o.order_type)}</div>
-        <div class="card-attrs">${renderOrderAttrs(o)}</div>
-        <div class="card-price">${o.price}₸</div>
-        <div class="card-footer-row">
-          <span class="status-badge">${t("status_" + o.status)}</span>
-          ${o.can_cancel ? `<button class="btn-cancel" onclick="cancelOrder(${o.id})">${t("cancelBtn")(Math.ceil(o.cancel_seconds_left / 60))}</button>` : ""}
-        </div>
-      </div>
-    `).join("");
+    list.innerHTML = items.map(renderOrderCard).join("");
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
   }
@@ -957,6 +983,19 @@ async function loadProfile() {
     profileData = null;
   }
   renderPhoneRow();
+  loadProfileStats();
+}
+
+async function loadProfileStats() {
+  if (!currentUser.tg_id) return;
+  try {
+    const [orders, listings] = await Promise.all([
+      fetch(`${API_BASE}/users/${currentUser.tg_id}/orders`).then((r) => r.json()),
+      fetch(`${API_BASE}/users/${currentUser.tg_id}/listings`).then((r) => r.json()),
+    ]);
+    document.getElementById("stat-orders").textContent = orders.length;
+    document.getElementById("stat-listings").textContent = listings.length;
+  } catch (e) { /* тихо игнорируем */ }
 }
 
 function renderPhoneRow() {
@@ -974,6 +1013,8 @@ document.getElementById("btn-refresh-profile").addEventListener("click", async (
 });
 
 document.getElementById("btn-attach-phone").addEventListener("click", () => {
+  // Поллим профиль независимо от того, что вернул коллбэк requestContact —
+  // на части клиентов Telegram он не сообщает true, даже если контакт реально отправлен.
   const poll = () => {
     let attempts = 0;
     const timer = setInterval(async () => {
@@ -987,23 +1028,29 @@ document.getElementById("btn-attach-phone").addEventListener("click", () => {
           clearInterval(timer);
         }
       } catch (e) { /* игнор, попробуем ещё раз */ }
-      if (attempts >= 6) clearInterval(timer);
+      if (attempts >= 10) clearInterval(timer);
     }, 1500);
   };
 
+  showToast(t("phoneRequestSent"));
+
   if (tg.requestContact) {
-    tg.requestContact((sent) => {
-      if (sent) {
-        showToast(t("phoneRequestSent"));
-        poll();
-      }
-    });
+    tg.requestContact(() => poll());
   } else {
-    showToast(t("phoneRequestSent"));
+    poll();
   }
 });
 
-["menu-settings", "menu-notifications", "menu-faq", "menu-support"].forEach((id) => {
+document.getElementById("menu-support").addEventListener("click", () => {
+  const url = "https://t.me/animus_sh1";
+  if (tg.openTelegramLink) {
+    tg.openTelegramLink(url);
+  } else {
+    window.open(url, "_blank");
+  }
+});
+
+["menu-settings", "menu-notifications", "menu-faq"].forEach((id) => {
   document.getElementById(id).addEventListener("click", () => showToast(t("comingSoon")));
 });
 

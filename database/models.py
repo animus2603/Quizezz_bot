@@ -36,6 +36,7 @@ class QuizCatalogItem(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     subject: Mapped[str | None] = mapped_column(String(128), nullable=True)  # предмет/дисциплина
     course: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    group_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     faculty: Mapped[str | None] = mapped_column(String(128), nullable=True)
     department: Mapped[str | None] = mapped_column(String(128), nullable=True)
     file_url: Mapped[str] = mapped_column(Text)  # ссылка на файл с ответами/доступ
@@ -77,6 +78,7 @@ class Order(Base):
 
     price: Mapped[int] = mapped_column(Integer)
     receipt_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # telegram file_id чека
+    rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow)

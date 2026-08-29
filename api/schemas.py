@@ -10,6 +10,7 @@ class CatalogItemOut(BaseModel):
     description: str | None
     subject: str | None
     course: str | None = None
+    group_name: str | None = None
     faculty: str | None = None
     department: str | None = None
     price: int
@@ -78,8 +79,10 @@ class UserOrderOut(BaseModel):
     title: str | None = None
     subject: str | None = None
     course: str | None = None
+    group_name: str | None = None
     faculty: str | None = None
     department: str | None = None
+    rejection_reason: str | None = None
     can_cancel: bool = False
     cancel_seconds_left: int = 0
 

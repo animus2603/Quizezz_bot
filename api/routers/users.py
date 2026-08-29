@@ -49,6 +49,7 @@ async def get_my_orders(tg_id: int, session: AsyncSession = Depends(get_session)
             status=order.status.value,
             price=order.price,
             created_at=order.created_at,
+            rejection_reason=order.rejection_reason,
             can_cancel=crud.order_cancel_seconds_left(order) > 0,
             cancel_seconds_left=crud.order_cancel_seconds_left(order),
             **item_data,

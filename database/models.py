@@ -40,6 +40,7 @@ class QuizCatalogItem(Base):
     faculty: Mapped[str | None] = mapped_column(String(128), nullable=True)
     department: Mapped[str | None] = mapped_column(String(128), nullable=True)
     file_url: Mapped[str] = mapped_column(Text)  # ссылка на файл с ответами/доступ
+    preview_text: Mapped[str | None] = mapped_column(Text, nullable=True)  # пример 10-20 вопросов для просмотра
     price: Mapped[int] = mapped_column(Integer, default=3000)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)

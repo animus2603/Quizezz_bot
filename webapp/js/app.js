@@ -72,6 +72,18 @@ const BASE_DICT = {
     phoneUpdated: "Номер обновлён!",
     menuSettings: "Настройки", menuNotifications: "Уведомления", menuFaq: "FAQ", menuSupport: "Поддержка",
     statOrders: "Заказов", statListings: "Объявлений",
+    previewBtn: "Посмотреть", noPreview: "Пример вопросов пока не добавлен.",
+    settingsLanguage: "Язык",
+    notifOrdersLabel: "Заказы и оплата", notifOrdersDesc: "Статусы заказов, подтверждение оплаты",
+    notifMarketLabel: "Маркетплейс", notifMarketDesc: "Модерация объявлений, ответы покупателям",
+    notifNewsLabel: "Новости и акции", notifNewsDesc: "Новые функции и специальные предложения",
+    faqItems: [
+      { q: "Как оплатить заказ?", a: "После оформления заказа бот пришлёт реквизиты Kaspi. Переведите сумму и отправьте боту скриншот чека — оператор подтвердит оплату." },
+      { q: "Сколько ждать готовый тест?", a: "Готовые тесты из каталога отправляются сразу после подтверждения оплаты. Индивидуальные заказы выполняются в течение рабочего дня после подтверждения." },
+      { q: "Можно ли отменить заказ?", a: "Да, в течение часа после оформления — в разделе «Заказы» рядом с неоплаченным заказом появится кнопка отмены." },
+      { q: "Как разместить объявление?", a: "Перейдите в раздел «Разместить», выберите категорию — Учебное или Товары — и заполните форму. Объявление опубликуется после проверки модератором." },
+      { q: "Что делать, если номер не привязался?", a: "Откройте раздел «Профиль» — Telegram покажет запрос на отправку номера. Подтвердите его, и номер появится автоматически в течение нескольких секунд." },
+    ],
     comingSoon: "Раздел в разработке — скоро будет доступен",
     orderType_ready_quiz: "Готовый тест",
     orderType_custom_quiz: "Индивидуальный тест",
@@ -153,6 +165,18 @@ const BASE_DICT = {
     phoneUpdated: "Нөмір жаңартылды!",
     menuSettings: "Баптаулар", menuNotifications: "Хабарламалар", menuFaq: "Жиі қойылатын сұрақтар", menuSupport: "Қолдау қызметі",
     statOrders: "Тапсырыс", statListings: "Хабарландыру",
+    previewBtn: "Қарау", noPreview: "Сұрақтар мысалы әлі қосылмаған.",
+    settingsLanguage: "Тіл",
+    notifOrdersLabel: "Тапсырыстар мен төлем", notifOrdersDesc: "Тапсырыс мәртебелері, төлемді растау",
+    notifMarketLabel: "Маркетплейс", notifMarketDesc: "Хабарландыруларды модерациялау, сатып алушыларға жауап",
+    notifNewsLabel: "Жаңалықтар мен акциялар", notifNewsDesc: "Жаңа мүмкіндіктер мен арнайы ұсыныстар",
+    faqItems: [
+      { q: "Тапсырысты қалай төлеймін?", a: "Тапсырыс рәсімделгеннен кейін бот Kaspi деректемелерін жібереді. Соманы аударып, чек скриншотын ботқа жіберіңіз — оператор растайды." },
+      { q: "Дайын тестті қанша күтемін?", a: "Каталогтағы дайын тесттер төлем расталғаннан кейін бірден жіберіледі. Жеке тапсырыстар растаудан кейін бір жұмыс күні ішінде орындалады." },
+      { q: "Тапсырысты бас тартуға бола ма?", a: "Иә, рәсімдеуден кейін бір сағат ішінде — «Тапсырыстар» бөлімінде төленбеген тапсырыстың жанында бас тарту түймесі шығады." },
+      { q: "Хабарландыруды қалай орналастырамын?", a: "«Орналастыру» бөліміне өтіп, санатты таңдаңыз — Оқу немесе Тауар — және форманы толтырыңыз. Модератор тексергеннен кейін жарияланады." },
+      { q: "Нөмір байланыспаса не істеу керек?", a: "«Профиль» бөлімін ашыңыз — Telegram нөмірді жіберу сұранысын көрсетеді. Растаңыз, нөмір бірнеше секундта өзі пайда болады." },
+    ],
     comingSoon: "Бөлім әзірленуде — жақында қолжетімді болады",
     orderType_ready_quiz: "Дайын тест",
     orderType_custom_quiz: "Жеке тест",
@@ -234,6 +258,18 @@ const BASE_DICT = {
     phoneUpdated: "Phone updated!",
     menuSettings: "Settings", menuNotifications: "Notifications", menuFaq: "FAQ", menuSupport: "Support",
     statOrders: "Orders", statListings: "Listings",
+    previewBtn: "Preview", noPreview: "No sample questions added yet.",
+    settingsLanguage: "Language",
+    notifOrdersLabel: "Orders & payment", notifOrdersDesc: "Order statuses, payment confirmations",
+    notifMarketLabel: "Marketplace", notifMarketDesc: "Listing moderation, buyer replies",
+    notifNewsLabel: "News & promos", notifNewsDesc: "New features and special offers",
+    faqItems: [
+      { q: "How do I pay for an order?", a: "After placing an order, the bot sends Kaspi payment details. Transfer the amount and send a screenshot of the receipt to the bot — an operator will confirm it." },
+      { q: "How long until my quiz is ready?", a: "Ready-made quizzes from the catalog are sent right after payment is confirmed. Custom orders are completed within one working day after confirmation." },
+      { q: "Can I cancel an order?", a: "Yes, within one hour of placing it — a cancel button appears next to the unpaid order in the Orders section." },
+      { q: "How do I post a listing?", a: "Go to the Post section, choose a category — Study or Goods — and fill in the form. It goes live after a moderator reviews it." },
+      { q: "What if my phone number didn't link?", a: "Open the Profile section — Telegram will show a prompt to share your number. Confirm it and the number will appear automatically within a few seconds." },
+    ],
     comingSoon: "This section is coming soon",
     orderType_ready_quiz: "Ready-made quiz",
     orderType_custom_quiz: "Custom quiz",
@@ -315,6 +351,18 @@ const BASE_DICT = {
     phoneUpdated: "Belgi täzelendi!",
     menuSettings: "Sazlamalar", menuNotifications: "Bildirişler", menuFaq: "Ýygy-ýygydan soralýan soraglar", menuSupport: "Goldaw",
     statOrders: "Sargytlar", statListings: "Bildirişler",
+    previewBtn: "Görmek", noPreview: "Sorag mysaly entek goşulmady.",
+    settingsLanguage: "Dil",
+    notifOrdersLabel: "Sargytlar we töleg", notifOrdersDesc: "Sargyt ýagdaýlary, töleg tassyklamalary",
+    notifMarketLabel: "Bazar", notifMarketDesc: "Bildirişleri barlamak, alyjylara jogap",
+    notifNewsLabel: "Habarlar we aksiýalar", notifNewsDesc: "Täze mümkinçilikler we ýörite teklipler",
+    faqItems: [
+      { q: "Sargydy nädip töleýärin?", a: "Sargyt resmileşdirilenden soň bot Kaspi maglumatlaryny iberer. Puly geçirip, çekiň suratyny bota iberiň — operator tassyklar." },
+      { q: "Taýýar testi näçe wagt garaşmaly?", a: "Katalogdaky taýýar testler töleg tassyklanandan soň derrew iberilýär. Şahsy sargytlar tassyklanandan soň bir iş güni içinde ýerine ýetirilýär." },
+      { q: "Sargydy ýatyryp bolarmy?", a: "Hawa, resmileşdirenden soň bir sagadyň dowamynda — Sargytlar bölüminde tölenmedik sargydyň gapdalynda ýatyrmak düwmesi çykýar." },
+      { q: "Bildirişi nädip ýerleşdirýärin?", a: "Ýerleşdirmek bölümine geçiň, kategoriýany saýlaň — Okuw ýa-da Haryt — we formany dolduryň. Moderator barlanyndan soň çap ediler." },
+      { q: "Belgi baglanmasa näme etmeli?", a: "Profil bölümini açyň — Telegram belgini ibermek üçin haýyş görkezer. Tassyklaň, belgi birnäçe sekuntda özi peýda bolar." },
+    ],
     comingSoon: "Bölüm ýakynda elýeterli bolar",
     orderType_ready_quiz: "Taýýar test",
     orderType_custom_quiz: "Şahsy test",
@@ -446,23 +494,42 @@ async function loadCatalog() {
     const res = await fetch(`${API_BASE}/quiz/catalog`);
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyCatalog")}</p>`; return; }
+    window.__catalogItems = items;
     list.innerHTML = items.map((item) => `
       <div class="card">
-        <div class="card-title">${item.title}</div>
+        <div class="quiz-card-title">${item.title}</div>
+        ${item.subject ? `<div class="quiz-card-subject">${item.subject}</div>` : ""}
         <div class="card-attrs">
-          ${item.subject ? `<div class="card-attr"><b>${t("cardSubject")}:</b> ${item.subject}</div>` : ""}
-          ${item.course ? `<div class="card-attr"><b>${t("cardCourse")}:</b> ${item.course}</div>` : ""}
           ${item.faculty ? `<div class="card-attr"><b>${t("cardFaculty")}:</b> ${item.faculty}</div>` : ""}
           ${item.department ? `<div class="card-attr"><b>${t("cardDepartment")}:</b> ${item.department}</div>` : ""}
+          ${item.course ? `<div class="card-attr"><b>${t("cardCourse")}:</b> ${item.course}</div>` : ""}
         </div>
         <div class="card-price">${item.price}₸</div>
-        <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
+        <div class="quiz-card-btn-row">
+          <button class="btn-secondary" onclick="previewQuiz(${item.id})">${t("previewBtn")}</button>
+          <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
+        </div>
       </div>
     `).join("");
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errCatalog")}</p>`;
   }
 }
+
+function previewQuiz(catalogItemId) {
+  const item = (window.__catalogItems || []).find((i) => i.id === catalogItemId);
+  if (!item) return;
+  document.getElementById("preview-title").textContent = item.title;
+  document.getElementById("preview-body").textContent = item.preview_text || t("noPreview");
+  document.getElementById("preview-overlay").classList.remove("hidden");
+}
+
+document.getElementById("preview-close").addEventListener("click", () => {
+  document.getElementById("preview-overlay").classList.add("hidden");
+});
+document.getElementById("preview-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "preview-overlay") document.getElementById("preview-overlay").classList.add("hidden");
+});
 
 async function buyReadyQuiz(catalogItemId) {
   try {
@@ -984,6 +1051,13 @@ async function loadProfile() {
   }
   renderPhoneRow();
   loadProfileStats();
+
+  // Номер показываем так же "само собой", как имя и username — без отдельной
+  // кнопки. Если ещё не привязан, один раз за сессию тихо запрашиваем его.
+  if (!profileData?.phone && !phoneAutoRequested) {
+    phoneAutoRequested = true;
+    requestPhoneAndPoll();
+  }
 }
 
 async function loadProfileStats() {
@@ -1012,7 +1086,9 @@ document.getElementById("btn-refresh-profile").addEventListener("click", async (
   } catch (e) { /* тихо игнорируем */ }
 });
 
-document.getElementById("btn-attach-phone").addEventListener("click", () => {
+let phoneAutoRequested = false;
+
+function requestPhoneAndPoll() {
   // Поллим профиль независимо от того, что вернул коллбэк requestContact —
   // на части клиентов Telegram он не сообщает true, даже если контакт реально отправлен.
   const poll = () => {
@@ -1024,7 +1100,6 @@ document.getElementById("btn-attach-phone").addEventListener("click", () => {
         if (fresh.phone) {
           profileData = fresh;
           renderPhoneRow();
-          showToast(t("phoneUpdated"));
           clearInterval(timer);
         }
       } catch (e) { /* игнор, попробуем ещё раз */ }
@@ -1032,14 +1107,12 @@ document.getElementById("btn-attach-phone").addEventListener("click", () => {
     }, 1500);
   };
 
-  showToast(t("phoneRequestSent"));
-
   if (tg.requestContact) {
     tg.requestContact(() => poll());
   } else {
     poll();
   }
-});
+}
 
 document.getElementById("menu-support").addEventListener("click", () => {
   const url = "https://t.me/animus_sh1";
@@ -1050,9 +1123,121 @@ document.getElementById("menu-support").addEventListener("click", () => {
   }
 });
 
-["menu-settings", "menu-notifications", "menu-faq"].forEach((id) => {
-  document.getElementById(id).addEventListener("click", () => showToast(t("comingSoon")));
+// ---------- Подэкраны профиля: FAQ / Уведомления / Настройки ----------
+const subscreen = document.getElementById("subscreen-overlay");
+const subscreenTitle = document.getElementById("subscreen-title");
+const subscreenBody = document.getElementById("subscreen-body");
+
+function openSubscreen(titleKey, bodyHtml) {
+  subscreenTitle.textContent = t(titleKey);
+  subscreenBody.innerHTML = bodyHtml;
+  subscreen.classList.remove("hidden");
+}
+
+document.getElementById("subscreen-back").addEventListener("click", () => {
+  subscreen.classList.add("hidden");
 });
+
+// ---- FAQ ----
+function renderFaqScreen() {
+  const items = t("faqItems");
+  const html = items.map((item, i) => `
+    <div class="faq-item" data-idx="${i}">
+      <button class="faq-question" data-idx="${i}">
+        <span>${item.q}</span>
+        <span class="faq-arrow">▾</span>
+      </button>
+      <div class="faq-answer">${item.a}</div>
+    </div>
+  `).join("");
+  openSubscreen("menuFaq", html);
+
+  subscreenBody.querySelectorAll(".faq-question").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btn.closest(".faq-item").classList.toggle("open");
+    });
+  });
+}
+
+document.getElementById("menu-faq").addEventListener("click", renderFaqScreen);
+
+// ---- Уведомления ----
+const NOTIFICATION_TOGGLES = [
+  { key: "orders", labelKey: "notifOrdersLabel", descKey: "notifOrdersDesc" },
+  { key: "marketplace", labelKey: "notifMarketLabel", descKey: "notifMarketDesc" },
+  { key: "news", labelKey: "notifNewsLabel", descKey: "notifNewsDesc" },
+];
+
+function getNotifPrefs() {
+  try {
+    return JSON.parse(localStorage.getItem("studhub_notif_prefs") || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function setNotifPref(key, value) {
+  const prefs = getNotifPrefs();
+  prefs[key] = value;
+  localStorage.setItem("studhub_notif_prefs", JSON.stringify(prefs));
+}
+
+function renderNotificationsScreen() {
+  const prefs = getNotifPrefs();
+  const html = NOTIFICATION_TOGGLES.map((item) => {
+    const checked = prefs[item.key] !== false; // по умолчанию включено
+    return `
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">${t(item.labelKey)}</div>
+          <div class="settings-row-desc">${t(item.descKey)}</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" data-key="${item.key}" ${checked ? "checked" : ""}>
+          <span class="switch-track"></span>
+        </label>
+      </div>
+    `;
+  }).join("");
+  openSubscreen("menuNotifications", html);
+
+  subscreenBody.querySelectorAll("input[type=checkbox]").forEach((input) => {
+    input.addEventListener("change", () => setNotifPref(input.dataset.key, input.checked));
+  });
+}
+
+document.getElementById("menu-notifications").addEventListener("click", renderNotificationsScreen);
+
+// ---- Настройки ----
+function renderSettingsScreen() {
+  const html = `
+    <div class="settings-row" id="settings-lang-row" style="cursor:pointer;">
+      <div>
+        <div class="settings-row-label">${t("settingsLanguage")}</div>
+        <div class="settings-row-desc">${currentLang}</div>
+      </div>
+      <span class="profile-item-arrow">›</span>
+    </div>
+    <div class="settings-row" id="settings-support-row" style="cursor:pointer;">
+      <div>
+        <div class="settings-row-label">${t("menuSupport")}</div>
+        <div class="settings-row-desc">@animus_sh1</div>
+      </div>
+      <span class="profile-item-arrow">›</span>
+    </div>
+    <div class="settings-info-row">StudHub · v1.0</div>
+  `;
+  openSubscreen("menuSettings", html);
+
+  document.getElementById("settings-lang-row").addEventListener("click", () => {
+    langOverlay.classList.remove("hidden");
+  });
+  document.getElementById("settings-support-row").addEventListener("click", () => {
+    document.getElementById("menu-support").click();
+  });
+}
+
+document.getElementById("menu-settings").addEventListener("click", renderSettingsScreen);
 
 // ---------- Init ----------
 applyTranslations();

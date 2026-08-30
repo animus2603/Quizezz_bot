@@ -181,7 +181,6 @@
           <span id="profile-phone" class="profile-phone">—</span>
           <button id="btn-refresh-profile" class="btn-icon" title="Обновить" type="button">⟳</button>
         </div>
-        <button id="btn-attach-phone" class="btn-primary btn-attach" data-i18n="attachPhone">Привязать номер</button>
       </div>
 
       <div class="profile-stats">
@@ -254,6 +253,26 @@
       <span class="nav-label" data-i18n="navProfile">Профиль</span>
     </button>
   </nav>
+
+  <!-- ===== ПОПАП ПРЕВЬЮ ВОПРОСОВ ТЕСТА ===== -->
+  <div id="preview-overlay" class="lang-overlay search-overlay hidden">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <span id="preview-title" class="sheet-title"></span>
+        <button class="sheet-close" id="preview-close" type="button">✕</button>
+      </div>
+      <div id="preview-body" class="sheet-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== ПОДЭКРАНЫ ПРОФИЛЯ: FAQ / Уведомления / Настройки ===== -->
+  <div id="subscreen-overlay" class="subscreen hidden">
+    <div class="subscreen-header">
+      <button class="subscreen-back" id="subscreen-back" type="button">‹</button>
+      <span id="subscreen-title" class="subscreen-title"></span>
+    </div>
+    <div id="subscreen-body" class="subscreen-body"></div>
+  </div>
 
   <div id="toast" class="toast hidden"></div>
 </div>

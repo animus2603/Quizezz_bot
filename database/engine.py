@@ -18,6 +18,18 @@ EXAMPLE_CATALOG = [
         department="Прикладная математика",
         file_url="https://example.com/quiz/math-1.pdf",
         price=3000,
+        preview_text=(
+            "1. Чему равен предел последовательности 1/n при n → ∞?\n"
+            "2. Производная функции x² равна...\n"
+            "3. Что такое точка перегиба функции?\n"
+            "4. Сформулируйте теорему Лагранжа.\n"
+            "5. Чему равен предел (sin x)/x при x → 0?\n"
+            "6. Что называется критической точкой функции?\n"
+            "7. Производная константы равна...\n"
+            "8. Что такое асимптота графика функции?\n"
+            "9. Сформулируйте правило Лопиталя.\n"
+            "10. Как найти точки экстремума функции?"
+        ),
     ),
     dict(
         title="История Казахстана — Тест 5",
@@ -29,6 +41,18 @@ EXAMPLE_CATALOG = [
         department="История и социология",
         file_url="https://example.com/quiz/history-5.pdf",
         price=3000,
+        preview_text=(
+            "1. В каком году произошло восстание Кенесары Касымова?\n"
+            "2. Кто возглавлял Алаш Орду?\n"
+            "3. Когда была провозглашена независимость Казахстана?\n"
+            "4. Что такое Голощёкинский геноцид?\n"
+            "5. Назовите первого Президента Казахстана.\n"
+            "6. В каком году Казахстан вступил в ООН?\n"
+            "7. Что такое Целинная эпопея?\n"
+            "8. Когда была принята Конституция РК?\n"
+            "9. Кто такой Абылай хан?\n"
+            "10. Назовите столицы Казахстана в разные периоды истории."
+        ),
     ),
     dict(
         title="English Grammar — Quiz B1",
@@ -40,6 +64,18 @@ EXAMPLE_CATALOG = [
         department="Кафедра иностранных языков",
         file_url="https://example.com/quiz/english-b1.pdf",
         price=3000,
+        preview_text=(
+            "1. Choose the correct form: I ___ (go) to school every day.\n"
+            "2. What is the past simple of 'to write'?\n"
+            "3. Fill the gap: If I ___ (be) you, I would study more.\n"
+            "4. Choose the correct preposition: interested ___ music.\n"
+            "5. What tense is used for finished actions with a result now?\n"
+            "6. Choose the correct article: I saw ___ elephant at the zoo.\n"
+            "7. What is the comparative form of 'good'?\n"
+            "8. Fill the gap: She has ___ (live) here for 10 years.\n"
+            "9. Choose the correct modal verb for advice.\n"
+            "10. What is the plural of 'child'?"
+        ),
     ),
 ]
 

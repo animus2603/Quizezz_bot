@@ -14,6 +14,7 @@ class CatalogItemOut(BaseModel):
     faculty: str | None = None
     department: str | None = None
     price: int
+    preview_text: str | None = None
 
     class Config:
         from_attributes = True

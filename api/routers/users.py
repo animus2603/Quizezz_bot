@@ -37,6 +37,7 @@ async def get_my_orders(tg_id: int, session: AsyncSession = Depends(get_session)
                     "title": item.title,
                     "subject": item.subject,
                     "course": item.course,
+                    "group_name": item.group_name,
                     "faculty": item.faculty,
                     "department": item.department,
                 }

@@ -119,22 +119,33 @@ async def reject_order_with_reason(session: AsyncSession, order: Order, reason: 
     return order
 
 
-CANCEL_WINDOW_SECONDS = 3600  # 1 час
+CANCEL_WINDOW_READY_SECONDS = 3600     # 1 час — готовые тесты, пока не оплачены
+CANCEL_WINDOW_CUSTOM_SECONDS = 10800   # 3 часа — индивидуальные заказы, даже если уже оплачены
 
 
 def order_cancel_seconds_left(order: Order) -> int:
-    if order.status != OrderStatus.awaiting_payment:
+    if order.order_type == OrderType.custom_quiz:
+        # индивидуальный заказ можно отменить (с возвратом денег), пока ждёт оплаты
+        # ИЛИ уже взят в работу — в течение 3 часов с момента создания заказа
+        allowed_statuses = (OrderStatus.awaiting_payment, OrderStatus.in_progress)
+        window = CANCEL_WINDOW_CUSTOM_SECONDS
+    else:
+        # готовый тест — отменить можно, только пока не оплачен (файл после оплаты уходит сразу)
+        allowed_statuses = (OrderStatus.awaiting_payment,)
+        window = CANCEL_WINDOW_READY_SECONDS
+
+    if order.status not in allowed_statuses:
         return 0
     elapsed = (dt.datetime.utcnow() - order.created_at).total_seconds()
-    left = CANCEL_WINDOW_SECONDS - elapsed
-    return max(0, int(left))
+    return max(0, int(window - elapsed))
 
 
 async def cancel_order(session: AsyncSession, order: Order) -> Order:
+    was_in_progress = order.status == OrderStatus.in_progress
     order.status = OrderStatus.cancelled
     await session.commit()
     await session.refresh(order)
-    return order
+    return order, was_in_progress
 
 
 async def create_listing(

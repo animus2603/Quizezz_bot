@@ -123,6 +123,23 @@ async def notify_client_listing_submitted(listing: Listing, user: User) -> None:
         pass
 
 
+async def notify_admin_refund_needed(order: Order, user: User) -> None:
+    """Клиент отменил уже оплаченный (принятый в работу) заказ — админу нужно вручную вернуть деньги через Kaspi."""
+    if not ADMIN_CHAT_ID:
+        return
+    text = (
+        f"💸 <b>Требуется возврат денег по заказу #{order.id}</b>\n"
+        f"Студент: {user.full_name or ''} (@{user.username or '—'}, id {user.tg_id})\n"
+        f"Сумма: {order.price}₸\n"
+        f"Заказ отменён клиентом в течение окна отмены (заказ был уже оплачен и принят в работу) — "
+        f"верните деньги на Kaspi вручную."
+    )
+    try:
+        await bot.send_message(ADMIN_CHAT_ID, text)
+    except TelegramAPIError:
+        pass
+
+
 def kaspi_requisites_text(amount: int) -> str:
     return (
         f"Переведите <b>{amount}₸</b> на Kaspi:\n"

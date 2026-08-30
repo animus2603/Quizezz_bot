@@ -74,6 +74,9 @@ const BASE_DICT = {
     statOrders: "Заказов", statListings: "Объявлений",
     previewBtn: "Посмотреть", noPreview: "Пример вопросов пока не добавлен.",
     settingsLanguage: "Язык",
+    settingsShare: "Поделиться приложением",
+    settingsShareDesc: "Расскажи друзьям про StudHub",
+    settingsShareText: "Загляни в StudHub — тесты и маркетплейс для студентов 🎓",
     notifOrdersLabel: "Заказы и оплата", notifOrdersDesc: "Статусы заказов, подтверждение оплаты",
     notifMarketLabel: "Маркетплейс", notifMarketDesc: "Модерация объявлений, ответы покупателям",
     notifNewsLabel: "Новости и акции", notifNewsDesc: "Новые функции и специальные предложения",
@@ -167,6 +170,9 @@ const BASE_DICT = {
     statOrders: "Тапсырыс", statListings: "Хабарландыру",
     previewBtn: "Қарау", noPreview: "Сұрақтар мысалы әлі қосылмаған.",
     settingsLanguage: "Тіл",
+    settingsShare: "Қосымшамен бөлісу",
+    settingsShareDesc: "Достарыңа StudHub туралы айт",
+    settingsShareText: "StudHub-қа қара — студенттерге арналған тесттер мен маркетплейс 🎓",
     notifOrdersLabel: "Тапсырыстар мен төлем", notifOrdersDesc: "Тапсырыс мәртебелері, төлемді растау",
     notifMarketLabel: "Маркетплейс", notifMarketDesc: "Хабарландыруларды модерациялау, сатып алушыларға жауап",
     notifNewsLabel: "Жаңалықтар мен акциялар", notifNewsDesc: "Жаңа мүмкіндіктер мен арнайы ұсыныстар",
@@ -260,6 +266,9 @@ const BASE_DICT = {
     statOrders: "Orders", statListings: "Listings",
     previewBtn: "Preview", noPreview: "No sample questions added yet.",
     settingsLanguage: "Language",
+    settingsShare: "Share the app",
+    settingsShareDesc: "Tell your friends about StudHub",
+    settingsShareText: "Check out StudHub — quizzes and a marketplace for students 🎓",
     notifOrdersLabel: "Orders & payment", notifOrdersDesc: "Order statuses, payment confirmations",
     notifMarketLabel: "Marketplace", notifMarketDesc: "Listing moderation, buyer replies",
     notifNewsLabel: "News & promos", notifNewsDesc: "New features and special offers",
@@ -353,6 +362,9 @@ const BASE_DICT = {
     statOrders: "Sargytlar", statListings: "Bildirişler",
     previewBtn: "Görmek", noPreview: "Sorag mysaly entek goşulmady.",
     settingsLanguage: "Dil",
+    settingsShare: "Programmany paýlaşmak",
+    settingsShareDesc: "Dostlaryňa StudHub barada aýt",
+    settingsShareText: "StudHub-a serediň — talyplar üçin testler we bazar 🎓",
     notifOrdersLabel: "Sargytlar we töleg", notifOrdersDesc: "Sargyt ýagdaýlary, töleg tassyklamalary",
     notifMarketLabel: "Bazar", notifMarketDesc: "Bildirişleri barlamak, alyjylara jogap",
     notifNewsLabel: "Habarlar we aksiýalar", notifNewsDesc: "Täze mümkinçilikler we ýörite teklipler",
@@ -506,7 +518,7 @@ async function loadCatalog() {
         </div>
         <div class="card-price">${item.price}₸</div>
         <div class="quiz-card-btn-row">
-          <button class="btn-secondary" onclick="previewQuiz(${item.id})">${t("previewBtn")}</button>
+          <button class="btn-outline" onclick="previewQuiz(${item.id})">${t("previewBtn")}</button>
           <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
         </div>
       </div>
@@ -1218,10 +1230,10 @@ function renderSettingsScreen() {
       </div>
       <span class="profile-item-arrow">›</span>
     </div>
-    <div class="settings-row" id="settings-support-row" style="cursor:pointer;">
+    <div class="settings-row" id="settings-share-row" style="cursor:pointer;">
       <div>
-        <div class="settings-row-label">${t("menuSupport")}</div>
-        <div class="settings-row-desc">@animus_sh1</div>
+        <div class="settings-row-label">${t("settingsShare")}</div>
+        <div class="settings-row-desc">${t("settingsShareDesc")}</div>
       </div>
       <span class="profile-item-arrow">›</span>
     </div>
@@ -1232,8 +1244,14 @@ function renderSettingsScreen() {
   document.getElementById("settings-lang-row").addEventListener("click", () => {
     langOverlay.classList.remove("hidden");
   });
-  document.getElementById("settings-support-row").addEventListener("click", () => {
-    document.getElementById("menu-support").click();
+  document.getElementById("settings-share-row").addEventListener("click", () => {
+    const botUrl = window.location.origin.replace(/^https?:\/\//, "https://t.me/");
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(t("settingsShareText"))}`;
+    if (tg.openTelegramLink) {
+      tg.openTelegramLink(shareUrl);
+    } else {
+      window.open(shareUrl, "_blank");
+    }
   });
 }
 

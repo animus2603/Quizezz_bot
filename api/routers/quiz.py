@@ -5,7 +5,7 @@ from database.engine import get_session
 from database import crud
 from api.schemas import CatalogItemOut, CreateReadyOrderIn, CreateCustomOrderIn, OrderOut, CancelOrderIn
 from config import PRICE_CUSTOM_QUIZ
-from bot.notify import notify_admin_new_order, notify_client_new_order
+from bot.notify import notify_admin_new_order, notify_client_new_order, notify_admin_refund_needed
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -68,4 +68,9 @@ async def cancel_order(order_id: int, data: CancelOrderIn, session: AsyncSession
     if seconds_left <= 0:
         raise HTTPException(400, "Время на отмену истекло или заказ уже в обработке")
 
-    return await crud.cancel_order(session, order)
+    order, was_in_progress = await crud.cancel_order(session, order)
+
+    if was_in_progress:
+        await notify_admin_refund_needed(order, user)
+
+    return order

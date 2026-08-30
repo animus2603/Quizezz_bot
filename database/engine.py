@@ -80,10 +80,35 @@ EXAMPLE_CATALOG = [
 ]
 
 
+EXAMPLE_GOODS_LISTINGS = [
+    dict(
+        title="Учебник «Физика. Механика» (Иргафов)",
+        description="Б/у, состояние хорошее, все страницы на месте, немного пометок карандашом",
+        price=2500,
+        subcategory="Учебники",
+    ),
+    dict(
+        title="Ноутбук Lenovo IdeaPad 3",
+        description="15.6\", 8GB RAM, SSD 256GB — для учёбы и не только. Продаю в связи с покупкой нового",
+        price=145000,
+        subcategory="Электроника",
+    ),
+    dict(
+        title="Толстовка с логотипом университета",
+        description="Размер M, почти новая, надевала пару раз",
+        price=6000,
+        subcategory="Одежда",
+    ),
+]
+
+
 async def init_db() -> None:
-    """Создаёт таблицы, если их ещё нет, и добавляет примеры тестов в пустой каталог."""
+    """Создаёт таблицы, если их ещё нет, и добавляет примеры тестов/объявлений в пустую БД."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    from database.models import Listing, ListingCategory, ListingStatus
+    from database import crud
 
     async with async_session() as session:
         result = await session.execute(select(QuizCatalogItem))
@@ -91,6 +116,23 @@ async def init_db() -> None:
             for item in EXAMPLE_CATALOG:
                 session.add(QuizCatalogItem(**item))
             await session.commit()
+
+        listing_result = await session.execute(select(Listing))
+        if listing_result.first() is None:
+            demo_user = await crud.get_or_create_user(session, 0, "demo_seller", "Демо продавец")
+            for item in EXAMPLE_GOODS_LISTINGS:
+                listing = await crud.create_listing(
+                    session,
+                    seller_id=demo_user.id,
+                    category=ListingCategory.goods,
+                    title=item["title"],
+                    description=item["description"],
+                    price=item["price"],
+                    photo_file_id=None,
+                    contact="@demo_seller",
+                    subcategory=item["subcategory"],
+                )
+                await crud.set_listing_status(session, listing, ListingStatus.approved)
 
 
 async def get_session() -> AsyncSession:

@@ -86,18 +86,47 @@ EXAMPLE_GOODS_LISTINGS = [
         description="Б/у, состояние хорошее, все страницы на месте, немного пометок карандашом",
         price=2500,
         subcategory="Учебники",
+        category="goods",
     ),
     dict(
         title="Ноутбук Lenovo IdeaPad 3",
         description="15.6\", 8GB RAM, SSD 256GB — для учёбы и не только. Продаю в связи с покупкой нового",
         price=145000,
         subcategory="Электроника",
+        category="goods",
     ),
     dict(
         title="Толстовка с логотипом университета",
         description="Размер M, почти новая, надевала пару раз",
         price=6000,
         subcategory="Одежда",
+        category="goods",
+    ),
+]
+
+EXAMPLE_STUDY_LISTINGS = [
+    dict(
+        title="Помогу с СРС по программированию",
+        description="Пишу и оформляю самостоятельные работы по Python/Java — с объяснением, не просто копипаст",
+        price=4000,
+        subcategory="СРС",
+        category="study",
+        subject="Программирование",
+    ),
+    dict(
+        title="Готовые Quizizz по английскому языку",
+        description="Есть база пройденных тестов по грамматике B1-B2, отвечу быстро",
+        price=1500,
+        subcategory="Quizizz",
+        category="study",
+        subject="Английский язык",
+    ),
+    dict(
+        title="Оформлю реферат по ГОСТу за 1 день",
+        description="Титульный лист, содержание, список литературы — всё по требованиям вуза",
+        price=3500,
+        subcategory="Реферат",
+        category="study",
     ),
 ]
 
@@ -120,17 +149,18 @@ async def init_db() -> None:
         listing_result = await session.execute(select(Listing))
         if listing_result.first() is None:
             demo_user = await crud.get_or_create_user(session, 0, "demo_seller", "Демо продавец")
-            for item in EXAMPLE_GOODS_LISTINGS:
+            for item in EXAMPLE_GOODS_LISTINGS + EXAMPLE_STUDY_LISTINGS:
                 listing = await crud.create_listing(
                     session,
                     seller_id=demo_user.id,
-                    category=ListingCategory.goods,
+                    category=ListingCategory(item["category"]),
                     title=item["title"],
                     description=item["description"],
                     price=item["price"],
                     photo_file_id=None,
                     contact="@demo_seller",
-                    subcategory=item["subcategory"],
+                    subcategory=item.get("subcategory"),
+                    subject=item.get("subject"),
                 )
                 await crud.set_listing_status(session, listing, ListingStatus.approved)
 

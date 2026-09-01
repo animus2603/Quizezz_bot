@@ -19,6 +19,7 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    referred_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # tg_id пригласившего
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     orders: Mapped[list["Order"]] = relationship(back_populates="user")
@@ -113,6 +114,7 @@ class Listing(Base):
     price: Mapped[int | None] = mapped_column(Integer, nullable=True)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     attachment_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    photo_urls: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON-список URL нескольких фото
     contact: Mapped[str] = mapped_column(String(255))  # @username или ссылка
     subcategory: Mapped[str | None] = mapped_column(String(64), nullable=True)  # Quizizz, СРС, Учебники и т.д.
 
@@ -127,3 +129,16 @@ class Listing(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     seller: Mapped["User"] = relationship(back_populates="listings")
+
+
+class ListingComment(Base):
+    """Комментарии под объявлением в маркетплейсе."""
+    __tablename__ = "listing_comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    listing_id: Mapped[int] = mapped_column(ForeignKey("listings.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+
+    user: Mapped["User"] = relationship()

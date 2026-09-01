@@ -102,6 +102,15 @@ const BASE_DICT = {
     status_sold: "Продано",
     cardSubject: "Предмет", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
     cardOrderNumber: "Заказ", cardStatus: "Статус", cardPrice: "Цена",
+    loading: "Загрузка...",
+    productTitle: "Объявление",
+    cardSeller: "Продавец",
+    similarProducts: "Похожие товары",
+    commentsTitle: "Комментарии",
+    noComments: "Пока нет комментариев — будьте первым!",
+    commentPlaceholder: "Написать комментарий...",
+    commentSend: "Отправить",
+    errComment: "Не удалось отправить комментарий",
     cancelBtn: (min) => `Отменить (осталось ${min} мин)`,
     cancelConfirm: "Отменить этот заказ?",
     cancelSuccess: "Заказ отменён",
@@ -198,6 +207,15 @@ const BASE_DICT = {
     status_sold: "Сатылды",
     cardSubject: "Пән", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
     cardOrderNumber: "Тапсырыс", cardStatus: "Мәртебе", cardPrice: "Бағасы",
+    loading: "Жүктелуде...",
+    productTitle: "Хабарландыру",
+    cardSeller: "Сатушы",
+    similarProducts: "Ұқсас тауарлар",
+    commentsTitle: "Пікірлер",
+    noComments: "Әзірге пікір жоқ — бірінші болыңыз!",
+    commentPlaceholder: "Пікір жазу...",
+    commentSend: "Жіберу",
+    errComment: "Пікірді жіберу мүмкін болмады",
     cancelBtn: (min) => `Бас тарту (${min} мин қалды)`,
     cancelConfirm: "Осы тапсырысты бас тартасыз ба?",
     cancelSuccess: "Тапсырыс бас тартылды",
@@ -294,6 +312,15 @@ const BASE_DICT = {
     status_sold: "Sold",
     cardSubject: "Subject", cardCourse: "Course", cardFaculty: "Faculty", cardDepartment: "Department",
     cardOrderNumber: "Order", cardStatus: "Status", cardPrice: "Price",
+    loading: "Loading...",
+    productTitle: "Listing",
+    cardSeller: "Seller",
+    similarProducts: "Similar items",
+    commentsTitle: "Comments",
+    noComments: "No comments yet — be the first!",
+    commentPlaceholder: "Write a comment...",
+    commentSend: "Send",
+    errComment: "Couldn't send the comment",
     cancelBtn: (min) => `Cancel (${min} min left)`,
     cancelConfirm: "Cancel this order?",
     cancelSuccess: "Order cancelled",
@@ -390,6 +417,15 @@ const BASE_DICT = {
     status_sold: "Satyldy",
     cardSubject: "Dersi", cardCourse: "Kurs", cardFaculty: "Fakultet", cardDepartment: "Kafedra",
     cardOrderNumber: "Sargyt", cardStatus: "Ýagdaýy", cardPrice: "Bahasy",
+    loading: "Ýüklenýär...",
+    productTitle: "Bildiriş",
+    cardSeller: "Satyjy",
+    similarProducts: "Meňzeş harytlar",
+    commentsTitle: "Teswirler",
+    noComments: "Entek teswir ýok — birinji boluň!",
+    commentPlaceholder: "Teswir ýazyň...",
+    commentSend: "Ibermek",
+    errComment: "Teswiri ibermek başartmady",
     cancelBtn: (min) => `Ýatyrmak (${min} min galdy)`,
     cancelConfirm: "Bu sargydy ýatyrmalymy?",
     cancelSuccess: "Sargyt ýatyryldy",
@@ -428,6 +464,12 @@ function applyTranslations() {
   loadCatalog();
   loadListings();
   renderPhoneRow();
+
+  // Если сейчас открыт подэкран (FAQ/Уведомления/Настройки) — перерисовываем
+  // его на месте, чтобы язык обновился сразу, без выхода и повторного входа.
+  if (!subscreen.classList.contains("hidden") && activeSubscreenRenderer) {
+    activeSubscreenRenderer();
+  }
 }
 
 // ---------- Попап выбора языка ----------
@@ -804,11 +846,12 @@ async function loadListings() {
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
     list.innerHTML = items.map((item) => `
-      <div class="card">
+      <div class="card listing-card" onclick="openProductScreen(${item.id})">
+        ${item.photo_urls && item.photo_urls[0] ? `<img class="listing-card-thumb" src="${item.photo_urls[0]}" alt="">` : ""}
         <div class="card-title">${item.title}</div>
         <div class="card-desc">${item.description || ""}</div>
         ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
-        <button class="btn-secondary" onclick="window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
+        <button class="btn-secondary" onclick="event.stopPropagation(); window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
           ${t("contactSellerBtn")}
         </button>
       </div>
@@ -818,9 +861,115 @@ async function loadListings() {
   }
 }
 
+// ---------- Экран деталей объявления ----------
+const productScreen = document.getElementById("product-screen");
+const productBody = document.getElementById("product-body");
+let currentProductId = null;
+
+async function openProductScreen(listingId) {
+  currentProductId = listingId;
+  productBody.innerHTML = `<p class="hint">${t("loading")}</p>`;
+  productScreen.classList.remove("hidden");
+
+  try {
+    const [listing, similar, comments] = await Promise.all([
+      fetch(`${API_BASE}/marketplace/listings/${listingId}`).then((r) => r.json()),
+      fetch(`${API_BASE}/marketplace/listings/${listingId}/similar`).then((r) => r.json()),
+      fetch(`${API_BASE}/marketplace/listings/${listingId}/comments`).then((r) => r.json()),
+    ]);
+    renderProductScreen(listing, similar, comments);
+  } catch (e) {
+    productBody.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
+}
+
+function renderProductScreen(listing, similar, comments) {
+  const photosHtml = listing.photo_urls && listing.photo_urls.length
+    ? `<div class="product-photos">${listing.photo_urls.map((url) => `<img src="${url}" alt="">`).join("")}</div>`
+    : `<div class="product-photos-empty">📦</div>`;
+
+  const sellerInitial = (listing.seller_name || "?").trim()[0]?.toUpperCase() || "?";
+
+  const commentsHtml = comments.length
+    ? comments.map((c) => `
+        <div class="comment-item">
+          <div class="comment-author">${escapeHtml(c.author_name)}</div>
+          <div class="comment-text">${escapeHtml(c.text)}</div>
+        </div>
+      `).join("")
+    : `<p class="hint">${t("noComments")}</p>`;
+
+  const similarHtml = similar.length
+    ? `<div class="similar-scroll">${similar.map((s) => `
+        <div class="similar-card" onclick="openProductScreen(${s.id})">
+          ${s.photo_urls && s.photo_urls[0] ? `<img src="${s.photo_urls[0]}" alt="">` : ""}
+          <div class="similar-card-title">${s.title}</div>
+          ${s.price ? `<div class="similar-card-price">${s.price}₸</div>` : ""}
+        </div>
+      `).join("")}</div>`
+    : "";
+
+  productBody.innerHTML = `
+    ${photosHtml}
+    <div class="product-title">${listing.title}</div>
+    ${listing.price ? `<div class="product-price">${listing.price}₸</div>` : ""}
+    <div class="product-desc">${listing.description || ""}</div>
+
+    <div class="product-seller-row">
+      <div class="product-seller-avatar">${sellerInitial}</div>
+      <div>
+        <div class="product-seller-name">${listing.seller_name || t("cardSeller")}</div>
+        <div class="product-seller-label">${t("cardSeller")}</div>
+      </div>
+      <button class="btn-primary" style="width:auto; margin-left:auto; padding:8px 16px; font-size:13px;"
+        onclick="window.open('https://t.me/${listing.contact.replace('@','')}', '_blank')">
+        ${t("contactSellerBtn")}
+      </button>
+    </div>
+
+    ${similar.length ? `<div class="product-section-title">${t("similarProducts")}</div>${similarHtml}` : ""}
+
+    <div class="product-section-title">${t("commentsTitle")}</div>
+    <div id="comments-list">${commentsHtml}</div>
+
+    <div class="comment-form">
+      <input id="comment-input" class="comment-input" type="text" placeholder="${t("commentPlaceholder")}">
+      <button id="comment-send" class="comment-send" type="button">${t("commentSend")}</button>
+    </div>
+  `;
+
+  document.getElementById("comment-send").addEventListener("click", submitComment);
+  document.getElementById("comment-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitComment();
+  });
+}
+
+async function submitComment() {
+  const input = document.getElementById("comment-input");
+  const text = input.value.trim();
+  if (!text || !currentProductId) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/marketplace/listings/${currentProductId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...currentUser, text }),
+    });
+    if (!res.ok) throw new Error();
+    input.value = "";
+    openProductScreen(currentProductId);
+  } catch (e) {
+    showToast(t("errComment"));
+  }
+}
+
+document.getElementById("product-back").addEventListener("click", () => {
+  productScreen.classList.add("hidden");
+  currentProductId = null;
+});
+
 // ---------- Разместить: категория → показать форму, автоподстановка контакта ----------
 let postCategory = null;
-let selectedListingFile = null;
 const postFields = { subcategory: "", course: "", group_name: "", faculty: "", department: "", subject: "" };
 
 const POST_FIELD_LABEL_KEYS = {
@@ -871,9 +1020,36 @@ document.querySelectorAll("#post-cat-tiles .cat-pill").forEach((pill) => {
   });
 });
 
+let selectedListingFiles = [];
+
+function renderListingPhotoPreviews() {
+  const container = document.getElementById("lf-photos-preview");
+  container.innerHTML = selectedListingFiles.map((file, idx) => `
+    <div class="photo-thumb" data-idx="${idx}">
+      <img src="${URL.createObjectURL(file)}" alt="">
+      <button type="button" class="photo-thumb-remove" data-idx="${idx}">✕</button>
+    </div>
+  `).join("");
+
+  container.querySelectorAll(".photo-thumb-remove").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedListingFiles.splice(Number(btn.dataset.idx), 1);
+      renderListingPhotoPreviews();
+    });
+  });
+}
+
 document.getElementById("lf-file").addEventListener("change", (e) => {
-  selectedListingFile = e.target.files[0] || null;
-  document.getElementById("lf-file-name").textContent = selectedListingFile ? selectedListingFile.name : "";
+  selectedListingFiles = selectedListingFiles.concat(Array.from(e.target.files || []));
+  renderListingPhotoPreviews();
+  e.target.value = ""; // сбрасываем, чтобы повторный выбор тех же файлов тоже сработал
+});
+
+// Цена: только цифры, живое форматирование пробелами по разрядам (5000 → 5 000)
+const lfPriceInput = document.getElementById("lf-price");
+lfPriceInput.addEventListener("input", () => {
+  const digitsOnly = lfPriceInput.value.replace(/\D/g, "");
+  lfPriceInput.value = digitsOnly ? Number(digitsOnly).toLocaleString("ru-RU").replace(/,/g, " ") : "";
 });
 
 document.getElementById("lf-submit").addEventListener("click", async () => {
@@ -881,16 +1057,16 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
 
   const title = document.getElementById("lf-title").value.trim();
   const description = document.getElementById("lf-description").value.trim();
-  const price = document.getElementById("lf-price").value;
+  const price = lfPriceInput.value.replace(/\D/g, "");
   const contact = document.getElementById("lf-contact").value.trim();
 
   if (!title || !contact) { showToast(t("errFields")); return; }
 
-  let attachmentUrl = null;
+  let photoUrls = [];
   try {
-    if (selectedListingFile) {
+    if (selectedListingFiles.length) {
       showToast(t("uploading"));
-      attachmentUrl = await uploadFile(selectedListingFile);
+      photoUrls = await Promise.all(selectedListingFiles.map(uploadFile));
     }
   } catch (e) {
     showToast(t("errUpload"));
@@ -908,7 +1084,7 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
         description: description || null,
         price: price ? parseInt(price, 10) : null,
         contact,
-        attachment_url: attachmentUrl,
+        photo_urls: photoUrls.length ? photoUrls : null,
         course: postFields.course || null,
         group_name: postFields.group_name || null,
         faculty: postFields.faculty || null,
@@ -921,8 +1097,8 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
     ["lf-title", "lf-description", "lf-price"].forEach((id) => { document.getElementById(id).value = ""; });
     Object.keys(postFields).forEach((k) => (postFields[k] = ""));
     renderPostFieldLabels();
-    selectedListingFile = null;
-    document.getElementById("lf-file-name").textContent = "";
+    selectedListingFiles = [];
+    renderListingPhotoPreviews();
     document.getElementById("lf-file").value = "";
   } catch (e) {
     showToast(t("errListing"));
@@ -1140,6 +1316,8 @@ const subscreen = document.getElementById("subscreen-overlay");
 const subscreenTitle = document.getElementById("subscreen-title");
 const subscreenBody = document.getElementById("subscreen-body");
 
+let activeSubscreenRenderer = null;
+
 function openSubscreen(titleKey, bodyHtml) {
   subscreenTitle.textContent = t(titleKey);
   subscreenBody.innerHTML = bodyHtml;
@@ -1148,10 +1326,12 @@ function openSubscreen(titleKey, bodyHtml) {
 
 document.getElementById("subscreen-back").addEventListener("click", () => {
   subscreen.classList.add("hidden");
+  activeSubscreenRenderer = null;
 });
 
 // ---- FAQ ----
 function renderFaqScreen() {
+  activeSubscreenRenderer = renderFaqScreen;
   const items = t("faqItems");
   const html = items.map((item, i) => `
     <div class="faq-item" data-idx="${i}">
@@ -1195,6 +1375,7 @@ function setNotifPref(key, value) {
 }
 
 function renderNotificationsScreen() {
+  activeSubscreenRenderer = renderNotificationsScreen;
   const prefs = getNotifPrefs();
   const html = NOTIFICATION_TOGGLES.map((item) => {
     const checked = prefs[item.key] !== false; // по умолчанию включено
@@ -1222,6 +1403,7 @@ document.getElementById("menu-notifications").addEventListener("click", renderNo
 
 // ---- Настройки ----
 function renderSettingsScreen() {
+  activeSubscreenRenderer = renderSettingsScreen;
   const html = `
     <div class="settings-row" id="settings-lang-row" style="cursor:pointer;">
       <div>

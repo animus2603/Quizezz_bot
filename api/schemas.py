@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 from pydantic import BaseModel, field_validator
 
 MIN_DEADLINE_HOURS = 24
@@ -60,6 +61,8 @@ class ProfileOut(BaseModel):
     username: str | None
     full_name: str | None
     phone: str | None
+    referral_count: int = 0
+    bot_username: str | None = None
 
     class Config:
         from_attributes = True
@@ -125,6 +128,18 @@ class ListingOut(BaseModel):
     department: str | None = None
     subject: str | None = None
     attachment_url: str | None = None
+    photo_urls: list[str] = []
+    seller_name: str | None = None
+
+    @field_validator("photo_urls", mode="before")
+    @classmethod
+    def parse_photo_urls(cls, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value) if value else []
+            except (ValueError, TypeError):
+                return []
+        return value or []
 
     class Config:
         from_attributes = True
@@ -141,9 +156,24 @@ class CreateListingIn(BaseModel):
     contact: str
     photo_file_id: str | None = None
     attachment_url: str | None = None
+    photo_urls: list[str] | None = None
     subcategory: str | None = None
     course: str | None = None
     group_name: str | None = None
     faculty: str | None = None
     department: str | None = None
     subject: str | None = None
+
+
+class CommentOut(BaseModel):
+    id: int
+    text: str
+    author_name: str
+    created_at: dt.datetime
+
+
+class CreateCommentIn(BaseModel):
+    tg_id: int
+    username: str | None = None
+    full_name: str | None = None
+    text: str

@@ -1,11 +1,12 @@
 import datetime as dt
+import json
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import (
     User, QuizCatalogItem, Order, OrderType, OrderStatus,
-    Listing, ListingCategory, ListingStatus,
+    Listing, ListingCategory, ListingStatus, ListingComment,
 )
 
 
@@ -35,16 +36,23 @@ async def get_user_listings(session: AsyncSession, user_id: int) -> list[Listing
     return list(result.scalars().all())
 
 
-async def get_or_create_user(session: AsyncSession, tg_id: int, username: str | None, full_name: str | None) -> User:
+async def get_or_create_user(
+    session: AsyncSession, tg_id: int, username: str | None, full_name: str | None, referred_by: int | None = None
+) -> User:
     result = await session.execute(select(User).where(User.tg_id == tg_id))
     user = result.scalar_one_or_none()
     if user:
         return user
-    user = User(tg_id=tg_id, username=username, full_name=full_name)
+    user = User(tg_id=tg_id, username=username, full_name=full_name, referred_by=referred_by)
     session.add(user)
     await session.commit()
     await session.refresh(user)
     return user
+
+
+async def count_referrals(session: AsyncSession, tg_id: int) -> int:
+    result = await session.execute(select(User).where(User.referred_by == tg_id))
+    return len(result.scalars().all())
 
 
 async def get_active_catalog(session: AsyncSession) -> list[QuizCatalogItem]:
@@ -164,6 +172,7 @@ async def create_listing(
     department: str | None = None,
     subject: str | None = None,
     attachment_url: str | None = None,
+    photo_urls: list[str] | None = None,
 ) -> Listing:
     listing = Listing(
         seller_id=seller_id,
@@ -173,6 +182,7 @@ async def create_listing(
         price=price,
         photo_file_id=photo_file_id,
         attachment_url=attachment_url,
+        photo_urls=json.dumps(photo_urls) if photo_urls else None,
         contact=contact,
         subcategory=subcategory,
         course=course,
@@ -220,6 +230,68 @@ async def get_approved_listings(
 async def get_listing(session: AsyncSession, listing_id: int) -> Listing | None:
     result = await session.execute(select(Listing).where(Listing.id == listing_id))
     return result.scalar_one_or_none()
+
+
+async def get_listing_with_seller(session: AsyncSession, listing_id: int) -> tuple[Listing, User] | None:
+    listing = await get_listing(session, listing_id)
+    if not listing:
+        return None
+    seller_result = await session.execute(select(User).where(User.id == listing.seller_id))
+    seller = seller_result.scalar_one()
+    return listing, seller
+
+
+async def get_similar_listings(session: AsyncSession, listing: Listing, limit: int = 4) -> list[Listing]:
+    stmt = (
+        select(Listing)
+        .where(
+            Listing.status == ListingStatus.approved,
+            Listing.category == listing.category,
+            Listing.id != listing.id,
+        )
+        .order_by(Listing.created_at.desc())
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def add_listing_comment(session: AsyncSession, listing_id: int, user_id: int, text: str) -> ListingComment:
+    comment = ListingComment(listing_id=listing_id, user_id=user_id, text=text)
+    session.add(comment)
+    await session.commit()
+    await session.refresh(comment)
+    return comment
+
+
+async def get_listing_comments(session: AsyncSession, listing_id: int) -> list[tuple[ListingComment, User]]:
+    stmt = (
+        select(ListingComment, User)
+        .join(User, User.id == ListingComment.user_id)
+        .where(ListingComment.listing_id == listing_id)
+        .order_by(ListingComment.created_at.asc())
+    )
+    result = await session.execute(stmt)
+    return [(c, u) for c, u in result.all()]
+
+
+async def delete_listing(session: AsyncSession, listing_id: int) -> bool:
+    listing = await get_listing(session, listing_id)
+    if not listing:
+        return False
+    await session.delete(listing)
+    await session.commit()
+    return True
+
+
+async def delete_catalog_item(session: AsyncSession, item_id: int) -> bool:
+    result = await session.execute(select(QuizCatalogItem).where(QuizCatalogItem.id == item_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        return False
+    await session.delete(item)
+    await session.commit()
+    return True
 
 
 async def set_listing_status(session: AsyncSession, listing: Listing, status: ListingStatus) -> Listing:

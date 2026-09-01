@@ -6,6 +6,7 @@ from database.engine import get_session
 from database import crud
 from database.models import QuizCatalogItem, OrderType
 from api.schemas import ProfileOut, ProfileIn, UserOrderOut, UserListingOut
+from config import BOT_USERNAME
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -14,7 +15,11 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def get_or_init_profile(data: ProfileIn, session: AsyncSession = Depends(get_session)):
     """Отдаёт профиль пользователя, создавая его при первом заходе в раздел «Профиль»."""
     user = await crud.get_or_create_user(session, data.tg_id, data.username, data.full_name)
-    return user
+    referral_count = await crud.count_referrals(session, user.tg_id)
+    out = ProfileOut.model_validate(user)
+    out.referral_count = referral_count
+    out.bot_username = BOT_USERNAME
+    return out
 
 
 @router.get("/{tg_id}/orders", response_model=list[UserOrderOut])

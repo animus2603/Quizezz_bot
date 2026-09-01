@@ -259,3 +259,39 @@ async def reject_listing_finish(message: Message, state: FSMContext):
 
     await state.clear()
     await message.answer(f"Готово — объявление #{listing_id} отклонено, продавец уведомлён.")
+
+
+# ---------- Удаление записей (демо/ошибочные объявления и тесты) ----------
+
+@router.message(Command("remove_listing"), StateFilter(None))
+async def remove_listing_cmd(message: Message):
+    parts = message.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        await message.answer("Использование: /remove_listing <id>")
+        return
+
+    listing_id = int(parts[1])
+    async with async_session() as session:
+        ok = await crud.delete_listing(session, listing_id)
+
+    if ok:
+        await message.answer(f"Объявление #{listing_id} удалено — исчезнет из ленты и категории сразу же.")
+    else:
+        await message.answer(f"Объявление #{listing_id} не найдено.")
+
+
+@router.message(Command("remove_quiz"), StateFilter(None))
+async def remove_quiz_cmd(message: Message):
+    parts = message.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        await message.answer("Использование: /remove_quiz <id>")
+        return
+
+    item_id = int(parts[1])
+    async with async_session() as session:
+        ok = await crud.delete_catalog_item(session, item_id)
+
+    if ok:
+        await message.answer(f"Тест #{item_id} удалён из каталога — пропадёт с Главной сразу же.")
+    else:
+        await message.answer(f"Тест #{item_id} не найден.")

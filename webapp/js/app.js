@@ -97,7 +97,7 @@ const BASE_DICT = {
     status_sent: "Отправлено",
     status_rejected: "Отклонено",
     status_cancelled: "Отменён",
-    status_pending: "На модерации",
+    status_pending: "Ожидание",
     status_approved: "Опубликовано",
     status_sold: "Продано",
     cardSubject: "Предмет", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
@@ -202,7 +202,7 @@ const BASE_DICT = {
     status_sent: "Жіберілді",
     status_rejected: "Қабылданбады",
     status_cancelled: "Бас тартылды",
-    status_pending: "Модерацияда",
+    status_pending: "Күтуде",
     status_approved: "Жарияланды",
     status_sold: "Сатылды",
     cardSubject: "Пән", cardCourse: "Курс", cardFaculty: "Факультет", cardDepartment: "Кафедра",
@@ -307,7 +307,7 @@ const BASE_DICT = {
     status_sent: "Sent",
     status_rejected: "Rejected",
     status_cancelled: "Cancelled",
-    status_pending: "Pending review",
+    status_pending: "Pending",
     status_approved: "Published",
     status_sold: "Sold",
     cardSubject: "Subject", cardCourse: "Course", cardFaculty: "Faculty", cardDepartment: "Department",
@@ -412,7 +412,7 @@ const BASE_DICT = {
     status_sent: "Iberildi",
     status_rejected: "Ret edildi",
     status_cancelled: "Ýatyryldy",
-    status_pending: "Barlagda",
+    status_pending: "Garaşylýar",
     status_approved: "Çap edildi",
     status_sold: "Satyldy",
     cardSubject: "Dersi", cardCourse: "Kurs", cardFaculty: "Fakultet", cardDepartment: "Kafedra",
@@ -847,10 +847,16 @@ async function loadListings() {
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
     list.innerHTML = items.map((item) => `
       <div class="card listing-card" onclick="openProductScreen(${item.id})">
-        ${item.photo_urls && item.photo_urls[0] ? `<img class="listing-card-thumb" src="${item.photo_urls[0]}" alt="">` : ""}
-        <div class="card-title">${item.title}</div>
+        <div class="listing-card-row">
+          ${item.photo_urls && item.photo_urls[0]
+            ? `<img class="listing-card-thumb-sm" src="${item.photo_urls[0]}" alt="">`
+            : `<div class="listing-card-thumb-placeholder">📦</div>`}
+          <div class="listing-card-info">
+            <div class="card-title">${item.title}</div>
+            ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
+          </div>
+        </div>
         <div class="card-desc">${item.description || ""}</div>
-        ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
         <button class="btn-secondary" onclick="event.stopPropagation(); window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
           ${t("contactSellerBtn")}
         </button>
@@ -893,7 +899,10 @@ function renderProductScreen(listing, similar, comments) {
   const commentsHtml = comments.length
     ? comments.map((c) => `
         <div class="comment-item">
-          <div class="comment-author">${escapeHtml(c.author_name)}</div>
+          <div class="comment-author-row">
+            <div class="comment-author">${escapeHtml(c.author_name)}</div>
+            ${c.rating ? `<div class="comment-stars">${renderStars(c.rating)}</div>` : ""}
+          </div>
           <div class="comment-text">${escapeHtml(c.text)}</div>
         </div>
       `).join("")
@@ -932,15 +941,40 @@ function renderProductScreen(listing, similar, comments) {
     <div class="product-section-title">${t("commentsTitle")}</div>
     <div id="comments-list">${commentsHtml}</div>
 
+    <div class="rating-picker" id="rating-picker">
+      ${[1, 2, 3, 4, 5].map((n) => `<span class="rating-star" data-value="${n}">★</span>`).join("")}
+    </div>
     <div class="comment-form">
       <input id="comment-input" class="comment-input" type="text" placeholder="${t("commentPlaceholder")}">
-      <button id="comment-send" class="comment-send" type="button">${t("commentSend")}</button>
+      <button id="comment-send" class="comment-send" type="button" aria-label="${t("commentSend")}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
     </div>
   `;
+
+  selectedRating = 0;
+  document.querySelectorAll("#rating-picker .rating-star").forEach((star) => {
+    star.addEventListener("click", () => {
+      selectedRating = selectedRating === Number(star.dataset.value) ? 0 : Number(star.dataset.value);
+      renderRatingPicker();
+    });
+  });
 
   document.getElementById("comment-send").addEventListener("click", submitComment);
   document.getElementById("comment-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") submitComment();
+  });
+}
+
+function renderStars(rating) {
+  return [1, 2, 3, 4, 5].map((n) => `<span class="${n <= rating ? "star-filled" : "star-empty"}">★</span>`).join("");
+}
+
+let selectedRating = 0;
+
+function renderRatingPicker() {
+  document.querySelectorAll("#rating-picker .rating-star").forEach((star) => {
+    star.classList.toggle("active", Number(star.dataset.value) <= selectedRating);
   });
 }
 
@@ -953,7 +987,7 @@ async function submitComment() {
     const res = await fetch(`${API_BASE}/marketplace/listings/${currentProductId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...currentUser, text }),
+      body: JSON.stringify({ ...currentUser, text, rating: selectedRating || null }),
     });
     if (!res.ok) throw new Error();
     input.value = "";
@@ -1189,10 +1223,17 @@ async function loadMyListings() {
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`; return; }
     list.innerHTML = items.map((l) => `
-      <div class="card">
-        <div class="card-title">${l.title}</div>
-        <div class="card-desc">${l.price ? l.price + "₸" : ""}</div>
-        <span class="status-badge">${t("status_" + l.status)}</span>
+      <div class="card listing-card" onclick="openProductScreen(${l.id})">
+        <div class="listing-card-row">
+          ${l.photo_urls && l.photo_urls[0]
+            ? `<img class="listing-card-thumb-sm" src="${l.photo_urls[0]}" alt="">`
+            : `<div class="listing-card-thumb-placeholder">📦</div>`}
+          <div class="listing-card-info">
+            <div class="card-title">${l.title}</div>
+            <div class="card-desc">${l.price ? l.price + "₸" : ""}</div>
+          </div>
+          <span class="status-badge">${t("status_" + l.status)}</span>
+        </div>
       </div>
     `).join("");
   } catch (e) {

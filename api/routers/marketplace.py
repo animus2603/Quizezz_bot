@@ -58,6 +58,7 @@ async def get_comments(listing_id: int, session: AsyncSession = Depends(get_sess
         CommentOut(
             id=c.id, text=c.text,
             author_name=u.full_name or (f"@{u.username}" if u.username else "Студент"),
+            rating=c.rating,
             created_at=c.created_at,
         )
         for c, u in pairs
@@ -72,11 +73,14 @@ async def post_comment(listing_id: int, data: CreateCommentIn, session: AsyncSes
     if not data.text.strip():
         raise HTTPException(400, "Комментарий не может быть пустым")
 
+    rating = data.rating if data.rating and 1 <= data.rating <= 5 else None
+
     user = await crud.get_or_create_user(session, data.tg_id, data.username, data.full_name)
-    comment = await crud.add_listing_comment(session, listing_id, user.id, data.text.strip())
+    comment = await crud.add_listing_comment(session, listing_id, user.id, data.text.strip(), rating)
     return CommentOut(
         id=comment.id, text=comment.text,
         author_name=user.full_name or (f"@{user.username}" if user.username else "Студент"),
+        rating=comment.rating,
         created_at=comment.created_at,
     )
 

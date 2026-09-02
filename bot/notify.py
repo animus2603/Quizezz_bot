@@ -1,3 +1,5 @@
+import json
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.exceptions import TelegramAPIError
 
@@ -92,6 +94,15 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
         InlineKeyboardButton(text="❌ Отклонить", callback_data=f"listing_reject:{listing.id}"),
     ]])
 
+    photo_urls = []
+    if listing.photo_urls:
+        try:
+            photo_urls = json.loads(listing.photo_urls)
+        except (ValueError, TypeError):
+            photo_urls = []
+
+    photos_note = f"\n📷 Фото: {len(photo_urls)} шт." if len(photo_urls) > 1 else ""
+
     text = (
         f"📢 <b>Новое объявление #{listing.id}</b>\n"
         f"Категория: {listing.category.value}\n"
@@ -99,10 +110,13 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
         f"Цена: {listing.price or '—'}₸\n"
         f"Продавец: @{user.username or '—'}\n"
         f"Контакт: {listing.contact}"
+        f"{photos_note}"
     )
 
     try:
-        if listing.photo_file_id:
+        if photo_urls:
+            await bot.send_photo(ADMIN_CHAT_ID, photo_urls[0], caption=text, reply_markup=kb)
+        elif listing.photo_file_id:
             await bot.send_photo(ADMIN_CHAT_ID, listing.photo_file_id, caption=text, reply_markup=kb)
         else:
             await bot.send_message(ADMIN_CHAT_ID, text, reply_markup=kb)

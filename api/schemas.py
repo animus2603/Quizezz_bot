@@ -108,7 +108,18 @@ class UserListingOut(BaseModel):
     title: str
     price: int | None
     status: str
+    photo_urls: list[str] = []
     created_at: dt.datetime
+
+    @field_validator("photo_urls", mode="before")
+    @classmethod
+    def parse_photo_urls_user_listing(cls, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value) if value else []
+            except (ValueError, TypeError):
+                return []
+        return value or []
 
     class Config:
         from_attributes = True
@@ -169,6 +180,7 @@ class CommentOut(BaseModel):
     id: int
     text: str
     author_name: str
+    rating: int | None = None
     created_at: dt.datetime
 
 
@@ -177,3 +189,4 @@ class CreateCommentIn(BaseModel):
     username: str | None = None
     full_name: str | None = None
     text: str
+    rating: int | None = None

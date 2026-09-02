@@ -139,6 +139,7 @@ class ListingComment(Base):
     listing_id: Mapped[int] = mapped_column(ForeignKey("listings.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     text: Mapped[str] = mapped_column(Text)
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5 звёзд, опционально
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     user: Mapped["User"] = relationship()

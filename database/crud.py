@@ -256,8 +256,10 @@ async def get_similar_listings(session: AsyncSession, listing: Listing, limit: i
     return list(result.scalars().all())
 
 
-async def add_listing_comment(session: AsyncSession, listing_id: int, user_id: int, text: str) -> ListingComment:
-    comment = ListingComment(listing_id=listing_id, user_id=user_id, text=text)
+async def add_listing_comment(
+    session: AsyncSession, listing_id: int, user_id: int, text: str, rating: int | None = None
+) -> ListingComment:
+    comment = ListingComment(listing_id=listing_id, user_id=user_id, text=text, rating=rating)
     session.add(comment)
     await session.commit()
     await session.refresh(comment)

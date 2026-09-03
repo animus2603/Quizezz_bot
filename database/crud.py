@@ -173,6 +173,7 @@ async def create_listing(
     subject: str | None = None,
     attachment_url: str | None = None,
     photo_urls: list[str] | None = None,
+    expires_at: dt.datetime | None = None,
 ) -> Listing:
     listing = Listing(
         seller_id=seller_id,
@@ -191,6 +192,7 @@ async def create_listing(
         department=department,
         subject=subject,
         status=ListingStatus.pending,
+        expires_at=expires_at,
     )
     session.add(listing)
     await session.commit()
@@ -209,6 +211,7 @@ async def get_approved_listings(
     subject: str | None = None,
 ) -> list[Listing]:
     stmt = select(Listing).where(Listing.status == ListingStatus.approved)
+    stmt = stmt.where((Listing.expires_at.is_(None)) | (Listing.expires_at > dt.datetime.utcnow()))
     if category:
         stmt = stmt.where(Listing.category == category)
     if subcategory:
@@ -284,6 +287,16 @@ async def delete_listing(session: AsyncSession, listing_id: int) -> bool:
     await session.delete(listing)
     await session.commit()
     return True
+
+
+async def update_listing(session: AsyncSession, listing: Listing, **fields) -> Listing:
+    """Обновляет переданные поля объявления. Неизвестные/None-значения игнорируются."""
+    for key, value in fields.items():
+        if value is not None and hasattr(listing, key):
+            setattr(listing, key, value)
+    await session.commit()
+    await session.refresh(listing)
+    return listing
 
 
 async def delete_catalog_item(session: AsyncSession, item_id: int) -> bool:

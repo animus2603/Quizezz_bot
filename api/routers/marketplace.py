@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.engine import get_session
 from database import crud
 from database.models import ListingCategory
-from api.schemas import ListingOut, CreateListingIn, FilterOptionsOut, CommentOut, CreateCommentIn
+from api.schemas import ListingOut, CreateListingIn, UpdateListingIn, DeleteListingIn, FilterOptionsOut, CommentOut, CreateCommentIn
 from bot.notify import notify_admin_new_listing, notify_client_listing_submitted
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
@@ -129,7 +129,41 @@ async def create_listing(data: CreateListingIn, session: AsyncSession = Depends(
         subject=data.subject,
         attachment_url=data.attachment_url,
         photo_urls=data.photo_urls,
+        expires_at=data.expires_at,
     )
     await notify_admin_new_listing(listing, user)
     await notify_client_listing_submitted(listing, user)
     return listing
+
+
+@router.put("/listings/{listing_id}", response_model=ListingOut)
+async def edit_listing(listing_id: int, data: UpdateListingIn, session: AsyncSession = Depends(get_session)):
+    listing = await crud.get_listing(session, listing_id)
+    if not listing:
+        raise HTTPException(404, "Объявление не найдено")
+
+    user = await crud.get_user_by_tg_id(session, data.tg_id)
+    if not user or listing.seller_id != user.id:
+        raise HTTPException(403, "Это не ваше объявление")
+
+    update_fields = data.model_dump(exclude={"tg_id", "photo_urls"})
+    if data.photo_urls is not None:
+        import json
+        update_fields["photo_urls"] = json.dumps(data.photo_urls)
+
+    listing = await crud.update_listing(session, listing, **update_fields)
+    return listing
+
+
+@router.delete("/listings/{listing_id}")
+async def remove_listing(listing_id: int, data: DeleteListingIn, session: AsyncSession = Depends(get_session)):
+    listing = await crud.get_listing(session, listing_id)
+    if not listing:
+        raise HTTPException(404, "Объявление не найдено")
+
+    user = await crud.get_user_by_tg_id(session, data.tg_id)
+    if not user or listing.seller_id != user.id:
+        raise HTTPException(403, "Это не ваше объявление")
+
+    await crud.delete_listing(session, listing_id)
+    return {"ok": True}

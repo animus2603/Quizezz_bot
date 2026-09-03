@@ -126,6 +126,7 @@ class Listing(Base):
     subject: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     status: Mapped[ListingStatus] = mapped_column(Enum(ListingStatus), default=ListingStatus.pending)
+    expires_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)  # до какого числа показывать
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     seller: Mapped["User"] = relationship(back_populates="listings")

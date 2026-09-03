@@ -143,6 +143,10 @@
           <button class="filter-field-btn" data-post-field="subject" data-i18n="fSubject">Предмет</button>
         </div>
 
+        <label data-i18n="expiresLabel">Показывать до</label>
+        <input id="lf-expires" type="date">
+        <div class="hint" data-i18n="expiresHint">Необязательно — после этой даты объявление скроется из ленты</div>
+
         <button id="lf-submit" class="btn-primary" data-i18n="lfSubmit">Отправить на модерацию</button>
       </div>
     </section>
@@ -281,6 +285,12 @@
       <span class="subscreen-title" data-i18n="productTitle">Объявление</span>
     </div>
     <div id="product-body" class="subscreen-body"></div>
+  </div>
+
+  <!-- ===== ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО ===== -->
+  <div id="fullscreen-photo-overlay" class="fullscreen-photo hidden">
+    <button id="fullscreen-photo-close" class="fullscreen-photo-close" type="button">✕</button>
+    <img id="fullscreen-photo-img" src="" alt="">
   </div>
 
   <div id="toast" class="toast hidden"></div>

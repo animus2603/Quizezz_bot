@@ -103,13 +103,19 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
 
     photos_note = f"\n📷 Фото: {len(photo_urls)} шт." if len(photo_urls) > 1 else ""
 
+    category_labels = {"study": "Учебное", "goods": "Товары"}
+    category_label = category_labels.get(listing.category.value, listing.category.value)
+
+    seller_name = user.full_name or (f"@{user.username}" if user.username else "Без имени")
+    contact_link = listing.contact  # ссылка/юзернейм, куда писать по объявлению
+
     text = (
         f"📢 <b>Новое объявление #{listing.id}</b>\n"
-        f"Категория: {listing.category.value}\n"
-        f"{listing.title}\n"
-        f"Цена: {listing.price or '—'}₸\n"
-        f"Продавец: @{user.username or '—'}\n"
-        f"Контакт: {listing.contact}"
+        f"Категория: {category_label}\n"
+        f"Название: {listing.title}\n"
+        f"Описание: {listing.description or '—'}\n"
+        f"Продавец: {seller_name}\n"
+        f"Контакт: {contact_link}"
         f"{photos_note}"
     )
 

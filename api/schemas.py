@@ -109,6 +109,7 @@ class UserListingOut(BaseModel):
     price: int | None
     status: str
     photo_urls: list[str] = []
+    expires_at: dt.datetime | None = None
     created_at: dt.datetime
 
     @field_validator("photo_urls", mode="before")
@@ -141,6 +142,7 @@ class ListingOut(BaseModel):
     attachment_url: str | None = None
     photo_urls: list[str] = []
     seller_name: str | None = None
+    expires_at: dt.datetime | None = None
 
     @field_validator("photo_urls", mode="before")
     @classmethod
@@ -174,6 +176,27 @@ class CreateListingIn(BaseModel):
     faculty: str | None = None
     department: str | None = None
     subject: str | None = None
+    expires_at: dt.datetime | None = None
+
+
+class UpdateListingIn(BaseModel):
+    tg_id: int
+    title: str | None = None
+    description: str | None = None
+    price: int | None = None
+    contact: str | None = None
+    photo_urls: list[str] | None = None
+    subcategory: str | None = None
+    course: str | None = None
+    group_name: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    subject: str | None = None
+    expires_at: dt.datetime | None = None
+
+
+class DeleteListingIn(BaseModel):
+    tg_id: int
 
 
 class CommentOut(BaseModel):

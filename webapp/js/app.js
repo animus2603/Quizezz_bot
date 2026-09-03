@@ -105,6 +105,17 @@ const BASE_DICT = {
     loading: "Загрузка...",
     productTitle: "Объявление",
     cardSeller: "Продавец",
+    expiresLabel: "Показывать до",
+    expiresHint: "Необязательно — после этой даты объявление скроется из ленты",
+    editBtn: "Изменить",
+    deleteBtn: "Удалить",
+    deleteConfirm: "Удалить это объявление?",
+    deleteSuccess: "Объявление удалено",
+    deleteError: "Не удалось удалить объявление",
+    saveBtn: "Сохранить",
+    editListingTitle: "Изменить объявление",
+    editSuccess: "Изменения сохранены",
+    editError: "Не удалось сохранить изменения",
     similarProducts: "Похожие товары",
     commentsTitle: "Комментарии",
     noComments: "Пока нет комментариев — будьте первым!",
@@ -210,6 +221,17 @@ const BASE_DICT = {
     loading: "Жүктелуде...",
     productTitle: "Хабарландыру",
     cardSeller: "Сатушы",
+    expiresLabel: "Қашанға дейін көрсету",
+    expiresHint: "Міндетті емес — осы күннен кейін хабарландыру лентадан жасырылады",
+    editBtn: "Өзгерту",
+    deleteBtn: "Жою",
+    deleteConfirm: "Бұл хабарландыруды жоясыз ба?",
+    deleteSuccess: "Хабарландыру жойылды",
+    deleteError: "Хабарландыруды жою мүмкін болмады",
+    saveBtn: "Сақтау",
+    editListingTitle: "Хабарландыруды өзгерту",
+    editSuccess: "Өзгерістер сақталды",
+    editError: "Өзгерістерді сақтау мүмкін болмады",
     similarProducts: "Ұқсас тауарлар",
     commentsTitle: "Пікірлер",
     noComments: "Әзірге пікір жоқ — бірінші болыңыз!",
@@ -315,6 +337,17 @@ const BASE_DICT = {
     loading: "Loading...",
     productTitle: "Listing",
     cardSeller: "Seller",
+    expiresLabel: "Show until",
+    expiresHint: "Optional — the listing will disappear from the feed after this date",
+    editBtn: "Edit",
+    deleteBtn: "Delete",
+    deleteConfirm: "Delete this listing?",
+    deleteSuccess: "Listing deleted",
+    deleteError: "Couldn't delete the listing",
+    saveBtn: "Save",
+    editListingTitle: "Edit listing",
+    editSuccess: "Changes saved",
+    editError: "Couldn't save changes",
     similarProducts: "Similar items",
     commentsTitle: "Comments",
     noComments: "No comments yet — be the first!",
@@ -420,6 +453,17 @@ const BASE_DICT = {
     loading: "Ýüklenýär...",
     productTitle: "Bildiriş",
     cardSeller: "Satyjy",
+    expiresLabel: "Haçana çenli görkezmeli",
+    expiresHint: "Hökman däl — bu senededen soň bildiriş lentadan gizlener",
+    editBtn: "Üýtgetmek",
+    deleteBtn: "Pozmak",
+    deleteConfirm: "Bu bildirişi pozmalymy?",
+    deleteSuccess: "Bildiriş pozuldy",
+    deleteError: "Bildirişi pozmak başartmady",
+    saveBtn: "Ýatda saklamak",
+    editListingTitle: "Bildirişi üýtgetmek",
+    editSuccess: "Üýtgeşmeler ýatda saklandy",
+    editError: "Üýtgeşmeleri ýatda saklamak başartmady",
     similarProducts: "Meňzeş harytlar",
     commentsTitle: "Teswirler",
     noComments: "Entek teswir ýok — birinji boluň!",
@@ -846,8 +890,8 @@ async function loadListings() {
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
     list.innerHTML = items.map((item) => `
-      <div class="card listing-card" onclick="openProductScreen(${item.id})">
-        <div class="listing-card-row">
+      <div class="card listing-card">
+        <div class="listing-card-row" onclick="openProductScreen(${item.id})">
           ${item.photo_urls && item.photo_urls[0]
             ? `<img class="listing-card-thumb-sm" src="${item.photo_urls[0]}" alt="">`
             : `<div class="listing-card-thumb-placeholder">📦</div>`}
@@ -857,9 +901,12 @@ async function loadListings() {
           </div>
         </div>
         <div class="card-desc">${item.description || ""}</div>
-        <button class="btn-secondary" onclick="event.stopPropagation(); window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
-          ${t("contactSellerBtn")}
-        </button>
+        <div class="card-btn-row">
+          <button class="btn-outline" onclick="openProductScreen(${item.id})">${t("previewBtn")}</button>
+          <button class="btn-secondary" onclick="window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
+            ${t("contactSellerBtn")}
+          </button>
+        </div>
       </div>
     `).join("");
   } catch (e) {
@@ -891,7 +938,7 @@ async function openProductScreen(listingId) {
 
 function renderProductScreen(listing, similar, comments) {
   const photosHtml = listing.photo_urls && listing.photo_urls.length
-    ? `<div class="product-photos">${listing.photo_urls.map((url) => `<img src="${url}" alt="">`).join("")}</div>`
+    ? `<div class="product-photos">${listing.photo_urls.map((url) => `<img src="${url}" alt="" onclick="openFullscreenPhoto('${url}')">`).join("")}</div>`
     : `<div class="product-photos-empty">📦</div>`;
 
   const sellerInitial = (listing.seller_name || "?").trim()[0]?.toUpperCase() || "?";
@@ -997,6 +1044,20 @@ async function submitComment() {
   }
 }
 
+function openFullscreenPhoto(url) {
+  document.getElementById("fullscreen-photo-img").src = url;
+  document.getElementById("fullscreen-photo-overlay").classList.remove("hidden");
+}
+
+document.getElementById("fullscreen-photo-close").addEventListener("click", () => {
+  document.getElementById("fullscreen-photo-overlay").classList.add("hidden");
+});
+document.getElementById("fullscreen-photo-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "fullscreen-photo-overlay") {
+    document.getElementById("fullscreen-photo-overlay").classList.add("hidden");
+  }
+});
+
 document.getElementById("product-back").addEventListener("click", () => {
   productScreen.classList.add("hidden");
   currentProductId = null;
@@ -1093,6 +1154,7 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
   const description = document.getElementById("lf-description").value.trim();
   const price = lfPriceInput.value.replace(/\D/g, "");
   const contact = document.getElementById("lf-contact").value.trim();
+  const expiresDate = document.getElementById("lf-expires").value;
 
   if (!title || !contact) { showToast(t("errFields")); return; }
 
@@ -1124,11 +1186,12 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
         faculty: postFields.faculty || null,
         department: postFields.department || null,
         subject: postFields.subject || null,
+        expires_at: expiresDate ? new Date(expiresDate + "T23:59:00").toISOString() : null,
       }),
     });
     if (!res.ok) throw new Error();
     showToast(t("listingSent"));
-    ["lf-title", "lf-description", "lf-price"].forEach((id) => { document.getElementById(id).value = ""; });
+    ["lf-title", "lf-description", "lf-price", "lf-expires"].forEach((id) => { document.getElementById(id).value = ""; });
     Object.keys(postFields).forEach((k) => (postFields[k] = ""));
     renderPostFieldLabels();
     selectedListingFiles = [];
@@ -1223,8 +1286,8 @@ async function loadMyListings() {
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyMyListings")}</p>`; return; }
     list.innerHTML = items.map((l) => `
-      <div class="card listing-card" onclick="openProductScreen(${l.id})">
-        <div class="listing-card-row">
+      <div class="card listing-card">
+        <div class="listing-card-row" onclick="openProductScreen(${l.id})">
           ${l.photo_urls && l.photo_urls[0]
             ? `<img class="listing-card-thumb-sm" src="${l.photo_urls[0]}" alt="">`
             : `<div class="listing-card-thumb-placeholder">📦</div>`}
@@ -1234,11 +1297,104 @@ async function loadMyListings() {
           </div>
           <span class="status-badge">${t("status_" + l.status)}</span>
         </div>
+        ${l.expires_at ? `<div class="hint listing-expiry">${t("expiresLabel")}: ${formatDate(l.expires_at)}</div>` : ""}
+        <div class="card-btn-row">
+          <button class="btn-outline" onclick="openEditListing(${l.id})">${t("editBtn")}</button>
+          <button class="btn-danger" onclick="deleteMyListing(${l.id})">${t("deleteBtn")}</button>
+        </div>
       </div>
     `).join("");
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
   }
+}
+
+function formatDate(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleDateString(currentLang === "RU" ? "ru-RU" : "en-GB");
+}
+
+async function deleteMyListing(listingId) {
+  if (!confirm(t("deleteConfirm"))) return;
+  try {
+    const res = await fetch(`${API_BASE}/marketplace/listings/${listingId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tg_id: currentUser.tg_id }),
+    });
+    if (!res.ok) throw new Error();
+    showToast(t("deleteSuccess"));
+    loadMyListings();
+  } catch (e) {
+    showToast(t("deleteError"));
+  }
+}
+
+async function openEditListing(listingId) {
+  let listing;
+  try {
+    listing = await fetch(`${API_BASE}/marketplace/listings/${listingId}`).then((r) => r.json());
+  } catch (e) {
+    showToast(t("errListings"));
+    return;
+  }
+
+  const expiryValue = listing.expires_at ? listing.expires_at.slice(0, 10) : "";
+  const html = `
+    <div class="form">
+      <label>${t("lfTitleLabel")}</label>
+      <input id="edit-title" type="text" value="${escapeHtml(listing.title)}">
+
+      <label>${t("lfDescLabel")}</label>
+      <textarea id="edit-description">${escapeHtml(listing.description || "")}</textarea>
+
+      <label>${t("lfPriceLabel")}</label>
+      <input id="edit-price" type="text" inputmode="numeric" value="${listing.price ? Number(listing.price).toLocaleString("ru-RU").replace(/,/g, " ") : ""}">
+
+      <label>${t("lfContactLabel")}</label>
+      <input id="edit-contact" type="text" value="${escapeHtml(listing.contact)}">
+
+      <label>${t("expiresLabel")}</label>
+      <input id="edit-expires" type="date" value="${expiryValue}">
+
+      <button id="edit-submit" class="btn-primary">${t("saveBtn")}</button>
+    </div>
+  `;
+  openSubscreen("editListingTitle", html);
+
+  document.getElementById("edit-price").addEventListener("input", (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "");
+    e.target.value = digitsOnly ? Number(digitsOnly).toLocaleString("ru-RU").replace(/,/g, " ") : "";
+  });
+
+  document.getElementById("edit-submit").addEventListener("click", async () => {
+    const title = document.getElementById("edit-title").value.trim();
+    const description = document.getElementById("edit-description").value.trim();
+    const price = document.getElementById("edit-price").value.replace(/\D/g, "");
+    const contact = document.getElementById("edit-contact").value.trim();
+    const expiresDate = document.getElementById("edit-expires").value;
+
+    try {
+      const res = await fetch(`${API_BASE}/marketplace/listings/${listingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tg_id: currentUser.tg_id,
+          title: title || null,
+          description: description || null,
+          price: price ? parseInt(price, 10) : null,
+          contact: contact || null,
+          expires_at: expiresDate ? new Date(expiresDate + "T23:59:00").toISOString() : null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      showToast(t("editSuccess"));
+      subscreen.classList.add("hidden");
+      loadMyListings();
+    } catch (e) {
+      showToast(t("editError"));
+    }
+  });
 }
 
 // ---------- Вкладка «Профиль» ----------

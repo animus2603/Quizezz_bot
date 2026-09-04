@@ -203,8 +203,19 @@ class CommentOut(BaseModel):
     id: int
     text: str
     author_name: str
+    author_tg_id: int
     rating: int | None = None
     created_at: dt.datetime
+
+
+class UpdateCommentIn(BaseModel):
+    tg_id: int
+    text: str
+    rating: int | None = None
+
+
+class DeleteCommentIn(BaseModel):
+    tg_id: int
 
 
 class CreateCommentIn(BaseModel):

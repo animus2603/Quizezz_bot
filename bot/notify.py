@@ -160,6 +160,26 @@ async def notify_admin_refund_needed(order: Order, user: User) -> None:
         pass
 
 
+async def notify_seller_new_review(listing: Listing, seller: User, reviewer_name: str, text: str, rating: int | None) -> None:
+    """Продавцу сразу, как только кто-то оставил отзыв на его объявление."""
+    category_labels = {"study": "Учебное", "goods": "Товары"}
+    category_label = category_labels.get(listing.category.value, listing.category.value)
+
+    stars = f"\nОценка: {'⭐' * rating}" if rating else ""
+    message = (
+        f"💬 <b>Новый отзыв на ваше объявление</b>\n"
+        f"Категория: {category_label}\n"
+        f"Товар/услуга: {listing.title}\n"
+        f"От: {reviewer_name}"
+        f"{stars}\n\n"
+        f"«{text}»"
+    )
+    try:
+        await bot.send_message(seller.tg_id, message)
+    except TelegramAPIError:
+        pass
+
+
 def kaspi_requisites_text(amount: int) -> str:
     return (
         f"Переведите <b>{amount}₸</b> на Kaspi:\n"

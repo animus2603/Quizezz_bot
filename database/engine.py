@@ -87,6 +87,7 @@ EXAMPLE_GOODS_LISTINGS = [
         price=2500,
         subcategory="Учебники",
         category="goods",
+        photo_urls=["https://picsum.photos/seed/studhub-book1/500/400"],
     ),
     dict(
         title="Ноутбук Lenovo IdeaPad 3",
@@ -94,6 +95,7 @@ EXAMPLE_GOODS_LISTINGS = [
         price=145000,
         subcategory="Электроника",
         category="goods",
+        photo_urls=["https://picsum.photos/seed/studhub-laptop1/500/400"],
     ),
     dict(
         title="Толстовка с логотипом университета",
@@ -101,6 +103,7 @@ EXAMPLE_GOODS_LISTINGS = [
         price=6000,
         subcategory="Одежда",
         category="goods",
+        photo_urls=["https://picsum.photos/seed/studhub-hoodie1/500/400"],
     ),
 ]
 
@@ -112,6 +115,7 @@ EXAMPLE_STUDY_LISTINGS = [
         subcategory="СРС",
         category="study",
         subject="Программирование",
+        photo_urls=["https://picsum.photos/seed/studhub-code1/500/400"],
     ),
     dict(
         title="Готовые Quizizz по английскому языку",
@@ -120,6 +124,7 @@ EXAMPLE_STUDY_LISTINGS = [
         subcategory="Quizizz",
         category="study",
         subject="Английский язык",
+        photo_urls=["https://picsum.photos/seed/studhub-english1/500/400"],
     ),
     dict(
         title="Оформлю реферат по ГОСТу за 1 день",
@@ -127,6 +132,7 @@ EXAMPLE_STUDY_LISTINGS = [
         price=3500,
         subcategory="Реферат",
         category="study",
+        photo_urls=["https://picsum.photos/seed/studhub-essay1/500/400"],
     ),
 ]
 
@@ -161,6 +167,7 @@ async def init_db() -> None:
                     contact="@demo_seller",
                     subcategory=item.get("subcategory"),
                     subject=item.get("subject"),
+                    photo_urls=item.get("photo_urls"),
                 )
                 await crud.set_listing_status(session, listing, ListingStatus.approved)
 

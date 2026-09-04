@@ -1113,6 +1113,27 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   cursor: pointer;
 }
 
+.similar-card img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.similar-card-photo-placeholder {
+  width: 100%;
+  height: 90px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
 .similar-card-title { font-size: 12.5px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
 .similar-card-price { font-size: 12.5px; font-weight: 700; color: var(--accent); }
 
@@ -1242,3 +1263,56 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 
 .rating-star { transition: color 0.15s ease, transform 0.1s ease; }
 .rating-star:active { transform: scale(1.2); }
+
+/* ===== Свой комментарий (long-press → изменить/удалить) ===== */
+
+.comment-item-own {
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.comment-item-own::after {
+  content: "•••";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: var(--hint);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.comment-edit-textarea {
+  width: 100%;
+  min-height: 90px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  margin: 12px 0;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+
+/* ===== Заголовок секции с кнопкой "Смотреть все" ===== */
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-heading-row h2 { margin: 20px 0 10px; }
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}

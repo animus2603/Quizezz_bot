@@ -280,6 +280,26 @@ async def get_listing_comments(session: AsyncSession, listing_id: int) -> list[t
     return [(c, u) for c, u in result.all()]
 
 
+async def get_comment_with_author(session: AsyncSession, comment_id: int) -> tuple[ListingComment, User] | None:
+    stmt = select(ListingComment, User).join(User, User.id == ListingComment.user_id).where(ListingComment.id == comment_id)
+    result = await session.execute(stmt)
+    row = result.first()
+    return (row[0], row[1]) if row else None
+
+
+async def update_comment(session: AsyncSession, comment: ListingComment, text: str, rating: int | None) -> ListingComment:
+    comment.text = text
+    comment.rating = rating
+    await session.commit()
+    await session.refresh(comment)
+    return comment
+
+
+async def delete_comment(session: AsyncSession, comment: ListingComment) -> None:
+    await session.delete(comment)
+    await session.commit()
+
+
 async def delete_listing(session: AsyncSession, listing_id: int) -> bool:
     listing = await get_listing(session, listing_id)
     if not listing:

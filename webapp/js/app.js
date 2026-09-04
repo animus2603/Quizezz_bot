@@ -18,6 +18,8 @@ const BASE_DICT = {
   RU: {
     appName: "StudHub",
     readyQuizzes: "Готовые тесты",
+    marketplacePreviewTitle: "Из маркетплейса",
+    viewAllBtn: "Смотреть все ›",
     noQuizFound: "Нет нужного теста?",
     orderCustomBtn: "Заказать индивидуальный тест — 5000₸",
     cfFileLabel: "Загрузить файл с вопросами (если нужно)",
@@ -122,6 +124,9 @@ const BASE_DICT = {
     commentPlaceholder: "Написать комментарий...",
     commentSend: "Отправить",
     errComment: "Не удалось отправить комментарий",
+    commentActionsTitle: "Ваш отзыв",
+    deleteCommentConfirm: "Удалить этот отзыв?",
+    editCommentTitle: "Изменить отзыв",
     cancelBtn: (min) => `Отменить (осталось ${min} мин)`,
     cancelConfirm: "Отменить этот заказ?",
     cancelSuccess: "Заказ отменён",
@@ -134,6 +139,8 @@ const BASE_DICT = {
   KZ: {
     appName: "StudHub",
     readyQuizzes: "Дайын тесттер",
+    marketplacePreviewTitle: "Маркетплейстен",
+    viewAllBtn: "Барлығын көру ›",
     noQuizFound: "Керекті тест жоқ па?",
     orderCustomBtn: "Жеке тест тапсырыс беру — 5000₸",
     cfFileLabel: "Сұрақтары бар файлды жүктеу (керек болса)",
@@ -238,6 +245,9 @@ const BASE_DICT = {
     commentPlaceholder: "Пікір жазу...",
     commentSend: "Жіберу",
     errComment: "Пікірді жіберу мүмкін болмады",
+    commentActionsTitle: "Сіздің пікіріңіз",
+    deleteCommentConfirm: "Бұл пікірді жоясыз ба?",
+    editCommentTitle: "Пікірді өзгерту",
     cancelBtn: (min) => `Бас тарту (${min} мин қалды)`,
     cancelConfirm: "Осы тапсырысты бас тартасыз ба?",
     cancelSuccess: "Тапсырыс бас тартылды",
@@ -250,6 +260,8 @@ const BASE_DICT = {
   EN: {
     appName: "StudHub",
     readyQuizzes: "Ready-made quizzes",
+    marketplacePreviewTitle: "From the marketplace",
+    viewAllBtn: "View all ›",
     noQuizFound: "Can't find your quiz?",
     orderCustomBtn: "Order a custom quiz — 5000₸",
     cfFileLabel: "Upload a file with questions (if needed)",
@@ -354,6 +366,9 @@ const BASE_DICT = {
     commentPlaceholder: "Write a comment...",
     commentSend: "Send",
     errComment: "Couldn't send the comment",
+    commentActionsTitle: "Your review",
+    deleteCommentConfirm: "Delete this review?",
+    editCommentTitle: "Edit review",
     cancelBtn: (min) => `Cancel (${min} min left)`,
     cancelConfirm: "Cancel this order?",
     cancelSuccess: "Order cancelled",
@@ -366,6 +381,8 @@ const BASE_DICT = {
   TM: {
     appName: "StudHub",
     readyQuizzes: "Taýýar testler",
+    marketplacePreviewTitle: "Bazardan",
+    viewAllBtn: "Ählisini görmek ›",
     noQuizFound: "Gerekli testiňiz ýokmy?",
     orderCustomBtn: "Şahsy test sargyt et — 5000₸",
     cfFileLabel: "Soraglar bilen faýly ýükläň (gerek bolsa)",
@@ -470,6 +487,9 @@ const BASE_DICT = {
     commentPlaceholder: "Teswir ýazyň...",
     commentSend: "Ibermek",
     errComment: "Teswiri ibermek başartmady",
+    commentActionsTitle: "Siziň teswiriňiz",
+    deleteCommentConfirm: "Bu teswiri pozmalymy?",
+    editCommentTitle: "Teswiri üýtgetmek",
     cancelBtn: (min) => `Ýatyrmak (${min} min galdy)`,
     cancelConfirm: "Bu sargydy ýatyrmalymy?",
     cancelSuccess: "Sargyt ýatyryldy",
@@ -506,6 +526,7 @@ function applyTranslations() {
   renderPostFieldLabels();
   renderBanner();
   loadCatalog();
+  loadHomeListingsPreview();
   loadListings();
   renderPhoneRow();
 
@@ -878,6 +899,33 @@ searchOverlay.addEventListener("click", (e) => {
 });
 
 // ---------- Маркетплейс: лента ----------
+function renderMarketplaceCard(item) {
+  return `
+    <div class="card listing-card">
+      <div class="listing-card-row" onclick="openProductScreen(${item.id})">
+        ${item.photo_urls && item.photo_urls[0]
+          ? `<img class="listing-card-thumb-sm" src="${item.photo_urls[0]}" alt="">`
+          : `<div class="listing-card-thumb-placeholder">📦</div>`}
+        <div class="listing-card-info">
+          <div class="card-title">${item.title}</div>
+          ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
+        </div>
+      </div>
+      <div class="card-desc">${item.description || ""}</div>
+      <div class="card-btn-row">
+        <button class="btn-outline" onclick="openProductScreen(${item.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${t("previewBtn")}
+        </button>
+        <button class="btn-secondary" onclick="window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ${t("contactSellerBtn")}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 async function loadListings() {
   const list = document.getElementById("market-list");
   const params = new URLSearchParams();
@@ -889,30 +937,28 @@ async function loadListings() {
     const res = await fetch(`${API_BASE}/marketplace/listings${qs ? "?" + qs : ""}`);
     const items = await res.json();
     if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
-    list.innerHTML = items.map((item) => `
-      <div class="card listing-card">
-        <div class="listing-card-row" onclick="openProductScreen(${item.id})">
-          ${item.photo_urls && item.photo_urls[0]
-            ? `<img class="listing-card-thumb-sm" src="${item.photo_urls[0]}" alt="">`
-            : `<div class="listing-card-thumb-placeholder">📦</div>`}
-          <div class="listing-card-info">
-            <div class="card-title">${item.title}</div>
-            ${item.price ? `<div class="card-price">${item.price}₸</div>` : ""}
-          </div>
-        </div>
-        <div class="card-desc">${item.description || ""}</div>
-        <div class="card-btn-row">
-          <button class="btn-outline" onclick="openProductScreen(${item.id})">${t("previewBtn")}</button>
-          <button class="btn-secondary" onclick="window.open('https://t.me/${item.contact.replace('@','')}', '_blank')">
-            ${t("contactSellerBtn")}
-          </button>
-        </div>
-      </div>
-    `).join("");
+    list.innerHTML = items.map(renderMarketplaceCard).join("");
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
   }
 }
+
+async function loadHomeListingsPreview() {
+  const list = document.getElementById("home-listings-preview");
+  if (!list) return;
+  try {
+    const res = await fetch(`${API_BASE}/marketplace/listings`);
+    const items = await res.json();
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
+    list.innerHTML = items.slice(0, 4).map(renderMarketplaceCard).join("");
+  } catch (e) {
+    list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
+}
+
+document.getElementById("btn-view-all-listings")?.addEventListener("click", () => {
+  document.querySelector('.nav-item[data-tab="categories"]')?.click();
+});
 
 // ---------- Экран деталей объявления ----------
 const productScreen = document.getElementById("product-screen");
@@ -945,7 +991,7 @@ function renderProductScreen(listing, similar, comments) {
 
   const commentsHtml = comments.length
     ? comments.map((c) => `
-        <div class="comment-item">
+        <div class="comment-item" data-comment-id="${c.id}" data-author-tg-id="${c.author_tg_id}" data-text="${escapeHtml(c.text)}" data-rating="${c.rating || 0}">
           <div class="comment-author-row">
             <div class="comment-author">${escapeHtml(c.author_name)}</div>
             ${c.rating ? `<div class="comment-stars">${renderStars(c.rating)}</div>` : ""}
@@ -958,7 +1004,9 @@ function renderProductScreen(listing, similar, comments) {
   const similarHtml = similar.length
     ? `<div class="similar-scroll">${similar.map((s) => `
         <div class="similar-card" onclick="openProductScreen(${s.id})">
-          ${s.photo_urls && s.photo_urls[0] ? `<img src="${s.photo_urls[0]}" alt="">` : ""}
+          ${s.photo_urls && s.photo_urls[0]
+            ? `<img src="${s.photo_urls[0]}" alt="">`
+            : `<div class="similar-card-photo-placeholder">📦</div>`}
           <div class="similar-card-title">${s.title}</div>
           ${s.price ? `<div class="similar-card-price">${s.price}₸</div>` : ""}
         </div>
@@ -1010,6 +1058,111 @@ function renderProductScreen(listing, similar, comments) {
   document.getElementById("comment-send").addEventListener("click", submitComment);
   document.getElementById("comment-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") submitComment();
+  });
+
+  bindOwnCommentLongPress();
+}
+
+function bindOwnCommentLongPress() {
+  document.querySelectorAll(".comment-item").forEach((el) => {
+    const authorTgId = Number(el.dataset.authorTgId);
+    if (!currentUser.tg_id || authorTgId !== currentUser.tg_id) return;
+
+    el.classList.add("comment-item-own");
+    let pressTimer = null;
+
+    const startPress = () => {
+      pressTimer = setTimeout(() => openCommentActionSheet(el), 500);
+    };
+    const cancelPress = () => clearTimeout(pressTimer);
+
+    el.addEventListener("touchstart", startPress);
+    el.addEventListener("touchend", cancelPress);
+    el.addEventListener("touchmove", cancelPress);
+    el.addEventListener("mousedown", startPress);
+    el.addEventListener("mouseup", cancelPress);
+    el.addEventListener("mouseleave", cancelPress);
+  });
+}
+
+function openCommentActionSheet(el) {
+  const commentId = el.dataset.commentId;
+  const text = el.dataset.text;
+  const rating = Number(el.dataset.rating) || 0;
+
+  const html = `
+    <button class="profile-item" id="comment-edit-btn">
+      <span class="profile-item-icon">✏️</span>
+      <span class="profile-item-label">${t("editBtn")}</span>
+    </button>
+    <button class="profile-item" id="comment-delete-btn">
+      <span class="profile-item-icon">🗑️</span>
+      <span class="profile-item-label" style="color:#e53935;">${t("deleteBtn")}</span>
+    </button>
+  `;
+  document.getElementById("preview-title").textContent = t("commentActionsTitle");
+  document.getElementById("preview-body").innerHTML = `<div class="profile-menu">${html}</div>`;
+  document.getElementById("preview-overlay").classList.remove("hidden");
+
+  document.getElementById("comment-edit-btn").addEventListener("click", () => {
+    document.getElementById("preview-overlay").classList.add("hidden");
+    openEditCommentForm(commentId, text, rating);
+  });
+
+  document.getElementById("comment-delete-btn").addEventListener("click", async () => {
+    document.getElementById("preview-overlay").classList.add("hidden");
+    if (!confirm(t("deleteCommentConfirm"))) return;
+    try {
+      const res = await fetch(`${API_BASE}/marketplace/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tg_id: currentUser.tg_id }),
+      });
+      if (!res.ok) throw new Error();
+      openProductScreen(currentProductId);
+    } catch (e) {
+      showToast(t("errComment"));
+    }
+  });
+}
+
+function openEditCommentForm(commentId, text, rating) {
+  let editRating = rating;
+  const html = `
+    <div class="rating-picker" id="edit-rating-picker">
+      ${[1, 2, 3, 4, 5].map((n) => `<span class="rating-star ${n <= editRating ? "active" : ""}" data-value="${n}">★</span>`).join("")}
+    </div>
+    <textarea id="edit-comment-text" class="comment-edit-textarea">${text}</textarea>
+    <button id="edit-comment-save" class="btn-primary">${t("saveBtn")}</button>
+  `;
+  document.getElementById("preview-title").textContent = t("editCommentTitle");
+  document.getElementById("preview-body").innerHTML = html;
+  document.getElementById("preview-overlay").classList.remove("hidden");
+
+  document.querySelectorAll("#edit-rating-picker .rating-star").forEach((star) => {
+    star.addEventListener("click", () => {
+      editRating = editRating === Number(star.dataset.value) ? 0 : Number(star.dataset.value);
+      document.querySelectorAll("#edit-rating-picker .rating-star").forEach((s) => {
+        s.classList.toggle("active", Number(s.dataset.value) <= editRating);
+      });
+    });
+  });
+
+  document.getElementById("edit-comment-save").addEventListener("click", async () => {
+    const newText = document.getElementById("edit-comment-text").value.trim();
+    if (!newText) return;
+    try {
+      const res = await fetch(`${API_BASE}/marketplace/comments/${commentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tg_id: currentUser.tg_id, text: newText, rating: editRating || null }),
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById("preview-overlay").classList.add("hidden");
+      openProductScreen(currentProductId);
+    } catch (e) {
+      showToast(t("errComment"));
+    }
   });
 }
 

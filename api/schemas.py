@@ -74,6 +74,11 @@ class ProfileIn(BaseModel):
     full_name: str | None = None
 
 
+class ApplyReferralIn(BaseModel):
+    tg_id: int
+    referral_code: str
+
+
 class UserOrderOut(BaseModel):
     id: int
     order_type: str

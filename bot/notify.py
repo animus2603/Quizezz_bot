@@ -165,10 +165,12 @@ async def notify_seller_new_review(listing: Listing, seller: User, reviewer_name
     category_labels = {"study": "Учебное", "goods": "Товары"}
     category_label = category_labels.get(listing.category.value, listing.category.value)
 
+    type_line = f"\nТип: {listing.subcategory}" if listing.subcategory else ""
     stars = f"\nОценка: {'⭐' * rating}" if rating else ""
     message = (
         f"💬 <b>Новый отзыв на ваше объявление</b>\n"
-        f"Категория: {category_label}\n"
+        f"Категория: {category_label}"
+        f"{type_line}\n"
         f"Товар/услуга: {listing.title}\n"
         f"От: {reviewer_name}"
         f"{stars}\n\n"

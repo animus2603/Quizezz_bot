@@ -1316,3 +1316,50 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   cursor: pointer;
   padding: 0;
 }
+
+/* ===== Реферальный блок в профиле ===== */
+
+.referral-card {
+  margin-top: 16px;
+  background: var(--secondary-bg);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.referral-card-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.referral-card-desc { font-size: 12px; color: var(--hint); margin-bottom: 12px; }
+
+.referral-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.referral-code { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; flex: 1; }
+
+.referral-stats { font-size: 12px; color: var(--hint); margin: 8px 0 10px; }
+
+.referral-apply-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.referral-apply-row input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.referral-apply-row .btn-outline {
+  width: auto;
+  padding: 10px 16px;
+  font-size: 13px;
+}

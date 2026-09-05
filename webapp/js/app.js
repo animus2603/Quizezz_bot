@@ -74,6 +74,16 @@ const BASE_DICT = {
     phoneUpdated: "Номер обновлён!",
     menuSettings: "Настройки", menuNotifications: "Уведомления", menuFaq: "FAQ", menuSupport: "Поддержка",
     statOrders: "Заказов", statListings: "Объявлений",
+    referralTitle: "Пригласи друга",
+    referralDesc: "Твой код приглашения — поделись им с друзьями",
+    referralInvitedLabel: "Приглашено",
+    referralShareBtn: "Поделиться кодом",
+    referralShareText: "Заходи в StudHub — тесты и маркетплейс для студентов 🎓",
+    referralInputPlaceholder: "Есть код друга? Введите его",
+    referralApplyBtn: "Применить",
+    referralCopied: "Код скопирован",
+    referralApplySuccess: "Код применён!",
+    referralApplyError: "Не удалось применить код",
     previewBtn: "Посмотреть", noPreview: "Пример вопросов пока не добавлен.",
     settingsLanguage: "Язык",
     settingsShare: "Поделиться приложением",
@@ -108,7 +118,9 @@ const BASE_DICT = {
     productTitle: "Объявление",
     cardSeller: "Продавец",
     expiresLabel: "Показывать до",
-    expiresHint: "Необязательно — после этой даты объявление скроется из ленты",
+    expiresHint: "После этой даты объявление скроется из ленты",
+    errExpiresRequired: "Укажите дату, до какой показывать объявление",
+    errExpiresPast: "Дата не может быть в прошлом",
     editBtn: "Изменить",
     deleteBtn: "Удалить",
     deleteConfirm: "Удалить это объявление?",
@@ -195,6 +207,16 @@ const BASE_DICT = {
     phoneUpdated: "Нөмір жаңартылды!",
     menuSettings: "Баптаулар", menuNotifications: "Хабарламалар", menuFaq: "Жиі қойылатын сұрақтар", menuSupport: "Қолдау қызметі",
     statOrders: "Тапсырыс", statListings: "Хабарландыру",
+    referralTitle: "Досыңды шақыр",
+    referralDesc: "Сенің шақыру кодың — досыңмен бөліс",
+    referralInvitedLabel: "Шақырылды",
+    referralShareBtn: "Кодпен бөлісу",
+    referralShareText: "StudHub-қа кел — студенттерге арналған тесттер мен маркетплейс 🎓",
+    referralInputPlaceholder: "Досыңның коды бар ма? Енгіз",
+    referralApplyBtn: "Қолдану",
+    referralCopied: "Код көшірілді",
+    referralApplySuccess: "Код қолданылды!",
+    referralApplyError: "Кодты қолдану мүмкін болмады",
     previewBtn: "Қарау", noPreview: "Сұрақтар мысалы әлі қосылмаған.",
     settingsLanguage: "Тіл",
     settingsShare: "Қосымшамен бөлісу",
@@ -229,7 +251,9 @@ const BASE_DICT = {
     productTitle: "Хабарландыру",
     cardSeller: "Сатушы",
     expiresLabel: "Қашанға дейін көрсету",
-    expiresHint: "Міндетті емес — осы күннен кейін хабарландыру лентадан жасырылады",
+    expiresHint: "Осы күннен кейін хабарландыру лентадан жасырылады",
+    errExpiresRequired: "Хабарландыруды қашанға дейін көрсету керегін көрсетіңіз",
+    errExpiresPast: "Күн өткен уақытта бола алмайды",
     editBtn: "Өзгерту",
     deleteBtn: "Жою",
     deleteConfirm: "Бұл хабарландыруды жоясыз ба?",
@@ -316,6 +340,16 @@ const BASE_DICT = {
     phoneUpdated: "Phone updated!",
     menuSettings: "Settings", menuNotifications: "Notifications", menuFaq: "FAQ", menuSupport: "Support",
     statOrders: "Orders", statListings: "Listings",
+    referralTitle: "Invite a friend",
+    referralDesc: "Your invite code — share it with friends",
+    referralInvitedLabel: "Invited",
+    referralShareBtn: "Share code",
+    referralShareText: "Check out StudHub — quizzes and a marketplace for students 🎓",
+    referralInputPlaceholder: "Have a friend's code? Enter it",
+    referralApplyBtn: "Apply",
+    referralCopied: "Code copied",
+    referralApplySuccess: "Code applied!",
+    referralApplyError: "Couldn't apply the code",
     previewBtn: "Preview", noPreview: "No sample questions added yet.",
     settingsLanguage: "Language",
     settingsShare: "Share the app",
@@ -350,7 +384,9 @@ const BASE_DICT = {
     productTitle: "Listing",
     cardSeller: "Seller",
     expiresLabel: "Show until",
-    expiresHint: "Optional — the listing will disappear from the feed after this date",
+    expiresHint: "The listing will disappear from the feed after this date",
+    errExpiresRequired: "Please choose a date to show the listing until",
+    errExpiresPast: "The date can't be in the past",
     editBtn: "Edit",
     deleteBtn: "Delete",
     deleteConfirm: "Delete this listing?",
@@ -437,6 +473,16 @@ const BASE_DICT = {
     phoneUpdated: "Belgi täzelendi!",
     menuSettings: "Sazlamalar", menuNotifications: "Bildirişler", menuFaq: "Ýygy-ýygydan soralýan soraglar", menuSupport: "Goldaw",
     statOrders: "Sargytlar", statListings: "Bildirişler",
+    referralTitle: "Dostuňy çagyr",
+    referralDesc: "Seniň çakylyk koduň — dostuň bilen paýlaş",
+    referralInvitedLabel: "Çagyryldy",
+    referralShareBtn: "Kody paýlaşmak",
+    referralShareText: "StudHub-a gel — talyplar üçin testler we bazar 🎓",
+    referralInputPlaceholder: "Dostuňyň kody barmy? Ýazyň",
+    referralApplyBtn: "Ulanmak",
+    referralCopied: "Kod göçürildi",
+    referralApplySuccess: "Kod ulanyldy!",
+    referralApplyError: "Kody ulanmak başartmady",
     previewBtn: "Görmek", noPreview: "Sorag mysaly entek goşulmady.",
     settingsLanguage: "Dil",
     settingsShare: "Programmany paýlaşmak",
@@ -471,7 +517,9 @@ const BASE_DICT = {
     productTitle: "Bildiriş",
     cardSeller: "Satyjy",
     expiresLabel: "Haçana çenli görkezmeli",
-    expiresHint: "Hökman däl — bu senededen soň bildiriş lentadan gizlener",
+    expiresHint: "Bu senededen soň bildiriş lentadan gizlener",
+    errExpiresRequired: "Bildirişi haçana çenli görkezmelidigini saýlaň",
+    errExpiresPast: "Sene geçmişde bolup bilmez",
     editBtn: "Üýtgetmek",
     deleteBtn: "Pozmak",
     deleteConfirm: "Bu bildirişi pozmalymy?",
@@ -1309,7 +1357,23 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
   const contact = document.getElementById("lf-contact").value.trim();
   const expiresDate = document.getElementById("lf-expires").value;
 
-  if (!title || !contact) { showToast(t("errFields")); return; }
+  if (!title || !description || !price || !contact || !postFields.subcategory) {
+    showToast(t("errFields"));
+    return;
+  }
+
+  if (postCategory === "study") {
+    const missingAcademic = ["faculty", "department", "course", "group_name", "subject"]
+      .some((f) => !postFields[f]);
+    if (missingAcademic) { showToast(t("errFields")); return; }
+  }
+
+  if (!expiresDate) { showToast(t("errExpiresRequired")); return; }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const chosenDate = new Date(expiresDate);
+  if (chosenDate < today) { showToast(t("errExpiresPast")); return; }
 
   let photoUrls = [];
   try {
@@ -1589,6 +1653,7 @@ async function loadProfile() {
   }
   renderPhoneRow();
   loadProfileStats();
+  renderReferralBlock();
 
   // Номер показываем так же "само собой", как имя и username — без отдельной
   // кнопки. Если ещё не привязан, один раз за сессию тихо запрашиваем его.
@@ -1609,6 +1674,60 @@ async function loadProfileStats() {
     document.getElementById("stat-listings").textContent = listings.length;
   } catch (e) { /* тихо игнорируем */ }
 }
+
+function renderReferralBlock() {
+  if (!currentUser.tg_id) return;
+  document.getElementById("referral-code").textContent = "#" + currentUser.tg_id;
+  const invitedEl = document.querySelector(".referral-stats");
+  if (invitedEl) invitedEl.textContent = `${t("referralInvitedLabel")}: ${profileData?.referral_count ?? 0}`;
+}
+
+function referralLink() {
+  const botUsername = profileData?.bot_username || "your_bot";
+  return `https://t.me/${botUsername}?start=ref_${currentUser.tg_id}`;
+}
+
+document.getElementById("btn-copy-referral").addEventListener("click", async () => {
+  const code = "#" + currentUser.tg_id;
+  try {
+    await navigator.clipboard.writeText(code);
+    showToast(t("referralCopied"));
+  } catch (e) {
+    showToast(code);
+  }
+});
+
+document.getElementById("btn-share-referral").addEventListener("click", () => {
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink())}&text=${encodeURIComponent(t("referralShareText"))}`;
+  if (tg.openTelegramLink) {
+    tg.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, "_blank");
+  }
+});
+
+document.getElementById("btn-apply-referral").addEventListener("click", async () => {
+  const input = document.getElementById("referral-code-input");
+  const code = input.value.trim();
+  if (!code) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/users/apply-referral`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tg_id: currentUser.tg_id, referral_code: code }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      showToast(err?.detail || t("referralApplyError"));
+      return;
+    }
+    showToast(t("referralApplySuccess"));
+    input.value = "";
+  } catch (e) {
+    showToast(t("referralApplyError"));
+  }
+});
 
 function renderPhoneRow() {
   const phoneEl = document.getElementById("profile-phone");
@@ -1792,3 +1911,9 @@ document.getElementById("menu-settings").addEventListener("click", renderSetting
 // ---------- Init ----------
 applyTranslations();
 setBannerVisible(true);
+
+// Запрещаем выбор прошлой даты в поле "Показывать до"
+const lfExpiresInput = document.getElementById("lf-expires");
+if (lfExpiresInput) {
+  lfExpiresInput.min = new Date().toISOString().slice(0, 10);
+}

@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database.engine import get_session
 from database import crud
 from database.models import QuizCatalogItem, OrderType
-from api.schemas import ProfileOut, ProfileIn, UserOrderOut, UserListingOut
+from api.schemas import ProfileOut, ProfileIn, ApplyReferralIn, UserOrderOut, UserListingOut
 from config import BOT_USERNAME
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -20,6 +20,26 @@ async def get_or_init_profile(data: ProfileIn, session: AsyncSession = Depends(g
     out.referral_count = referral_count
     out.bot_username = BOT_USERNAME
     return out
+
+
+@router.post("/apply-referral")
+async def apply_referral(data: ApplyReferralIn, session: AsyncSession = Depends(get_session)):
+    """Покупатель вводит реферальный код друга (если не пришёл по прямой ссылке)."""
+    try:
+        referrer_tg_id = int(data.referral_code.strip().lstrip("#"))
+    except ValueError:
+        raise HTTPException(400, "Неверный формат кода")
+
+    user = await crud.get_or_create_user(session, data.tg_id, None, None)
+    ok, reason = await crud.apply_referral_code(session, user, referrer_tg_id)
+    if not ok:
+        messages = {
+            "already_set": "К вам уже привязан пригласивший",
+            "self": "Нельзя ввести свой же код",
+            "not_found": "Пользователь с таким кодом не найден",
+        }
+        raise HTTPException(400, messages.get(reason, "Не удалось применить код"))
+    return {"ok": True}
 
 
 @router.get("/{tg_id}/orders", response_model=list[UserOrderOut])

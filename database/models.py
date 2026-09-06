@@ -20,6 +20,7 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     referred_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # tg_id пригласившего
+    points: Mapped[int] = mapped_column(Integer, default=0)  # баллы за рефералов и т.д.
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     orders: Mapped[list["Order"]] = relationship(back_populates="user")

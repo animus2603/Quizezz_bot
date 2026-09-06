@@ -30,6 +30,14 @@
     </div>
   </div>
 
+  <!-- ===== КОМПАКТНОЕ МЕНЮ ДЕЙСТВИЙ НАД СВОИМ ОТЗЫВОМ ===== -->
+  <div id="comment-action-overlay" class="lang-overlay comment-action-overlay hidden">
+    <div class="lang-menu">
+      <button class="lang-option" id="comment-edit-btn">✏️ <span data-i18n="editBtn">Изменить</span></button>
+      <button class="lang-option" id="comment-delete-btn" style="color:#e53935;">🗑️ <span data-i18n="deleteBtn">Удалить</span></button>
+    </div>
+  </div>
+
   <!-- ===== ПОПАП АВТОКОМПЛИТ-ПОИСКА ДЛЯ ФИЛЬТРОВ ===== -->
   <div id="search-overlay" class="lang-overlay search-overlay hidden">
     <div class="search-sheet">
@@ -66,12 +74,15 @@
         <button id="cf-submit" class="btn-primary" data-i18n="cfSubmit">Оформить заказ — 5000₸</button>
       </div>
 
-      <h2 data-i18n="readyQuizzes">Готовые тесты</h2>
+      <div class="section-heading-row">
+        <h2 data-i18n="readyQuizzes">Готовые тесты</h2>
+        <button id="btn-view-all-quizzes" class="link-btn hidden" data-i18n="viewAllBtn">Смотреть все ›</button>
+      </div>
       <div id="catalog-list" class="list">…</div>
 
       <div class="section-heading-row">
-        <h2 data-i18n="marketplacePreviewTitle">Из маркетплейса</h2>
-        <button id="btn-view-all-listings" class="link-btn" data-i18n="viewAllBtn">Смотреть все ›</button>
+        <h2 data-i18n="goodsPreviewTitle">Товары</h2>
+        <button id="btn-view-all-listings" class="link-btn hidden" data-i18n="viewAllBtn">Смотреть все ›</button>
       </div>
       <div id="home-listings-preview" class="list">…</div>
     </section>
@@ -153,6 +164,7 @@
         <input id="lf-expires" type="date" required>
         <div class="hint" data-i18n="expiresHint">После этой даты объявление скроется из ленты</div>
 
+        <div id="post-form-error" class="form-error hidden"></div>
         <button id="lf-submit" class="btn-primary" data-i18n="lfSubmit">Отправить на модерацию</button>
       </div>
     </section>
@@ -211,7 +223,15 @@
           <span id="referral-code" class="referral-code">—</span>
           <button id="btn-copy-referral" class="btn-icon" type="button" title="Скопировать">⧉</button>
         </div>
+
+        <div class="referral-link-label" data-i18n="referralLinkLabel">Или своя ссылка-приглашение:</div>
+        <div class="referral-code-row">
+          <span id="referral-link" class="referral-link">—</span>
+          <button id="btn-copy-referral-link" class="btn-icon" type="button" title="Скопировать">⧉</button>
+        </div>
+
         <div class="referral-stats">Приглашено: 0</div>
+        <div class="referral-points" id="referral-points"></div>
         <button id="btn-share-referral" class="btn-primary btn-attach" data-i18n="referralShareBtn">Поделиться кодом</button>
 
         <div class="referral-apply-row">

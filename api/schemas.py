@@ -63,6 +63,7 @@ class ProfileOut(BaseModel):
     phone: str | None
     referral_count: int = 0
     bot_username: str | None = None
+    points: int = 0
 
     class Config:
         from_attributes = True

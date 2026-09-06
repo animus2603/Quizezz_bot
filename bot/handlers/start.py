@@ -22,10 +22,14 @@ async def cmd_start(message: Message, command: CommandObject):
             pass
 
     async with async_session() as session:
-        await crud.get_or_create_user(
+        existing = await crud.get_user_by_tg_id(session, message.from_user.id)
+        user = await crud.get_or_create_user(
             session, message.from_user.id, message.from_user.username, message.from_user.full_name,
             referred_by=referred_by,
         )
+        # баллы начисляем только один раз — если пользователь только что создан по этой ссылке
+        if existing is None and referred_by and user.referred_by == referred_by:
+            await crud.award_referral_points(session, referred_by)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))

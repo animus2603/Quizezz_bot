@@ -55,9 +55,12 @@ async def count_referrals(session: AsyncSession, tg_id: int) -> int:
     return len(result.scalars().all())
 
 
+REFERRAL_REWARD_POINTS = 10
+
+
 async def apply_referral_code(session: AsyncSession, user: User, referrer_tg_id: int) -> tuple[bool, str]:
     """Привязывает пользователя к пригласившему по коду (=tg_id), если ещё не привязан.
-    Возвращает (успех, причина_отказа_если_не_успех)."""
+    Начисляет пригласившему бонусные баллы. Возвращает (успех, причина_отказа_если_не_успех)."""
     if user.referred_by is not None:
         return False, "already_set"
     if referrer_tg_id == user.tg_id:
@@ -67,8 +70,18 @@ async def apply_referral_code(session: AsyncSession, user: User, referrer_tg_id:
     if not referrer:
         return False, "not_found"
     user.referred_by = referrer_tg_id
+    referrer.points += REFERRAL_REWARD_POINTS
     await session.commit()
     return True, ""
+
+
+async def award_referral_points(session: AsyncSession, referrer_tg_id: int) -> None:
+    """Начисляет баллы рефереру по tg_id (используется при регистрации через deep-link в /start)."""
+    result = await session.execute(select(User).where(User.tg_id == referrer_tg_id))
+    referrer = result.scalar_one_or_none()
+    if referrer:
+        referrer.points += REFERRAL_REWARD_POINTS
+        await session.commit()
 
 
 async def get_active_catalog(session: AsyncSession) -> list[QuizCatalogItem]:

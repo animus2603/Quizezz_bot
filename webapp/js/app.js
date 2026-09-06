@@ -18,7 +18,7 @@ const BASE_DICT = {
   RU: {
     appName: "StudHub",
     readyQuizzes: "Готовые тесты",
-    marketplacePreviewTitle: "Из маркетплейса",
+    goodsPreviewTitle: "Товары",
     viewAllBtn: "Смотреть все ›",
     noQuizFound: "Нет нужного теста?",
     orderCustomBtn: "Заказать индивидуальный тест — 5000₸",
@@ -44,7 +44,8 @@ const BASE_DICT = {
     lfDescPlaceholder: "Состояние, детали...",
     lfPriceLabel: "Цена (₸, необязательно)",
     lfContactLabel: "Контакт",
-    lfFileLabel: "Файл/фото (по желанию)",
+    lfFileLabel: "Фото (по желанию, максимум 10)",
+    errMaxPhotos: "Максимум 10 фото",
     contactAutoHint: "Подставляется автоматически из вашего Telegram-профиля",
     fillPreviousField: (label) => `Сначала выберите: ${label}`,
     lfSubmit: "Отправить на модерацию",
@@ -77,6 +78,8 @@ const BASE_DICT = {
     referralTitle: "Пригласи друга",
     referralDesc: "Твой код приглашения — поделись им с друзьями",
     referralInvitedLabel: "Приглашено",
+    referralLinkLabel: "Или своя ссылка-приглашение:",
+    referralPointsLabel: "Баллы",
     referralShareBtn: "Поделиться кодом",
     referralShareText: "Заходи в StudHub — тесты и маркетплейс для студентов 🎓",
     referralInputPlaceholder: "Есть код друга? Введите его",
@@ -151,7 +154,7 @@ const BASE_DICT = {
   KZ: {
     appName: "StudHub",
     readyQuizzes: "Дайын тесттер",
-    marketplacePreviewTitle: "Маркетплейстен",
+    goodsPreviewTitle: "Тауарлар",
     viewAllBtn: "Барлығын көру ›",
     noQuizFound: "Керекті тест жоқ па?",
     orderCustomBtn: "Жеке тест тапсырыс беру — 5000₸",
@@ -177,7 +180,8 @@ const BASE_DICT = {
     lfDescPlaceholder: "Жағдайы, толығырақ...",
     lfPriceLabel: "Бағасы (₸, міндетті емес)",
     lfContactLabel: "Байланыс",
-    lfFileLabel: "Файл/фото (қаласаңыз)",
+    lfFileLabel: "Фото (қаласаңыз, барлығы 10-ға дейін)",
+    errMaxPhotos: "Ең көбі 10 фото",
     contactAutoHint: "Telegram профиліңізден автоматты түрде қойылады",
     fillPreviousField: (label) => `Алдымен таңдаңыз: ${label}`,
     lfSubmit: "Модерацияға жіберу",
@@ -210,6 +214,8 @@ const BASE_DICT = {
     referralTitle: "Досыңды шақыр",
     referralDesc: "Сенің шақыру кодың — досыңмен бөліс",
     referralInvitedLabel: "Шақырылды",
+    referralLinkLabel: "Немесе жеке шақыру сілтемесі:",
+    referralPointsLabel: "Ұпайлар",
     referralShareBtn: "Кодпен бөлісу",
     referralShareText: "StudHub-қа кел — студенттерге арналған тесттер мен маркетплейс 🎓",
     referralInputPlaceholder: "Досыңның коды бар ма? Енгіз",
@@ -284,7 +290,7 @@ const BASE_DICT = {
   EN: {
     appName: "StudHub",
     readyQuizzes: "Ready-made quizzes",
-    marketplacePreviewTitle: "From the marketplace",
+    goodsPreviewTitle: "Goods",
     viewAllBtn: "View all ›",
     noQuizFound: "Can't find your quiz?",
     orderCustomBtn: "Order a custom quiz — 5000₸",
@@ -310,7 +316,8 @@ const BASE_DICT = {
     lfDescPlaceholder: "Condition, details...",
     lfPriceLabel: "Price (₸, optional)",
     lfContactLabel: "Contact",
-    lfFileLabel: "File/photo (optional)",
+    lfFileLabel: "Photos (optional, up to 10)",
+    errMaxPhotos: "Maximum 10 photos",
     contactAutoHint: "Filled in automatically from your Telegram profile",
     fillPreviousField: (label) => `Please select first: ${label}`,
     lfSubmit: "Send for moderation",
@@ -343,6 +350,8 @@ const BASE_DICT = {
     referralTitle: "Invite a friend",
     referralDesc: "Your invite code — share it with friends",
     referralInvitedLabel: "Invited",
+    referralLinkLabel: "Or your personal invite link:",
+    referralPointsLabel: "Points",
     referralShareBtn: "Share code",
     referralShareText: "Check out StudHub — quizzes and a marketplace for students 🎓",
     referralInputPlaceholder: "Have a friend's code? Enter it",
@@ -417,7 +426,7 @@ const BASE_DICT = {
   TM: {
     appName: "StudHub",
     readyQuizzes: "Taýýar testler",
-    marketplacePreviewTitle: "Bazardan",
+    goodsPreviewTitle: "Harytlar",
     viewAllBtn: "Ählisini görmek ›",
     noQuizFound: "Gerekli testiňiz ýokmy?",
     orderCustomBtn: "Şahsy test sargyt et — 5000₸",
@@ -443,7 +452,8 @@ const BASE_DICT = {
     lfDescPlaceholder: "Ýagdaýy, jikme-jiklikler...",
     lfPriceLabel: "Bahasy (₸, hökman däl)",
     lfContactLabel: "Habarlaşmak",
-    lfFileLabel: "Faýl/surat (islege görä)",
+    lfFileLabel: "Suratlar (islege görä, iň köp 10)",
+    errMaxPhotos: "Iň köp 10 surat",
     contactAutoHint: "Telegram profiliňizden awtomatiki goýulýar",
     fillPreviousField: (label) => `Ilki saýlaň: ${label}`,
     lfSubmit: "Barlaga ibermek",
@@ -476,6 +486,8 @@ const BASE_DICT = {
     referralTitle: "Dostuňy çagyr",
     referralDesc: "Seniň çakylyk koduň — dostuň bilen paýlaş",
     referralInvitedLabel: "Çagyryldy",
+    referralLinkLabel: "Ýa-da öz çakylyk salgyňyz:",
+    referralPointsLabel: "Utuklar",
     referralShareBtn: "Kody paýlaşmak",
     referralShareText: "StudHub-a gel — talyplar üçin testler we bazar 🎓",
     referralInputPlaceholder: "Dostuňyň kody barmy? Ýazyň",
@@ -655,33 +667,47 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
 });
 
 // ---------- Quizizz: каталог ----------
+const HOME_PREVIEW_LIMIT = 7;
+
+function renderQuizCard(item) {
+  return `
+    <div class="card">
+      <div class="quiz-card-title">${item.title}</div>
+      ${item.subject ? `<div class="quiz-card-subject">${item.subject}</div>` : ""}
+      <div class="card-attrs">
+        ${item.faculty ? `<div class="card-attr"><b>${t("cardFaculty")}:</b> ${item.faculty}</div>` : ""}
+        ${item.department ? `<div class="card-attr"><b>${t("cardDepartment")}:</b> ${item.department}</div>` : ""}
+        ${item.course ? `<div class="card-attr"><b>${t("cardCourse")}:</b> ${item.course}</div>` : ""}
+      </div>
+      <div class="card-price">${item.price}₸</div>
+      <div class="quiz-card-btn-row">
+        <button class="btn-outline" onclick="previewQuiz(${item.id})">${t("previewBtn")}</button>
+        <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
+      </div>
+    </div>
+  `;
+}
+
 async function loadCatalog() {
   const list = document.getElementById("catalog-list");
+  const viewAllBtn = document.getElementById("btn-view-all-quizzes");
   try {
     const res = await fetch(`${API_BASE}/quiz/catalog`);
     const items = await res.json();
-    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyCatalog")}</p>`; return; }
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyCatalog")}</p>`; viewAllBtn?.classList.add("hidden"); return; }
     window.__catalogItems = items;
-    list.innerHTML = items.map((item) => `
-      <div class="card">
-        <div class="quiz-card-title">${item.title}</div>
-        ${item.subject ? `<div class="quiz-card-subject">${item.subject}</div>` : ""}
-        <div class="card-attrs">
-          ${item.faculty ? `<div class="card-attr"><b>${t("cardFaculty")}:</b> ${item.faculty}</div>` : ""}
-          ${item.department ? `<div class="card-attr"><b>${t("cardDepartment")}:</b> ${item.department}</div>` : ""}
-          ${item.course ? `<div class="card-attr"><b>${t("cardCourse")}:</b> ${item.course}</div>` : ""}
-        </div>
-        <div class="card-price">${item.price}₸</div>
-        <div class="quiz-card-btn-row">
-          <button class="btn-outline" onclick="previewQuiz(${item.id})">${t("previewBtn")}</button>
-          <button class="btn-primary" onclick="buyReadyQuiz(${item.id})">${t("buyBtn")}</button>
-        </div>
-      </div>
-    `).join("");
+    list.innerHTML = items.slice(0, HOME_PREVIEW_LIMIT).map(renderQuizCard).join("");
+    viewAllBtn?.classList.toggle("hidden", items.length <= HOME_PREVIEW_LIMIT);
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errCatalog")}</p>`;
   }
 }
+
+document.getElementById("btn-view-all-quizzes")?.addEventListener("click", () => {
+  const items = window.__catalogItems || [];
+  const html = `<div class="list">${items.map(renderQuizCard).join("")}</div>`;
+  openSubscreen("readyQuizzes", html);
+});
 
 function previewQuiz(catalogItemId) {
   const item = (window.__catalogItems || []).find((i) => i.id === catalogItemId);
@@ -993,12 +1019,14 @@ async function loadListings() {
 
 async function loadHomeListingsPreview() {
   const list = document.getElementById("home-listings-preview");
+  const viewAllBtn = document.getElementById("btn-view-all-listings");
   if (!list) return;
   try {
     const res = await fetch(`${API_BASE}/marketplace/listings`);
     const items = await res.json();
-    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; return; }
-    list.innerHTML = items.slice(0, 4).map(renderMarketplaceCard).join("");
+    if (!items.length) { list.innerHTML = `<p class="hint">${t("emptyListings")}</p>`; viewAllBtn?.classList.add("hidden"); return; }
+    list.innerHTML = items.slice(0, HOME_PREVIEW_LIMIT).map(renderMarketplaceCard).join("");
+    viewAllBtn?.classList.toggle("hidden", items.length <= HOME_PREVIEW_LIMIT);
   } catch (e) {
     list.innerHTML = `<p class="hint">${t("errListings")}</p>`;
   }
@@ -1138,27 +1166,24 @@ function openCommentActionSheet(el) {
   const text = el.dataset.text;
   const rating = Number(el.dataset.rating) || 0;
 
-  const html = `
-    <button class="profile-item" id="comment-edit-btn">
-      <span class="profile-item-icon">✏️</span>
-      <span class="profile-item-label">${t("editBtn")}</span>
-    </button>
-    <button class="profile-item" id="comment-delete-btn">
-      <span class="profile-item-icon">🗑️</span>
-      <span class="profile-item-label" style="color:#e53935;">${t("deleteBtn")}</span>
-    </button>
-  `;
-  document.getElementById("preview-title").textContent = t("commentActionsTitle");
-  document.getElementById("preview-body").innerHTML = `<div class="profile-menu">${html}</div>`;
-  document.getElementById("preview-overlay").classList.remove("hidden");
+  const overlay = document.getElementById("comment-action-overlay");
+  overlay.classList.remove("hidden");
 
-  document.getElementById("comment-edit-btn").addEventListener("click", () => {
-    document.getElementById("preview-overlay").classList.add("hidden");
+  const editBtn = document.getElementById("comment-edit-btn");
+  const deleteBtn = document.getElementById("comment-delete-btn");
+
+  const newEditBtn = editBtn.cloneNode(true);
+  editBtn.replaceWith(newEditBtn);
+  const newDeleteBtn = deleteBtn.cloneNode(true);
+  deleteBtn.replaceWith(newDeleteBtn);
+
+  newEditBtn.addEventListener("click", () => {
+    overlay.classList.add("hidden");
     openEditCommentForm(commentId, text, rating);
   });
 
-  document.getElementById("comment-delete-btn").addEventListener("click", async () => {
-    document.getElementById("preview-overlay").classList.add("hidden");
+  newDeleteBtn.addEventListener("click", async () => {
+    overlay.classList.add("hidden");
     if (!confirm(t("deleteCommentConfirm"))) return;
     try {
       const res = await fetch(`${API_BASE}/marketplace/comments/${commentId}`, {
@@ -1173,6 +1198,10 @@ function openCommentActionSheet(el) {
     }
   });
 }
+
+document.getElementById("comment-action-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "comment-action-overlay") e.target.classList.add("hidden");
+});
 
 function openEditCommentForm(commentId, text, rating) {
   let editRating = rating;
@@ -1336,7 +1365,13 @@ function renderListingPhotoPreviews() {
 }
 
 document.getElementById("lf-file").addEventListener("change", (e) => {
-  selectedListingFiles = selectedListingFiles.concat(Array.from(e.target.files || []));
+  const MAX_PHOTOS = 10;
+  const newFiles = Array.from(e.target.files || []);
+  const combined = selectedListingFiles.concat(newFiles);
+  if (combined.length > MAX_PHOTOS) {
+    showToast(t("errMaxPhotos"));
+  }
+  selectedListingFiles = combined.slice(0, MAX_PHOTOS);
   renderListingPhotoPreviews();
   e.target.value = ""; // сбрасываем, чтобы повторный выбор тех же файлов тоже сработал
 });
@@ -1348,6 +1383,19 @@ lfPriceInput.addEventListener("input", () => {
   lfPriceInput.value = digitsOnly ? Number(digitsOnly).toLocaleString("ru-RU").replace(/,/g, " ") : "";
 });
 
+function showPostFormError(message) {
+  const el = document.getElementById("post-form-error");
+  el.textContent = message;
+  el.classList.remove("hidden");
+  el.style.animation = "none";
+  void el.offsetWidth; // перезапуск анимации тряски при повторной ошибке
+  el.style.animation = "";
+}
+
+function hidePostFormError() {
+  document.getElementById("post-form-error").classList.add("hidden");
+}
+
 document.getElementById("lf-submit").addEventListener("click", async () => {
   if (!postCategory) return;
 
@@ -1358,22 +1406,24 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
   const expiresDate = document.getElementById("lf-expires").value;
 
   if (!title || !description || !price || !contact || !postFields.subcategory) {
-    showToast(t("errFields"));
+    showPostFormError(t("errFields"));
     return;
   }
 
   if (postCategory === "study") {
     const missingAcademic = ["faculty", "department", "course", "group_name", "subject"]
       .some((f) => !postFields[f]);
-    if (missingAcademic) { showToast(t("errFields")); return; }
+    if (missingAcademic) { showPostFormError(t("errFields")); return; }
   }
 
-  if (!expiresDate) { showToast(t("errExpiresRequired")); return; }
+  if (!expiresDate) { showPostFormError(t("errExpiresRequired")); return; }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const chosenDate = new Date(expiresDate);
-  if (chosenDate < today) { showToast(t("errExpiresPast")); return; }
+  if (chosenDate < today) { showPostFormError(t("errExpiresPast")); return; }
+
+  hidePostFormError();
 
   let photoUrls = [];
   try {
@@ -1572,7 +1622,7 @@ async function openEditListing(listingId) {
       <input id="edit-contact" type="text" value="${escapeHtml(listing.contact)}">
 
       <label>${t("expiresLabel")}</label>
-      <input id="edit-expires" type="date" value="${expiryValue}">
+      <input id="edit-expires" type="date" min="${new Date().toISOString().slice(0, 10)}" value="${expiryValue}">
 
       <button id="edit-submit" class="btn-primary">${t("saveBtn")}</button>
     </div>
@@ -1678,14 +1728,27 @@ async function loadProfileStats() {
 function renderReferralBlock() {
   if (!currentUser.tg_id) return;
   document.getElementById("referral-code").textContent = "#" + currentUser.tg_id;
+  document.getElementById("referral-link").textContent = referralLink();
   const invitedEl = document.querySelector(".referral-stats");
   if (invitedEl) invitedEl.textContent = `${t("referralInvitedLabel")}: ${profileData?.referral_count ?? 0}`;
+  const pointsEl = document.getElementById("referral-points");
+  if (pointsEl) pointsEl.textContent = `${t("referralPointsLabel")}: ${profileData?.points ?? 0}`;
 }
 
 function referralLink() {
   const botUsername = profileData?.bot_username || "your_bot";
   return `https://t.me/${botUsername}?start=ref_${currentUser.tg_id}`;
 }
+
+document.getElementById("btn-copy-referral-link").addEventListener("click", async () => {
+  const link = referralLink();
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast(t("referralCopied"));
+  } catch (e) {
+    showToast(link);
+  }
+});
 
 document.getElementById("btn-copy-referral").addEventListener("click", async () => {
   const code = "#" + currentUser.tg_id;

@@ -1,6 +1,6 @@
 import json
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.exceptions import TelegramAPIError
 
 from bot.loader import bot
@@ -120,13 +120,11 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
     )
 
     try:
-        if len(photo_urls) > 1:
-            # Telegram не поддерживает inline-кнопки в медиа-группах — шлём фото группой,
-            # а следом отдельным сообщением текст с кнопками подтверждения.
-            media = [InputMediaPhoto(media=url, caption=text if i == 0 else None) for i, url in enumerate(photo_urls[:10])]
-            await bot.send_media_group(ADMIN_CHAT_ID, media)
-            await bot.send_message(ADMIN_CHAT_ID, "⬆️ Решение по объявлению:", reply_markup=kb)
-        elif photo_urls:
+        # Всегда ровно ОДНО сообщение: первое фото (если есть) + вся информация + кнопки.
+        # Telegram не поддерживает инлайн-кнопки в медиа-группах (альбомах), поэтому
+        # остальные фото (если их несколько) не дублируем отдельным альбомом — админ
+        # всегда видит цельную карточку с решением сразу под ней.
+        if photo_urls:
             await bot.send_photo(ADMIN_CHAT_ID, photo_urls[0], caption=text, reply_markup=kb)
         elif listing.photo_file_id:
             await bot.send_photo(ADMIN_CHAT_ID, listing.photo_file_id, caption=text, reply_markup=kb)

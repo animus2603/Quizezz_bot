@@ -4,6 +4,16 @@ tg.expand();
 
 const API_BASE = window.location.origin + "/api";
 
+// Локальная дата в формате YYYY-MM-DD — без сдвига часового пояса,
+// в отличие от new Date().toISOString(), которая всегда в UTC.
+function getLocalDateString(date) {
+  const d = date || new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const tgUser = tg.initDataUnsafe?.user || {};
 const currentUser = {
   tg_id: tgUser.id || 0,
@@ -1417,11 +1427,7 @@ document.getElementById("lf-submit").addEventListener("click", async () => {
   }
 
   if (!expiresDate) { showPostFormError(t("errExpiresRequired")); return; }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const chosenDate = new Date(expiresDate);
-  if (chosenDate < today) { showPostFormError(t("errExpiresPast")); return; }
+  if (expiresDate < getLocalDateString()) { showPostFormError(t("errExpiresPast")); return; }
 
   hidePostFormError();
 
@@ -1622,7 +1628,7 @@ async function openEditListing(listingId) {
       <input id="edit-contact" type="text" value="${escapeHtml(listing.contact)}">
 
       <label>${t("expiresLabel")}</label>
-      <input id="edit-expires" type="date" min="${new Date().toISOString().slice(0, 10)}" value="${expiryValue}">
+      <input id="edit-expires" type="date" min="${getLocalDateString()}" value="${expiryValue}">
 
       <button id="edit-submit" class="btn-primary">${t("saveBtn")}</button>
     </div>
@@ -1640,6 +1646,11 @@ async function openEditListing(listingId) {
     const price = document.getElementById("edit-price").value.replace(/\D/g, "");
     const contact = document.getElementById("edit-contact").value.trim();
     const expiresDate = document.getElementById("edit-expires").value;
+
+    if (expiresDate && expiresDate < getLocalDateString()) {
+      showToast(t("errExpiresPast"));
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE}/marketplace/listings/${listingId}`, {
@@ -1723,20 +1734,18 @@ async function loadProfileStats() {
     document.getElementById("stat-orders").textContent = orders.length;
     document.getElementById("stat-listings").textContent = listings.length;
   } catch (e) { /* тихо игнорируем */ }
+  document.getElementById("stat-points").textContent = profileData?.points ?? 0;
 }
 
 function renderReferralBlock() {
   if (!currentUser.tg_id) return;
-  document.getElementById("referral-code").textContent = "#" + currentUser.tg_id;
   document.getElementById("referral-link").textContent = referralLink();
   const invitedEl = document.querySelector(".referral-stats");
   if (invitedEl) invitedEl.textContent = `${t("referralInvitedLabel")}: ${profileData?.referral_count ?? 0}`;
-  const pointsEl = document.getElementById("referral-points");
-  if (pointsEl) pointsEl.textContent = `${t("referralPointsLabel")}: ${profileData?.points ?? 0}`;
 }
 
 function referralLink() {
-  const botUsername = profileData?.bot_username || "your_bot";
+  const botUsername = profileData?.bot_username || "tmbereket_bot";
   return `https://t.me/${botUsername}?start=ref_${currentUser.tg_id}`;
 }
 
@@ -1750,45 +1759,12 @@ document.getElementById("btn-copy-referral-link").addEventListener("click", asyn
   }
 });
 
-document.getElementById("btn-copy-referral").addEventListener("click", async () => {
-  const code = "#" + currentUser.tg_id;
-  try {
-    await navigator.clipboard.writeText(code);
-    showToast(t("referralCopied"));
-  } catch (e) {
-    showToast(code);
-  }
-});
-
 document.getElementById("btn-share-referral").addEventListener("click", () => {
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink())}&text=${encodeURIComponent(t("referralShareText"))}`;
   if (tg.openTelegramLink) {
     tg.openTelegramLink(shareUrl);
   } else {
     window.open(shareUrl, "_blank");
-  }
-});
-
-document.getElementById("btn-apply-referral").addEventListener("click", async () => {
-  const input = document.getElementById("referral-code-input");
-  const code = input.value.trim();
-  if (!code) return;
-
-  try {
-    const res = await fetch(`${API_BASE}/users/apply-referral`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tg_id: currentUser.tg_id, referral_code: code }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      showToast(err?.detail || t("referralApplyError"));
-      return;
-    }
-    showToast(t("referralApplySuccess"));
-    input.value = "";
-  } catch (e) {
-    showToast(t("referralApplyError"));
   }
 });
 
@@ -1978,5 +1954,5 @@ setBannerVisible(true);
 // Запрещаем выбор прошлой даты в поле "Показывать до"
 const lfExpiresInput = document.getElementById("lf-expires");
 if (lfExpiresInput) {
-  lfExpiresInput.min = new Date().toISOString().slice(0, 10);
+  lfExpiresInput.min = getLocalDateString();
 }

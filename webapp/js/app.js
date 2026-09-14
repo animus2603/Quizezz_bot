@@ -150,6 +150,17 @@ const BASE_DICT = {
     commentSend: "Отправить",
     errComment: "Не удалось отправить комментарий",
     commentActionsTitle: "Ваш отзыв",
+    emptyNotifications: "Здесь пока пусто",
+    faqAskTitle: "Не нашли ответ?",
+    faqAskPlaceholder: "Напишите ваш вопрос...",
+    faqAskSend: "Отправить",
+    faqAskSuccess: "Вопрос отправлен, скоро ответим!",
+    faqAskError: "Не удалось отправить вопрос",
+    supportTelegram: "Telegram",
+    supportWhatsapp: "WhatsApp",
+    supportInstagram: "Instagram",
+    supportTiktok: "TikTok",
+    supportEmail: "Email",
     deleteCommentConfirm: "Удалить этот отзыв?",
     editCommentTitle: "Изменить отзыв",
     cancelBtn: (min) => `Отменить (осталось ${min} мин)`,
@@ -286,6 +297,17 @@ const BASE_DICT = {
     commentSend: "Жіберу",
     errComment: "Пікірді жіберу мүмкін болмады",
     commentActionsTitle: "Сіздің пікіріңіз",
+    emptyNotifications: "Мұнда әзірге бос",
+    faqAskTitle: "Жауап таппадыңыз ба?",
+    faqAskPlaceholder: "Сұрағыңызды жазыңыз...",
+    faqAskSend: "Жіберу",
+    faqAskSuccess: "Сұрақ жіберілді, жақында жауап береміз!",
+    faqAskError: "Сұрақты жіберу мүмкін болмады",
+    supportTelegram: "Telegram",
+    supportWhatsapp: "WhatsApp",
+    supportInstagram: "Instagram",
+    supportTiktok: "TikTok",
+    supportEmail: "Email",
     deleteCommentConfirm: "Бұл пікірді жоясыз ба?",
     editCommentTitle: "Пікірді өзгерту",
     cancelBtn: (min) => `Бас тарту (${min} мин қалды)`,
@@ -422,6 +444,17 @@ const BASE_DICT = {
     commentSend: "Send",
     errComment: "Couldn't send the comment",
     commentActionsTitle: "Your review",
+    emptyNotifications: "Nothing here yet",
+    faqAskTitle: "Didn't find an answer?",
+    faqAskPlaceholder: "Write your question...",
+    faqAskSend: "Send",
+    faqAskSuccess: "Question sent, we'll reply soon!",
+    faqAskError: "Couldn't send the question",
+    supportTelegram: "Telegram",
+    supportWhatsapp: "WhatsApp",
+    supportInstagram: "Instagram",
+    supportTiktok: "TikTok",
+    supportEmail: "Email",
     deleteCommentConfirm: "Delete this review?",
     editCommentTitle: "Edit review",
     cancelBtn: (min) => `Cancel (${min} min left)`,
@@ -558,6 +591,17 @@ const BASE_DICT = {
     commentSend: "Ibermek",
     errComment: "Teswiri ibermek başartmady",
     commentActionsTitle: "Siziň teswiriňiz",
+    emptyNotifications: "Bu ýerde entek boş",
+    faqAskTitle: "Jogap tapmadyňyzmy?",
+    faqAskPlaceholder: "Soragyňyzy ýazyň...",
+    faqAskSend: "Ibermek",
+    faqAskSuccess: "Sorag iberildi, ýakynda jogap bereris!",
+    faqAskError: "Sorag ibermek başartmady",
+    supportTelegram: "Telegram",
+    supportWhatsapp: "WhatsApp",
+    supportInstagram: "Instagram",
+    supportTiktok: "TikTok",
+    supportEmail: "Email",
     deleteCommentConfirm: "Bu teswiri pozmalymy?",
     editCommentTitle: "Teswiri üýtgetmek",
     cancelBtn: (min) => `Ýatyrmak (${min} min galdy)`,
@@ -1810,13 +1854,38 @@ function requestPhoneAndPoll() {
   }
 }
 
+const SUPPORT_CHANNELS = [
+  { icon: "✈️", labelKey: "supportTelegram", url: "https://t.me/animus_sh1" },
+  { icon: "💬", labelKey: "supportWhatsapp", url: "https://wa.me/77000000000" },
+  { icon: "📷", labelKey: "supportInstagram", url: "https://instagram.com/studhub" },
+  { icon: "🎵", labelKey: "supportTiktok", url: "https://tiktok.com/@studhub" },
+  { icon: "✉️", labelKey: "supportEmail", url: "mailto:support@studhub.kz" },
+];
+
 document.getElementById("menu-support").addEventListener("click", () => {
-  const url = "https://t.me/animus_sh1";
-  if (tg.openTelegramLink) {
-    tg.openTelegramLink(url);
-  } else {
-    window.open(url, "_blank");
-  }
+  const html = `
+    <div class="profile-menu">
+      ${SUPPORT_CHANNELS.map((ch, i) => `
+        <button class="profile-item" data-support-idx="${i}">
+          <span class="profile-item-icon">${ch.icon}</span>
+          <span class="profile-item-label">${t(ch.labelKey)}</span>
+          <span class="profile-item-arrow">›</span>
+        </button>
+      `).join("")}
+    </div>
+  `;
+  openSubscreen("menuSupport", html);
+
+  subscreenBody.querySelectorAll("[data-support-idx]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const channel = SUPPORT_CHANNELS[Number(btn.dataset.supportIdx)];
+      if (channel.url.startsWith("https://t.me/") && tg.openTelegramLink) {
+        tg.openTelegramLink(channel.url);
+      } else {
+        window.open(channel.url, "_blank");
+      }
+    });
+  });
 });
 
 // ---------- Подэкраны профиля: FAQ / Уведомления / Настройки ----------
@@ -1841,7 +1910,7 @@ document.getElementById("subscreen-back").addEventListener("click", () => {
 function renderFaqScreen() {
   activeSubscreenRenderer = renderFaqScreen;
   const items = t("faqItems");
-  const html = items.map((item, i) => `
+  const faqHtml = items.map((item, i) => `
     <div class="faq-item" data-idx="${i}">
       <button class="faq-question" data-idx="${i}">
         <span>${item.q}</span>
@@ -1850,12 +1919,39 @@ function renderFaqScreen() {
       <div class="faq-answer">${item.a}</div>
     </div>
   `).join("");
-  openSubscreen("menuFaq", html);
+
+  const askHtml = `
+    <div class="faq-ask-block">
+      <div class="faq-ask-title">${t("faqAskTitle")}</div>
+      <textarea id="faq-ask-text" class="comment-edit-textarea" placeholder="${t("faqAskPlaceholder")}"></textarea>
+      <button id="faq-ask-send" class="btn-primary">${t("faqAskSend")}</button>
+    </div>
+  `;
+
+  openSubscreen("menuFaq", faqHtml + askHtml);
 
   subscreenBody.querySelectorAll(".faq-question").forEach((btn) => {
     btn.addEventListener("click", () => {
       btn.closest(".faq-item").classList.toggle("open");
     });
+  });
+
+  document.getElementById("faq-ask-send").addEventListener("click", async () => {
+    const textEl = document.getElementById("faq-ask-text");
+    const text = textEl.value.trim();
+    if (!text) return;
+    try {
+      const res = await fetch(`${API_BASE}/users/support/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...currentUser, text }),
+      });
+      if (!res.ok) throw new Error();
+      showToast(t("faqAskSuccess"));
+      textEl.value = "";
+    } catch (e) {
+      showToast(t("faqAskError"));
+    }
   });
 }
 
@@ -1889,8 +1985,8 @@ function renderNotificationsScreen() {
     const checked = prefs[item.key] !== false; // по умолчанию включено
     return `
       <div class="settings-row">
-        <div>
-          <div class="settings-row-label">${t(item.labelKey)}</div>
+        <div class="settings-row-clickable" data-category="${item.key}" data-label-key="${item.labelKey}">
+          <div class="settings-row-label">${t(item.labelKey)} ›</div>
           <div class="settings-row-desc">${t(item.descKey)}</div>
         </div>
         <label class="switch">
@@ -1903,8 +1999,46 @@ function renderNotificationsScreen() {
   openSubscreen("menuNotifications", html);
 
   subscreenBody.querySelectorAll("input[type=checkbox]").forEach((input) => {
-    input.addEventListener("change", () => setNotifPref(input.dataset.key, input.checked));
+    input.addEventListener("change", (e) => {
+      e.stopPropagation();
+      setNotifPref(input.dataset.key, input.checked);
+    });
   });
+
+  subscreenBody.querySelectorAll(".settings-row-clickable").forEach((row) => {
+    row.addEventListener("click", () => openNotificationHistory(row.dataset.category, row.dataset.labelKey));
+  });
+}
+
+async function openNotificationHistory(category, labelKey) {
+  if (!currentUser.tg_id) return;
+  subscreenTitle.textContent = t(labelKey);
+  subscreenBody.innerHTML = `<p class="hint">${t("loading")}</p>`;
+  activeSubscreenRenderer = () => openNotificationHistory(category, labelKey);
+
+  try {
+    const items = await fetch(`${API_BASE}/users/${currentUser.tg_id}/notifications?category=${category}`).then((r) => r.json());
+    if (!items.length) {
+      subscreenBody.innerHTML = `
+        <button class="subscreen-back-inline" id="notif-history-back">‹ ${t("menuNotifications")}</button>
+        <p class="hint">${t("emptyNotifications")}</p>
+      `;
+    } else {
+      subscreenBody.innerHTML = `
+        <button class="subscreen-back-inline" id="notif-history-back">‹ ${t("menuNotifications")}</button>
+        <div class="list">${items.map((n) => `
+          <div class="card notif-card">
+            <div class="notif-title">${escapeHtml(n.title)}</div>
+            <div class="notif-body">${escapeHtml(n.body)}</div>
+            <div class="notif-date">${formatDate(n.created_at)}</div>
+          </div>
+        `).join("")}</div>
+      `;
+    }
+    document.getElementById("notif-history-back").addEventListener("click", renderNotificationsScreen);
+  } catch (e) {
+    subscreenBody.innerHTML = `<p class="hint">${t("errListings")}</p>`;
+  }
 }
 
 document.getElementById("menu-notifications").addEventListener("click", renderNotificationsScreen);

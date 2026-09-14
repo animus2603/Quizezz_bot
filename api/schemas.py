@@ -230,3 +230,21 @@ class CreateCommentIn(BaseModel):
     full_name: str | None = None
     text: str
     rating: int | None = None
+
+
+class NotificationOut(BaseModel):
+    id: int
+    category: str
+    title: str
+    body: str
+    created_at: dt.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AskSupportIn(BaseModel):
+    tg_id: int
+    username: str | None = None
+    full_name: str | None = None
+    text: str

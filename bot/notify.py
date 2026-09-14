@@ -108,10 +108,12 @@ async def notify_admin_new_listing(listing: Listing, user: User) -> None:
 
     seller_name = user.full_name or (f"@{user.username}" if user.username else "Без имени")
     contact_link = listing.contact  # ссылка/юзернейм, куда писать по объявлению
+    type_line = f"\nТип: {listing.subcategory}" if listing.subcategory else ""
 
     text = (
         f"📢 <b>Новое объявление #{listing.id}</b>\n"
-        f"Категория: {category_label}\n"
+        f"Категория: {category_label}"
+        f"{type_line}\n"
         f"Название: {listing.title}\n"
         f"Описание: {listing.description or '—'}\n"
         f"Продавец: {seller_name}\n"
@@ -193,3 +195,19 @@ def kaspi_requisites_text(amount: int) -> str:
         f"👤 {KASPI_NAME}\n\n"
         f"После перевода пришлите сюда скриншот чека одним сообщением."
     )
+
+
+async def notify_admin_faq_question(user: User, text: str) -> None:
+    """Клиент не нашёл ответ в FAQ и написал свой вопрос — уходит админу."""
+    if not ADMIN_CHAT_ID:
+        return
+    seller_name = user.full_name or (f"@{user.username}" if user.username else "Без имени")
+    message = (
+        f"❓ <b>Вопрос от студента (не нашёл ответ в FAQ)</b>\n"
+        f"От: {seller_name} (id {user.tg_id})\n\n"
+        f"«{text}»"
+    )
+    try:
+        await bot.send_message(ADMIN_CHAT_ID, message)
+    except TelegramAPIError:
+        pass

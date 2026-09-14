@@ -26,6 +26,10 @@ async def order_ready_quiz(data: CreateReadyOrderIn, session: AsyncSession = Dep
     order = await crud.create_ready_quiz_order(session, user.id, item)
     await notify_admin_new_order(order, user, kind="ready_quiz", subject=item.title)
     await notify_client_new_order(order, user, kind="ready_quiz", subject=item.title)
+    await crud.create_notification(
+        session, user.id, "orders", f"Заказ #{order.id} создан",
+        f"«{item.title}» — {order.price}₸. Ждём оплаты.",
+    )
     return order
 
 
@@ -43,6 +47,10 @@ async def order_custom_quiz(data: CreateCustomOrderIn, session: AsyncSession = D
     subject = data.comment or "Индивидуальный тест"
     await notify_admin_new_order(order, user, kind="custom_quiz", subject=subject)
     await notify_client_new_order(order, user, kind="custom_quiz", subject=subject)
+    await crud.create_notification(
+        session, user.id, "orders", f"Заказ #{order.id} создан",
+        f"Индивидуальный тест — {order.price}₸. Ждём оплаты.",
+    )
     return order
 
 
@@ -72,5 +80,10 @@ async def cancel_order(order_id: int, data: CancelOrderIn, session: AsyncSession
 
     if was_in_progress:
         await notify_admin_refund_needed(order, user)
+
+    await crud.create_notification(
+        session, user.id, "orders", f"Заказ #{order.id} отменён",
+        "Вы отменили заказ." + (" Деньги вернутся вам вручную через Kaspi." if was_in_progress else ""),
+    )
 
     return order

@@ -1405,3 +1405,34 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 /* ===== Компактный попап действий над своим отзывом ===== */
 
 .comment-action-overlay .lang-menu { min-width: 160px; }
+
+/* ===== Кликабельная строка уведомлений + история ===== */
+
+.settings-row-clickable { flex: 1; cursor: pointer; }
+
+.subscreen-back-inline {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 12px;
+  display: block;
+}
+
+.notif-card { padding: 12px 14px; }
+.notif-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.notif-body { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+.notif-date { font-size: 11px; color: var(--hint); }
+
+/* ===== FAQ: форма "не нашли вопрос" ===== */
+
+.faq-ask-block {
+  margin-top: 20px;
+  background: var(--secondary-bg);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.faq-ask-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; }

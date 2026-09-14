@@ -71,6 +71,10 @@ async def confirm_order(call: CallbackQuery):
                 user.tg_id,
                 f"✅ Оплата по заказу #{order.id} подтверждена!\nВаш тест «{item.title}»:\n{item.file_url}",
             )
+            await crud.create_notification(
+                session, user.id, "orders", f"Заказ #{order.id} подтверждён",
+                f"Оплата принята, тест «{item.title}» отправлен.",
+            )
         else:
             order = await crud.set_order_status(session, order, OrderStatus.in_progress)
             deadline_str = order.deadline.strftime("%d.%m.%Y %H:%M") if order.deadline else "—"
@@ -80,6 +84,10 @@ async def confirm_order(call: CallbackQuery):
                 f"Статус: <b>Принято</b> — будет готово в течение рабочего дня.\n"
                 f"Дедлайн: {deadline_str}\n\n"
                 f"Как только всё будет готово, мы пришлём сюда файл/ссылку.",
+            )
+            await crud.create_notification(
+                session, user.id, "orders", f"Заказ #{order.id} принят",
+                "Оплата подтверждена, заказ в работе.",
             )
 
     await call.answer("Подтверждено")
@@ -118,6 +126,9 @@ async def reject_order_finish(message: Message, state: FSMContext):
             user.tg_id,
             f"❌ Заказ #{order.id} отклонён.\nПричина: {reason}\n\n"
             f"Если это ошибка — свяжитесь с оператором или оформите заказ заново.",
+        )
+        await crud.create_notification(
+            session, user.id, "orders", f"Заказ #{order.id} отклонён", f"Причина: {reason}",
         )
 
     await state.clear()
@@ -187,6 +198,9 @@ async def approve_listing(call: CallbackQuery):
         user_result = await session.execute(select(User).where(User.id == listing.seller_id))
         user = user_result.scalar_one()
         await call.bot.send_message(user.tg_id, f"✅ Ваше объявление «{listing.title}» опубликовано!")
+        await crud.create_notification(
+            session, user.id, "marketplace", f"Объявление «{listing.title}» опубликовано", "Теперь его видят все.",
+        )
 
     await call.answer("Опубликовано")
 
@@ -229,6 +243,10 @@ async def _listing_reject_timeout(state: FSMContext, listing_id: int, bot) -> No
             ADMIN_CHAT_ID,
             f"⏱ Время на причину отказа по объявлению #{listing_id} истекло — отклонено автоматически.",
         )
+        await crud.create_notification(
+            session, user.id, "marketplace", f"Объявление «{listing.title}» отклонено",
+            "Без указания причины (истекло время ожидания).",
+        )
 
     await state.clear()
 
@@ -255,6 +273,9 @@ async def reject_listing_finish(message: Message, state: FSMContext):
         await message.bot.send_message(
             user.tg_id,
             f"❌ Ваше объявление «{listing.title}» отклонено.\nПричина: {reason}",
+        )
+        await crud.create_notification(
+            session, user.id, "marketplace", f"Объявление «{listing.title}» отклонено", f"Причина: {reason}",
         )
 
     await state.clear()

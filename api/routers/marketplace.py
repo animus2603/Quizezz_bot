@@ -85,6 +85,10 @@ async def post_comment(listing_id: int, data: CreateCommentIn, session: AsyncSes
 
     reviewer_name = user.full_name or (f"@{user.username}" if user.username else "Студент")
     await notify_seller_new_review(listing, seller, reviewer_name, comment.text, comment.rating)
+    await crud.create_notification(
+        session, seller.id, "marketplace", f"Новый отзыв на «{listing.title}»",
+        f"{reviewer_name}: «{comment.text}»",
+    )
 
     return CommentOut(
         id=comment.id, text=comment.text,
@@ -179,6 +183,10 @@ async def create_listing(data: CreateListingIn, session: AsyncSession = Depends(
     )
     await notify_admin_new_listing(listing, user)
     await notify_client_listing_submitted(listing, user)
+    await crud.create_notification(
+        session, user.id, "marketplace", f"Объявление «{listing.title}» отправлено",
+        "Ожидает проверки модератором.",
+    )
     return listing
 
 

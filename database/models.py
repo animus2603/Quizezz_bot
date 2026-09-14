@@ -145,3 +145,21 @@ class ListingComment(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
 
     user: Mapped["User"] = relationship()
+
+
+class NotificationCategory(str, enum.Enum):
+    orders = "orders"
+    marketplace = "marketplace"
+    news = "news"
+
+
+class Notification(Base):
+    """История уведомлений пользователя — показывается в разделе «Профиль → Уведомления»."""
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    category: Mapped[NotificationCategory] = mapped_column(Enum(NotificationCategory))
+    title: Mapped[str] = mapped_column(String(255))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)

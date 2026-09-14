@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import (
     User, QuizCatalogItem, Order, OrderType, OrderStatus,
-    Listing, ListingCategory, ListingStatus, ListingComment,
+    Listing, ListingCategory, ListingStatus, ListingComment, Notification,
 )
 
 
@@ -274,18 +274,42 @@ async def get_listing_with_seller(session: AsyncSession, listing_id: int) -> tup
 
 
 async def get_similar_listings(session: AsyncSession, listing: Listing, limit: int = 4) -> list[Listing]:
+    # Сначала — товары той же подкатегории (Тип), это самое похожее.
+    same_subcategory: list[Listing] = []
+    if listing.subcategory:
+        stmt = (
+            select(Listing)
+            .where(
+                Listing.status == ListingStatus.approved,
+                Listing.category == listing.category,
+                Listing.subcategory == listing.subcategory,
+                Listing.id != listing.id,
+            )
+            .order_by(Listing.created_at.desc())
+            .limit(limit)
+        )
+        result = await session.execute(stmt)
+        same_subcategory = list(result.scalars().all())
+
+    if len(same_subcategory) >= limit:
+        return same_subcategory[:limit]
+
+    # Не хватило — добираем остальными объявлениями той же категории (кроме уже отобранных).
+    exclude_ids = {listing.id} | {l.id for l in same_subcategory}
     stmt = (
         select(Listing)
         .where(
             Listing.status == ListingStatus.approved,
             Listing.category == listing.category,
-            Listing.id != listing.id,
+            Listing.id.not_in(exclude_ids),
         )
         .order_by(Listing.created_at.desc())
-        .limit(limit)
+        .limit(limit - len(same_subcategory))
     )
     result = await session.execute(stmt)
-    return list(result.scalars().all())
+    rest = list(result.scalars().all())
+
+    return same_subcategory + rest
 
 
 async def add_listing_comment(
@@ -455,3 +479,32 @@ async def search_listing_filter_options(
             combined.append(FALLBACK_OTHER)
 
     return combined[:20]
+
+
+async def create_notification(session: AsyncSession, user_id: int, category, title: str, body: str) -> Notification:
+    notif = Notification(user_id=user_id, category=category, title=title, body=body)
+    session.add(notif)
+    await session.commit()
+    return notif
+
+
+async def create_notification_by_tg_id(
+    session: AsyncSession, tg_id: int, category, title: str, body: str
+) -> Notification | None:
+    """Удобный хелпер, когда под рукой только tg_id, а не внутренний user_id."""
+    user = await get_user_by_tg_id(session, tg_id)
+    if not user:
+        return None
+    return await create_notification(session, user.id, category, title, body)
+
+
+async def get_notifications(session: AsyncSession, tg_id: int, category: str | None = None) -> list[Notification]:
+    user = await get_user_by_tg_id(session, tg_id)
+    if not user:
+        return []
+    stmt = select(Notification).where(Notification.user_id == user.id)
+    if category:
+        stmt = stmt.where(Notification.category == category)
+    stmt = stmt.order_by(Notification.created_at.desc()).limit(50)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())

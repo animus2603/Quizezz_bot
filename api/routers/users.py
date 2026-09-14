@@ -5,8 +5,9 @@ from sqlalchemy import select
 from database.engine import get_session
 from database import crud
 from database.models import QuizCatalogItem, OrderType
-from api.schemas import ProfileOut, ProfileIn, ApplyReferralIn, UserOrderOut, UserListingOut
+from api.schemas import ProfileOut, ProfileIn, ApplyReferralIn, UserOrderOut, UserListingOut, NotificationOut, AskSupportIn
 from config import BOT_USERNAME
+from bot.notify import notify_admin_faq_question
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -89,3 +90,18 @@ async def get_my_listings(tg_id: int, session: AsyncSession = Depends(get_sessio
     if not user:
         return []
     return await crud.get_user_listings(session, user.id)
+
+
+@router.get("/{tg_id}/notifications", response_model=list[NotificationOut])
+async def get_notifications(tg_id: int, category: str | None = None, session: AsyncSession = Depends(get_session)):
+    return await crud.get_notifications(session, tg_id, category)
+
+
+@router.post("/support/ask")
+async def ask_support(data: AskSupportIn, session: AsyncSession = Depends(get_session)):
+    """Клиент не нашёл ответ в FAQ — вопрос уходит админу напрямую."""
+    if not data.text.strip():
+        raise HTTPException(400, "Вопрос не может быть пустым")
+    user = await crud.get_or_create_user(session, data.tg_id, data.username, data.full_name)
+    await notify_admin_faq_question(user, data.text.strip())
+    return {"ok": True}

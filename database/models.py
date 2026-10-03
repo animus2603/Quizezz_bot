@@ -1,5 +1,6 @@
 import enum
 import datetime as dt
+from datetime import timezone
 
 from sqlalchemy import (
     String, Integer, BigInteger, Text, DateTime, Enum, ForeignKey, Boolean
@@ -21,7 +22,7 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     referred_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # tg_id пригласившего
     points: Mapped[int] = mapped_column(Integer, default=0)  # баллы за рефералов и т.д.
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
 
     orders: Mapped[list["Order"]] = relationship(back_populates="user")
     listings: Mapped[list["Listing"]] = relationship(back_populates="seller")
@@ -45,7 +46,7 @@ class QuizCatalogItem(Base):
     preview_text: Mapped[str | None] = mapped_column(Text, nullable=True)  # пример 10-20 вопросов для просмотра
     price: Mapped[int] = mapped_column(Integer, default=3000)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
 
 
 class OrderType(str, enum.Enum):
@@ -83,8 +84,8 @@ class Order(Base):
     receipt_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # telegram file_id чека
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
-    updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc), onupdate=lambda: dt.datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship(back_populates="orders")
     catalog_item: Mapped["QuizCatalogItem"] = relationship()
@@ -128,7 +129,7 @@ class Listing(Base):
 
     status: Mapped[ListingStatus] = mapped_column(Enum(ListingStatus), default=ListingStatus.pending)
     expires_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)  # до какого числа показывать
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
 
     seller: Mapped["User"] = relationship(back_populates="listings")
 
@@ -142,7 +143,7 @@ class ListingComment(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     text: Mapped[str] = mapped_column(Text)
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5 звёзд, опционально
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship()
 
@@ -163,7 +164,7 @@ class Notification(Base):
     title: Mapped[str] = mapped_column(String(255))
     body: Mapped[str] = mapped_column(Text)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
 
 
 class SupportQuestion(Base):

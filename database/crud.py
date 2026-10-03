@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+from datetime import timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -173,7 +174,7 @@ def order_cancel_seconds_left(order: Order) -> int:
 
     if order.status not in allowed_statuses:
         return 0
-    elapsed = (dt.datetime.utcnow() - order.created_at).total_seconds()
+    elapsed = (dt.datetime.now(timezone.utc) - order.created_at).total_seconds()
     return max(0, int(window - elapsed))
 
 
@@ -240,7 +241,7 @@ async def get_approved_listings(
     subject: str | None = None,
 ) -> list[Listing]:
     stmt = select(Listing).where(Listing.status == ListingStatus.approved)
-    stmt = stmt.where((Listing.expires_at.is_(None)) | (Listing.expires_at > dt.datetime.utcnow()))
+    stmt = stmt.where((Listing.expires_at.is_(None)) | (Listing.expires_at > dt.datetime.now(timezone.utc)))
     if category:
         stmt = stmt.where(Listing.category == category)
     if subcategory:

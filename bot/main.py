@@ -4,6 +4,8 @@ import logging
 from bot.loader import bot, dp
 from bot.handlers import start, payments, admin, profile
 
+logger = logging.getLogger(__name__)
+
 
 def setup_routers() -> None:
     # порядок важен: admin фильтрует по ADMIN_CHAT_ID, payments/profile — по "не ADMIN_CHAT_ID"
@@ -16,6 +18,7 @@ def setup_routers() -> None:
 async def start_polling() -> None:
     """Запускается как background task внутри FastAPI (см. api/main.py)."""
     setup_routers()
+    logger.info("Запуск Telegram бота...")
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

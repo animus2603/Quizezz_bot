@@ -1,9 +1,15 @@
 from logging.config import fileConfig
+import os
+from dotenv import load_dotenv
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-from config import DATABASE_URL
+load_dotenv()
+
+# Получаем DATABASE_URL напрямую из окружения, чтобы не импортировать config.py
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./db/app.db")
+
 from database.models import Base
 
 # this is the Alembic Config object

@@ -6,7 +6,7 @@
   --button-text: var(--tg-theme-button-text-color, #ffffff);
   --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
 
-  /* Брендовые токены StudHub: индиго + бирюза */
+  /* Брендовые токены Bereket: индиго + бирюза */
   --accent: #4F46E5;
   --accent-2: #14B8A6;
   --nav-gradient: linear-gradient(120deg, var(--accent), var(--accent-2));
@@ -719,8 +719,36 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 
 /* ===== Карточка готового теста (Главная) ===== */
 
-.quiz-card-title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-.quiz-card-subject { font-size: 12.5px; color: var(--hint); margin-bottom: 8px; }
+.quiz-card {
+  background: var(--secondary-bg);
+  border-radius: 14px;
+  padding: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.quiz-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.quiz-card:active {
+  transform: scale(0.98);
+}
+
+.quiz-card-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.quiz-card-subject {
+  font-size: 12.5px;
+  color: var(--hint);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
 
 .quiz-card-btn-row,
 .card-btn-row {
@@ -1146,40 +1174,76 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 .listing-card-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 8px;
+  padding: 12px;
+  background: var(--secondary-bg);
+  border-radius: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.listing-card-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.listing-card-row:active {
+  transform: scale(0.98);
 }
 
 .listing-card-thumb-sm,
 .listing-card-thumb-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
   flex-shrink: 0;
   object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .listing-card-thumb-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
-  font-size: 22px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  font-size: 28px;
+  color: #fff;
 }
 
 .listing-card-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .listing-card-info .card-title {
-  margin-bottom: 2px;
+  margin-bottom: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
 }
 
-.listing-card-info .card-price { margin-bottom: 0; }
+.listing-card-info .card-price {
+  margin-bottom: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.listing-card-info .card-desc {
+  font-size: 12px;
+  color: var(--hint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 0;
+}
 
 .listing-card-row .status-badge { flex-shrink: 0; }
 
@@ -1469,7 +1533,7 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 /* ===== Красивая обложка профиля ===== */
 
 .profile-cover {
-  height: 140px;
+  height: 160px;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.28), transparent 45%),
     radial-gradient(circle at 85% 70%, rgba(255, 255, 255, 0.18), transparent 40%),
@@ -1477,6 +1541,8 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   border-radius: 0 0 28px 28px;
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.28);
   overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-cover::before,
@@ -1485,18 +1551,23 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   position: absolute;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.12);
+  z-index: -1;
 }
 
 .profile-cover::before { width: 120px; height: 120px; top: -40px; right: -30px; }
 .profile-cover::after { width: 80px; height: 80px; bottom: -30px; left: 30px; }
 
-.profile-avatar-wrap { bottom: -46px; }
-
-.profile-avatar {
-  width: 92px;
-  height: 92px;
-  border: 4px solid var(--bg);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+.profile-avatar-wrap {
+  bottom: -50px;
+  z-index: 10;
 }
 
-.profile-info { margin-top: 54px; }
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border: 4px solid var(--bg);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  background: var(--bg);
+}
+
+.profile-info { margin-top: 56px; }

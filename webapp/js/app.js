@@ -26,7 +26,7 @@ const LANGS = ["EN", "RU", "KZ", "TM"];
 
 const BASE_DICT = {
   RU: {
-    appName: "StudHub",
+    appName: "Bereket",
     readyQuizzes: "Готовые тесты",
     goodsPreviewTitle: "Товары",
     viewAllBtn: "Смотреть все ›",
@@ -91,7 +91,7 @@ const BASE_DICT = {
     referralLinkLabel: "Или своя ссылка-приглашение:",
     referralPointsLabel: "Баллы",
     referralShareBtn: "Поделиться кодом",
-    referralShareText: "Заходи в StudHub — тесты и маркетплейс для студентов 🎓",
+    referralShareText: "Заходи в Bereket — тесты и маркетплейс для студентов 🎓",
     referralInputPlaceholder: "Есть код друга? Введите его",
     referralApplyBtn: "Применить",
     referralCopied: "Код скопирован",
@@ -100,8 +100,8 @@ const BASE_DICT = {
     previewBtn: "Посмотреть", noPreview: "Пример вопросов пока не добавлен.",
     settingsLanguage: "Язык",
     settingsShare: "Поделиться приложением",
-    settingsShareDesc: "Расскажи друзьям про StudHub",
-    settingsShareText: "Загляни в StudHub — тесты и маркетплейс для студентов 🎓",
+    settingsShareDesc: "Расскажи друзьям про Bereket",
+    settingsShareText: "Загляни в Bereket — тесты и маркетплейс для студентов 🎓",
     notifOrdersLabel: "Заказы и оплата", notifOrdersDesc: "Статусы заказов, подтверждение оплаты",
     notifMarketLabel: "Маркетплейс", notifMarketDesc: "Модерация объявлений, ответы покупателям",
     notifNewsLabel: "Новости и акции", notifNewsDesc: "Новые функции и специальные предложения",
@@ -173,7 +173,7 @@ const BASE_DICT = {
     ],
   },
   KZ: {
-    appName: "StudHub",
+    appName: "Bereket",
     readyQuizzes: "Дайын тесттер",
     goodsPreviewTitle: "Тауарлар",
     viewAllBtn: "Барлығын көру ›",
@@ -238,7 +238,7 @@ const BASE_DICT = {
     referralLinkLabel: "Немесе жеке шақыру сілтемесі:",
     referralPointsLabel: "Ұпайлар",
     referralShareBtn: "Кодпен бөлісу",
-    referralShareText: "StudHub-қа кел — студенттерге арналған тесттер мен маркетплейс 🎓",
+    referralShareText: "Bereket-ке кел — студенттерге арналған тесттер мен маркетплейс 🎓",
     referralInputPlaceholder: "Досыңның коды бар ма? Енгіз",
     referralApplyBtn: "Қолдану",
     referralCopied: "Код көшірілді",
@@ -247,8 +247,8 @@ const BASE_DICT = {
     previewBtn: "Қарау", noPreview: "Сұрақтар мысалы әлі қосылмаған.",
     settingsLanguage: "Тіл",
     settingsShare: "Қосымшамен бөлісу",
-    settingsShareDesc: "Достарыңа StudHub туралы айт",
-    settingsShareText: "StudHub-қа қара — студенттерге арналған тесттер мен маркетплейс 🎓",
+    settingsShareDesc: "Достарыңа Bereket туралы айт",
+    settingsShareText: "Bereket-ке қара — студенттерге арналған тесттер мен маркетплейс 🎓",
     notifOrdersLabel: "Тапсырыстар мен төлем", notifOrdersDesc: "Тапсырыс мәртебелері, төлемді растау",
     notifMarketLabel: "Маркетплейс", notifMarketDesc: "Хабарландыруларды модерациялау, сатып алушыларға жауап",
     notifNewsLabel: "Жаңалықтар мен акциялар", notifNewsDesc: "Жаңа мүмкіндіктер мен арнайы ұсыныстар",
@@ -320,7 +320,7 @@ const BASE_DICT = {
     ],
   },
   EN: {
-    appName: "StudHub",
+    appName: "Bereket",
     readyQuizzes: "Ready-made quizzes",
     goodsPreviewTitle: "Goods",
     viewAllBtn: "View all ›",
@@ -385,7 +385,7 @@ const BASE_DICT = {
     referralLinkLabel: "Or your personal invite link:",
     referralPointsLabel: "Points",
     referralShareBtn: "Share code",
-    referralShareText: "Check out StudHub — quizzes and a marketplace for students 🎓",
+    referralShareText: "Check out Bereket — quizzes and a marketplace for students 🎓",
     referralInputPlaceholder: "Have a friend's code? Enter it",
     referralApplyBtn: "Apply",
     referralCopied: "Code copied",
@@ -394,8 +394,8 @@ const BASE_DICT = {
     previewBtn: "Preview", noPreview: "No sample questions added yet.",
     settingsLanguage: "Language",
     settingsShare: "Share the app",
-    settingsShareDesc: "Tell your friends about StudHub",
-    settingsShareText: "Check out StudHub — quizzes and a marketplace for students 🎓",
+    settingsShareDesc: "Tell your friends about Bereket",
+    settingsShareText: "Check out Bereket — quizzes and a marketplace for students 🎓",
     notifOrdersLabel: "Orders & payment", notifOrdersDesc: "Order statuses, payment confirmations",
     notifMarketLabel: "Marketplace", notifMarketDesc: "Listing moderation, buyer replies",
     notifNewsLabel: "News & promos", notifNewsDesc: "New features and special offers",
@@ -467,7 +467,7 @@ const BASE_DICT = {
     ],
   },
   TM: {
-    appName: "StudHub",
+    appName: "Bereket",
     readyQuizzes: "Taýýar testler",
     goodsPreviewTitle: "Harytlar",
     viewAllBtn: "Ählisini görmek ›",
@@ -532,7 +532,7 @@ const BASE_DICT = {
     referralLinkLabel: "Ýa-da öz çakylyk salgyňyz:",
     referralPointsLabel: "Utuklar",
     referralShareBtn: "Kody paýlaşmak",
-    referralShareText: "StudHub-a gel — talyplar üçin testler we bazar 🎓",
+    referralShareText: "Bereket-a gel — talyplar üçin testler we bazar 🎓",
     referralInputPlaceholder: "Dostuňyň kody barmy? Ýazyň",
     referralApplyBtn: "Ulanmak",
     referralCopied: "Kod göçürildi",
@@ -541,8 +541,8 @@ const BASE_DICT = {
     previewBtn: "Görmek", noPreview: "Sorag mysaly entek goşulmady.",
     settingsLanguage: "Dil",
     settingsShare: "Programmany paýlaşmak",
-    settingsShareDesc: "Dostlaryňa StudHub barada aýt",
-    settingsShareText: "StudHub-a serediň — talyplar üçin testler we bazar 🎓",
+    settingsShareDesc: "Dostlaryňa Bereket barada aýt",
+    settingsShareText: "Bereket-a serediň — talyplar üçin testler we bazar 🎓",
     notifOrdersLabel: "Sargytlar we töleg", notifOrdersDesc: "Sargyt ýagdaýlary, töleg tassyklamalary",
     notifMarketLabel: "Bazar", notifMarketDesc: "Bildirişleri barlamak, alyjylara jogap",
     notifNewsLabel: "Habarlar we aksiýalar", notifNewsDesc: "Täze mümkinçilikler we ýörite teklipler",
@@ -2065,7 +2065,7 @@ function renderSettingsScreen() {
       </div>
       <span class="profile-item-arrow">›</span>
     </div>
-    <div class="settings-info-row">StudHub · v1.0</div>
+    <div class="settings-info-row">Bereket · v1.0</div>
   `;
   openSubscreen("menuSettings", html);
 

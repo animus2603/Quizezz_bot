@@ -58,7 +58,7 @@ async def health_check():
     """Health check endpoint для мониторинга"""
     return {
         "status": "healthy",
-        "service": "StudHub API",
+        "service": "Bereket API",
         "version": "1.0.0"
     }
 

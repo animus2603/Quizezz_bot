@@ -162,4 +162,16 @@ class Notification(Base):
     category: Mapped[NotificationCategory] = mapped_column(Enum(NotificationCategory))
     title: Mapped[str] = mapped_column(String(255))
     body: Mapped[str] = mapped_column(Text)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)
+
+
+class SupportQuestion(Base):
+    """Вопрос из FAQ, на который клиент не нашёл ответа — админ отвечает через бота."""
+    __tablename__ = "support_questions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    text: Mapped[str] = mapped_column(Text)
+    answered: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=dt.datetime.utcnow)

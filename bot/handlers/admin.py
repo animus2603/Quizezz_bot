@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy import select
 
 from database.engine import async_session
@@ -29,6 +29,18 @@ class RejectOrder(StatesGroup):
 
 class RejectListing(StatesGroup):
     waiting_reason = State()
+
+
+class ReplyQuestion(StatesGroup):
+    waiting_answer = State()
+
+
+FAQ_TEMPLATES = [
+    "Спасибо за вопрос! Ответим в течение дня.",
+    "Актуальная информация есть в разделе FAQ мини-приложения.",
+    "Индивидуальный заказ можно отменить в течение 3 часов после оформления — раздел «Заказы».",
+    "По вопросам оплаты и возврата напишите нам в поддержку — @animus_sh1.",
+]
 
 
 async def _remove_processed_message(call: CallbackQuery) -> None:
@@ -316,3 +328,67 @@ async def remove_quiz_cmd(message: Message):
         await message.answer(f"Тест #{item_id} удалён из каталога — пропадёт с Главной сразу же.")
     else:
         await message.answer(f"Тест #{item_id} не найден.")
+
+
+
+# ---------- Ответ на вопрос из FAQ ----------
+
+@router.callback_query(F.data.startswith("faq_reply:"))
+async def faq_reply_start(call: CallbackQuery, state: FSMContext):
+    question_id = int(call.data.split(":")[1])
+    await state.update_data(question_id=question_id)
+    await state.set_state(ReplyQuestion.waiting_answer)
+    await call.answer()
+    await call.message.answer(f"Напишите ответ на вопрос #{question_id} — он уйдёт студенту.")
+
+
+@router.callback_query(F.data.startswith("faq_templates:"))
+async def faq_templates_show(call: CallbackQuery):
+    question_id = int(call.data.split(":")[1])
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=tpl[:40], callback_data=f"faq_tpl:{question_id}:{i}")]
+        for i, tpl in enumerate(FAQ_TEMPLATES)
+    ])
+    await call.answer()
+    await call.message.answer("Выберите шаблон ответа:", reply_markup=kb)
+
+
+@router.callback_query(F.data.startswith("faq_tpl:"))
+async def faq_template_send(call: CallbackQuery):
+    _, question_id_str, idx_str = call.data.split(":")
+    question_id, idx = int(question_id_str), int(idx_str)
+    answer_text = FAQ_TEMPLATES[idx]
+
+    async with async_session() as session:
+        question = await crud.get_support_question(session, question_id)
+        if not question:
+            await call.answer("Вопрос не найден", show_alert=True)
+            return
+        user_result = await session.execute(select(User).where(User.id == question.user_id))
+        user = user_result.scalar_one()
+        await call.bot.send_message(user.tg_id, f"💬 Ответ на ваш вопрос:\n\n{answer_text}")
+        await crud.mark_question_answered(session, question)
+
+    await call.answer("Отправлено")
+    await call.message.edit_text(f"✅ Шаблон отправлен студенту по вопросу #{question_id}:\n{answer_text}")
+
+
+@router.message(ReplyQuestion.waiting_answer)
+async def faq_reply_finish(message: Message, state: FSMContext):
+    data = await state.get_data()
+    question_id = data["question_id"]
+    answer_text = message.text or ""
+
+    async with async_session() as session:
+        question = await crud.get_support_question(session, question_id)
+        if not question:
+            await message.answer("Вопрос не найден — возможно, уже обработан.")
+            await state.clear()
+            return
+        user_result = await session.execute(select(User).where(User.id == question.user_id))
+        user = user_result.scalar_one()
+        await message.bot.send_message(user.tg_id, f"💬 Ответ на ваш вопрос:\n\n{answer_text}")
+        await crud.mark_question_answered(session, question)
+
+    await state.clear()
+    await message.answer(f"Готово — ответ на вопрос #{question_id} отправлен студенту.")

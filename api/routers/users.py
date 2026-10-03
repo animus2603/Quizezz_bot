@@ -5,9 +5,9 @@ from sqlalchemy import select
 from database.engine import get_session
 from database import crud
 from database.models import QuizCatalogItem, OrderType
-from api.schemas import ProfileOut, ProfileIn, ApplyReferralIn, UserOrderOut, UserListingOut, NotificationOut, AskSupportIn
+from api.schemas import ProfileOut, ProfileIn, ApplyReferralIn, UserOrderOut, UserListingOut, NotificationOut, AskSupportIn, UnreadCountOut
 from config import BOT_USERNAME
-from bot.notify import notify_admin_faq_question
+from bot.notify import notify_admin_faq_question, notify_client_question_received
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -94,14 +94,25 @@ async def get_my_listings(tg_id: int, session: AsyncSession = Depends(get_sessio
 
 @router.get("/{tg_id}/notifications", response_model=list[NotificationOut])
 async def get_notifications(tg_id: int, category: str | None = None, session: AsyncSession = Depends(get_session)):
-    return await crud.get_notifications(session, tg_id, category)
+    items = await crud.get_notifications(session, tg_id, category)
+    result = [NotificationOut.model_validate(n) for n in items]
+    await crud.mark_notifications_read(session, tg_id, category)
+    return result
 
 
 @router.post("/support/ask")
 async def ask_support(data: AskSupportIn, session: AsyncSession = Depends(get_session)):
-    """Клиент не нашёл ответ в FAQ — вопрос уходит админу напрямую."""
+    """Клиент не нашёл ответ в FAQ — вопрос сохраняется и уходит админу напрямую."""
     if not data.text.strip():
         raise HTTPException(400, "Вопрос не может быть пустым")
     user = await crud.get_or_create_user(session, data.tg_id, data.username, data.full_name)
-    await notify_admin_faq_question(user, data.text.strip())
+    question = await crud.create_support_question(session, user.id, data.text.strip())
+    await notify_admin_faq_question(user, question.id, data.text.strip())
+    await notify_client_question_received(user)
     return {"ok": True}
+
+
+@router.get("/{tg_id}/notifications/unread-count", response_model=UnreadCountOut)
+async def get_unread_count(tg_id: int, session: AsyncSession = Depends(get_session)):
+    count = await crud.count_unread_notifications(session, tg_id)
+    return UnreadCountOut(count=count)

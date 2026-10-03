@@ -197,17 +197,32 @@ def kaspi_requisites_text(amount: int) -> str:
     )
 
 
-async def notify_admin_faq_question(user: User, text: str) -> None:
-    """Клиент не нашёл ответ в FAQ и написал свой вопрос — уходит админу."""
+async def notify_admin_faq_question(user: User, question_id: int, text: str) -> None:
+    """Клиент не нашёл ответ в FAQ и написал свой вопрос — уходит админу с кнопками ответа."""
     if not ADMIN_CHAT_ID:
         return
-    seller_name = user.full_name or (f"@{user.username}" if user.username else "Без имени")
+    name_line = user.full_name or (f"@{user.username}" if user.username else "Без имени")
+    phone_line = user.phone or "не привязан"
     message = (
         f"❓ <b>Вопрос от студента (не нашёл ответ в FAQ)</b>\n"
-        f"От: {seller_name} (id {user.tg_id})\n\n"
-        f"«{text}»"
+        f"От: {name_line}\n"
+        f"Телефон: {phone_line}\n"
+        f"id: {user.tg_id}\n\n"
+        f"Вопрос: «{text}»"
     )
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="✍️ Ответить", callback_data=f"faq_reply:{question_id}"),
+        InlineKeyboardButton(text="📋 Шаблоны", callback_data=f"faq_templates:{question_id}"),
+    ]])
     try:
-        await bot.send_message(ADMIN_CHAT_ID, message)
+        await bot.send_message(ADMIN_CHAT_ID, message, reply_markup=kb)
+    except TelegramAPIError:
+        pass
+
+
+async def notify_client_question_received(user: User) -> None:
+    """Клиенту сразу после отправки вопроса в FAQ."""
+    try:
+        await bot.send_message(user.tg_id, "✅ Вопрос получен, ожидайте ответа — обычно отвечаем в течение дня.")
     except TelegramAPIError:
         pass

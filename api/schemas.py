@@ -248,3 +248,7 @@ class AskSupportIn(BaseModel):
     username: str | None = None
     full_name: str | None = None
     text: str
+
+
+class UnreadCountOut(BaseModel):
+    count: int

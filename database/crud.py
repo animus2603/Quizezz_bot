@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import (
     User, QuizCatalogItem, Order, OrderType, OrderStatus,
-    Listing, ListingCategory, ListingStatus, ListingComment, Notification,
+    Listing, ListingCategory, ListingStatus, ListingComment, Notification, SupportQuestion,
 )
 
 
@@ -508,3 +508,45 @@ async def get_notifications(session: AsyncSession, tg_id: int, category: str | N
     stmt = stmt.order_by(Notification.created_at.desc()).limit(50)
     result = await session.execute(stmt)
     return list(result.scalars().all())
+
+
+async def count_unread_notifications(session: AsyncSession, tg_id: int) -> int:
+    user = await get_user_by_tg_id(session, tg_id)
+    if not user:
+        return 0
+    result = await session.execute(
+        select(Notification).where(Notification.user_id == user.id, Notification.is_read == False)  # noqa: E712
+    )
+    return len(result.scalars().all())
+
+
+async def mark_notifications_read(session: AsyncSession, tg_id: int, category: str | None = None) -> None:
+    user = await get_user_by_tg_id(session, tg_id)
+    if not user:
+        return
+    stmt = select(Notification).where(Notification.user_id == user.id, Notification.is_read == False)  # noqa: E712
+    if category:
+        stmt = stmt.where(Notification.category == category)
+    result = await session.execute(stmt)
+    for notif in result.scalars().all():
+        notif.is_read = True
+    await session.commit()
+
+
+async def create_support_question(session: AsyncSession, user_id: int, text: str) -> SupportQuestion:
+    q = SupportQuestion(user_id=user_id, text=text)
+    session.add(q)
+    await session.commit()
+    await session.refresh(q)
+    return q
+
+
+async def get_support_question(session: AsyncSession, question_id: int) -> SupportQuestion | None:
+    result = await session.execute(select(SupportQuestion).where(SupportQuestion.id == question_id))
+    return result.scalar_one_or_none()
+
+
+async def mark_question_answered(session: AsyncSession, question: SupportQuestion) -> SupportQuestion:
+    question.answered = True
+    await session.commit()
+    return question

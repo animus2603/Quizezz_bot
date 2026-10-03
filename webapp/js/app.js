@@ -716,7 +716,7 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
     setBannerVisible(btn.dataset.tab === "home");
 
     if (btn.dataset.tab === "orders") { loadMyOrders(); loadMyListings(); }
-    if (btn.dataset.tab === "profile") loadProfile();
+    if (btn.dataset.tab === "profile") { loadProfile(); refreshNotificationBadge(); }
   });
 });
 
@@ -1997,6 +1997,9 @@ function renderNotificationsScreen() {
     `;
   }).join("");
   openSubscreen("menuNotifications", html);
+  if (window.__unreadCount) {
+    subscreenTitle.textContent = `${t("menuNotifications")} (${window.__unreadCount})`;
+  }
 
   subscreenBody.querySelectorAll("input[type=checkbox]").forEach((input) => {
     input.addEventListener("change", (e) => {
@@ -2036,6 +2039,7 @@ async function openNotificationHistory(category, labelKey) {
       `;
     }
     document.getElementById("notif-history-back").addEventListener("click", renderNotificationsScreen);
+    refreshNotificationBadge();
   } catch (e) {
     subscreenBody.innerHTML = `<p class="hint">${t("errListings")}</p>`;
   }
@@ -2090,3 +2094,23 @@ const lfExpiresInput = document.getElementById("lf-expires");
 if (lfExpiresInput) {
   lfExpiresInput.min = getLocalDateString();
 }
+
+
+// ---------- Бейдж непрочитанных уведомлений ----------
+async function refreshNotificationBadge() {
+  if (!currentUser.tg_id) return;
+  try {
+    const data = await fetch(`${API_BASE}/users/${currentUser.tg_id}/notifications/unread-count`).then((r) => r.json());
+    const count = data.count || 0;
+    ["nav-profile-badge", "menu-notif-badge"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = count > 99 ? "99+" : count;
+      el.classList.toggle("hidden", count === 0);
+    });
+    window.__unreadCount = count;
+  } catch (e) { /* тихо игнорируем */ }
+}
+
+refreshNotificationBadge();
+setInterval(refreshNotificationBadge, 30000);

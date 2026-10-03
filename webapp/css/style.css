@@ -1469,14 +1469,14 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 /* ===== Красивая обложка профиля ===== */
 
 .profile-cover {
-  height: 120px;
+  height: 140px;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.28), transparent 45%),
     radial-gradient(circle at 85% 70%, rgba(255, 255, 255, 0.18), transparent 40%),
     linear-gradient(135deg, #4F46E5 0%, #7C3AED 45%, #14B8A6 100%);
   border-radius: 0 0 28px 28px;
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.28);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .profile-cover::before,
@@ -1490,7 +1490,7 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 .profile-cover::before { width: 120px; height: 120px; top: -40px; right: -30px; }
 .profile-cover::after { width: 80px; height: 80px; bottom: -30px; left: 30px; }
 
-.profile-avatar-wrap { bottom: -42px; }
+.profile-avatar-wrap { bottom: -46px; }
 
 .profile-avatar {
   width: 92px;
@@ -1499,4 +1499,4 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
-.profile-info { margin-top: 52px; }
+.profile-info { margin-top: 54px; }

@@ -1856,10 +1856,10 @@ function requestPhoneAndPoll() {
 
 const SUPPORT_CHANNELS = [
   { icon: "✈️", labelKey: "supportTelegram", url: "https://t.me/animus_sh1" },
-  { icon: "💬", labelKey: "supportWhatsapp", url: "https://wa.me/77000000000" },
-  { icon: "📷", labelKey: "supportInstagram", url: "https://instagram.com/studhub" },
-  { icon: "🎵", labelKey: "supportTiktok", url: "https://tiktok.com/@studhub" },
-  { icon: "✉️", labelKey: "supportEmail", url: "mailto:support@studhub.kz" },
+  { icon: "💬", labelKey: "supportWhatsapp", url: "https://wa.me/77003626026" },
+  { icon: "📷", labelKey: "supportInstagram", url: "https://www.instagram.com/bereket_app.sh?stkn=MWwwNTJkN3VjdTBtNw%3D%3D&utm_source=qr" },
+  { icon: "🎵", labelKey: "supportTiktok", url: "https://www.tiktok.com/@bereket_app?_r=1&_t=ZS-9AFPiGdJDy1" },
+  { icon: "✉️", labelKey: "supportEmail", url: "mailto:rozybayewdemon@gmail.com" },
 ];
 
 document.getElementById("menu-support").addEventListener("click", () => {

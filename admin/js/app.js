@@ -2,7 +2,17 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-const API_BASE = window.location.origin + "/api/admin";
+// Определяем базовый URL API
+// Если в Telegram WebApp, используем тот же домен
+// Если локально - localhost
+let API_BASE;
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  API_BASE = "http://localhost:8000/api/admin";
+} else {
+  API_BASE = window.location.origin + "/api/admin";
+}
+
+console.log('API_BASE:', API_BASE);
 
 // ---------- Навигация ----------
 
@@ -43,8 +53,18 @@ async function loadTab(tab) {
 
 async function loadDashboard() {
   try {
+    console.log('Fetching stats from:', `${API_BASE}/stats`);
     const res = await fetch(`${API_BASE}/stats`);
+    console.log('Response status:', res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error response:', errorText);
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+
     const data = await res.json();
+    console.log('Stats data:', data);
 
     document.getElementById('stat-users').textContent = data.users || 0;
     document.getElementById('stat-orders').textContent = data.orders || 0;
@@ -54,6 +74,10 @@ async function loadDashboard() {
     loadPendingItems();
   } catch (e) {
     console.error('Error loading dashboard:', e);
+    document.getElementById('stat-users').textContent = 'Ошибка';
+    document.getElementById('stat-orders').textContent = 'Ошибка';
+    document.getElementById('stat-listings').textContent = 'Ошибка';
+    document.getElementById('stat-pending').textContent = 'Ошибка';
   }
 }
 

@@ -306,6 +306,45 @@ async def get_users():
         ]
 
 
+@router.get("/cascade/faculties")
+async def get_faculties():
+    """Список уникальных факультетов"""
+    async with async_session() as session:
+        result = await session.execute(
+            select(QuizCatalogItem.faculty)
+            .where(QuizCatalogItem.faculty.is_not(None))
+            .distinct()
+        )
+        faculties = [row[0] for row in result.all() if row[0]]
+        return faculties
+
+
+@router.get("/cascade/departments")
+async def get_departments(faculty: str = None):
+    """Список кафедр по факультету"""
+    async with async_session() as session:
+        stmt = select(QuizCatalogItem.department).where(QuizCatalogItem.department.is_not(None))
+        if faculty:
+            stmt = stmt.where(QuizCatalogItem.faculty == faculty)
+        result = await session.execute(stmt.distinct())
+        departments = [row[0] for row in result.all() if row[0]]
+        return departments
+
+
+@router.get("/cascade/groups")
+async def get_groups(faculty: str = None, department: str = None):
+    """Список групп по факультету и кафедре"""
+    async with async_session() as session:
+        stmt = select(QuizCatalogItem.group_name).where(QuizCatalogItem.group_name.is_not(None))
+        if faculty:
+            stmt = stmt.where(QuizCatalogItem.faculty == faculty)
+        if department:
+            stmt = stmt.where(QuizCatalogItem.department == department)
+        result = await session.execute(stmt.distinct())
+        groups = [row[0] for row in result.all() if row[0]]
+        return groups
+
+
 @router.post("/listings/{listing_id}/approve")
 async def approve_listing(listing_id: int):
     """Одобрить объявление"""

@@ -441,27 +441,53 @@ async function rejectOrder(orderId) {
 }
 
 async function editQuiz(id) {
-  const title = prompt('Название теста:');
-  if (!title) return;
-
-  const price = prompt('Цена (₸):');
-  if (!price) return;
-
   try {
-    const res = await fetch(`${API_BASE}/quizzes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, price: parseInt(price) })
-    });
-    if (res.ok) {
-      loadQuizzes();
-      alert('Тест обновлён');
-    } else {
-      alert('Ошибка при обновлении');
+    const res = await fetch(`${API_BASE}/quizzes/${id}`);
+    const quiz = await res.json();
+
+    // Загрузить факультеты
+    const facRes = await fetch(`${API_BASE}/cascade/faculties`);
+    const faculties = await facRes.json();
+    const facultySelect = document.getElementById('quiz-faculty');
+    facultySelect.innerHTML = '<option value="">Выберите факультет...</option>' +
+      faculties.map(f => `<option value="${f}">${f}</option>`).join('');
+
+    // Установить значение и загрузить кафедры
+    facultySelect.value = quiz.faculty;
+    if (quiz.faculty) {
+      const deptRes = await fetch(`${API_BASE}/cascade/departments?faculty=${encodeURIComponent(quiz.faculty)}`);
+      const departments = await deptRes.json();
+      const deptSelect = document.getElementById('quiz-department');
+      deptSelect.disabled = false;
+      deptSelect.innerHTML = '<option value="">Выберите кафедру...</option>' +
+        departments.map(d => `<option value="${d}">${d}</option>`).join('');
+      deptSelect.value = quiz.department;
+
+      // Загрузить группы
+      if (quiz.department) {
+        const groupRes = await fetch(`${API_BASE}/cascade/groups?faculty=${encodeURIComponent(quiz.faculty)}&department=${encodeURIComponent(quiz.department)}`);
+        const groups = await groupRes.json();
+        const groupSelect = document.getElementById('quiz-group');
+        groupSelect.disabled = false;
+        groupSelect.innerHTML = '<option value="">Выберите группу...</option>' +
+          groups.map(g => `<option value="${g}">${g}</option>`).join('');
+        groupSelect.value = quiz.group_name;
+      }
     }
+
+    document.getElementById('quiz-title').value = quiz.title;
+    document.getElementById('quiz-subject').value = quiz.subject;
+    document.getElementById('quiz-description').value = quiz.description;
+    document.getElementById('quiz-course').value = quiz.course;
+    document.getElementById('quiz-price').value = quiz.price;
+    document.getElementById('quiz-file-url').value = quiz.file_url;
+    document.getElementById('quiz-preview').value = quiz.preview_text;
+
+    document.getElementById('quiz-form-overlay').classList.remove('hidden');
+    document.getElementById('btn-save-quiz').dataset.id = id;
   } catch (e) {
-    console.error('Error editing quiz:', e);
-    alert('Ошибка при обновлении');
+    console.error('Error loading quiz:', e);
+    alert('Ошибка при загрузке теста');
   }
 }
 
@@ -532,7 +558,7 @@ document.getElementById('btn-save-quiz').addEventListener('click', async () => {
         course,
         group_name: group,
         price,
-        file_url: fileUrl,
+        file_url: fileUrl || '',
         preview_text: preview
       })
     });
@@ -547,8 +573,10 @@ document.getElementById('btn-save-quiz').addEventListener('click', async () => {
       document.getElementById('quiz-description').value = '';
       document.getElementById('quiz-faculty').value = '';
       document.getElementById('quiz-department').value = '';
-      document.getElementById('quiz-course').value = '';
+      document.getElementById('quiz-department').disabled = true;
       document.getElementById('quiz-group').value = '';
+      document.getElementById('quiz-group').disabled = true;
+      document.getElementById('quiz-course').value = '1';
       document.getElementById('quiz-price').value = '';
       document.getElementById('quiz-file-url').value = '';
       document.getElementById('quiz-preview').value = '';
@@ -558,5 +586,74 @@ document.getElementById('btn-save-quiz').addEventListener('click', async () => {
   } catch (e) {
     console.error('Error adding quiz:', e);
     alert('Ошибка при добавлении теста');
+  }
+});
+
+// ---------- Каскадные селекты для тестов ----------
+
+document.getElementById('quiz-faculty').addEventListener('change', async (e) => {
+  const faculty = e.target.value;
+  const deptSelect = document.getElementById('quiz-department');
+  const groupSelect = document.getElementById('quiz-group');
+
+  if (!faculty) {
+    deptSelect.disabled = true;
+    deptSelect.innerHTML = '<option value="">Сначала выберите факультет</option>';
+    groupSelect.disabled = true;
+    groupSelect.innerHTML = '<option value="">Сначала выберите факультет и кафедру</option>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/cascade/departments?faculty=${encodeURIComponent(faculty)}`);
+    const departments = await res.json();
+
+    deptSelect.disabled = false;
+    deptSelect.innerHTML = '<option value="">Выберите кафедру...</option>' +
+      departments.map(d => `<option value="${d}">${d}</option>`).join('');
+    
+    groupSelect.disabled = true;
+    groupSelect.innerHTML = '<option value="">Сначала выберите кафедру</option>';
+  } catch (e) {
+    console.error('Error loading departments:', e);
+  }
+});
+
+document.getElementById('quiz-department').addEventListener('change', async (e) => {
+  const faculty = document.getElementById('quiz-faculty').value;
+  const department = e.target.value;
+  const groupSelect = document.getElementById('quiz-group');
+
+  if (!department) {
+    groupSelect.disabled = true;
+    groupSelect.innerHTML = '<option value="">Сначала выберите кафедру</option>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/cascade/groups?faculty=${encodeURIComponent(faculty)}&department=${encodeURIComponent(department)}`);
+    const groups = await res.json();
+
+    groupSelect.disabled = false;
+    groupSelect.innerHTML = '<option value="">Выберите группу...</option>' +
+      groups.map(g => `<option value="${g}">${g}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading groups:', e);
+  }
+});
+
+// Загрузка факультетов при открытии формы
+document.getElementById('btn-add-quiz').addEventListener('click', async () => {
+  document.getElementById('quiz-form-overlay').classList.remove('hidden');
+  
+  try {
+    const res = await fetch(`${API_BASE}/cascade/faculties`);
+    const faculties = await res.json();
+
+    const facultySelect = document.getElementById('quiz-faculty');
+    facultySelect.innerHTML = '<option value="">Выберите факультет...</option>' +
+      faculties.map(f => `<option value="${f}">${f}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading faculties:', e);
   }
 });

@@ -99,17 +99,26 @@
           <label>Описание</label>
           <textarea id="quiz-description" placeholder="Краткое описание..."></textarea>
           <label>Факультет</label>
-          <input type="text" id="quiz-faculty" placeholder="Например: Информационные технологии">
+          <select id="quiz-faculty">
+            <option value="">Выберите факультет...</option>
+          </select>
           <label>Кафедра</label>
-          <input type="text" id="quiz-department" placeholder="Например: Прикладная математика">
+          <select id="quiz-department" disabled>
+            <option value="">Сначала выберите факультет</option>
+          </select>
           <label>Курс</label>
-          <input type="text" id="quiz-course" placeholder="Например: 1">
+          <select id="quiz-course">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
           <label>Группа</label>
-          <input type="text" id="quiz-group" placeholder="Например: ИС-21">
+          <select id="quiz-group" disabled>
+            <option value="">Сначала выберите факультет и кафедру</option>
+          </select>
           <label>Цена (₸)</label>
           <input type="number" id="quiz-price" placeholder="3000">
-          <label>Ссылка на файл</label>
-          <input type="text" id="quiz-file-url" placeholder="https://example.com/quiz/math-1.pdf">
           <label>Пример вопросов (превью)</label>
           <textarea id="quiz-preview" placeholder="1. Вопрос 1&#10;2. Вопрос 2&#10;..."></textarea>
           <button id="btn-save-quiz" class="btn-primary">Сохранить</button>

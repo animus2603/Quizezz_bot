@@ -674,7 +674,17 @@ document.getElementById('btn-add-quiz').addEventListener('click', async () => {
 
 document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
 
-const settingsCache = { faculties: [], departments: [], groups: [], banners: [], ads: [], faq: [] };
+// ---------- Настройки: общие хелперы ----------
+
+const settingsCache = { faculties: [], departments: [], groups: [], banners: [], ads: [], faq: [], support: {}, app: {} };
+const UPLOAD_URL = API_BASE.replace(/\/admin$/, '') + '/upload';
+
+// Рекомендуемые размеры картинок — под них свёрстаны карусель баннеров и карточки рекламы в Mini App
+const IMAGE_SPECS = {
+  banner: { width: 1200, height: 400, label: '1200×400 px (3:1)' },
+  ad: { width: 800, height: 450, label: '800×450 px (16:9)' },
+  icon: { width: 512, height: 512, label: '512×512 px (1:1), PNG' },
+};
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -682,10 +692,11 @@ function escapeHtml(value) {
   }[ch]));
 }
 
-function settingsItemHtml(label, editCall, deleteCall, isActive = true) {
+function settingsItemHtml(label, editCall, deleteCall, isActive = true, thumbUrl = null) {
+  const thumb = thumbUrl ? `<img class="settings-thumb" src="${escapeHtml(thumbUrl)}" alt="">` : '';
   return `
       <div class="settings-item${isActive ? '' : ' inactive'}">
-        <span>${label}${isActive ? '' : ' <em>(скрыто)</em>'}</span>
+        <span class="settings-item-label">${thumb}<span>${label}${isActive ? '' : ' <em>(скрыто)</em>'}</span></span>
         <div class="settings-item-actions">
           <button class="btn-edit" onclick="${editCall}">✏️ Изменить</button>
           <button class="btn-danger" onclick="${deleteCall}">✕</button>
@@ -694,567 +705,450 @@ function settingsItemHtml(label, editCall, deleteCall, isActive = true) {
     `;
 }
 
+function emptyListHtml(text) {
+  return `<div class="settings-empty">${text}</div>`;
+}
+
 function nameById(list, id) {
   const item = list.find(x => x.id === id);
   return item ? item.name : `ID ${id}`;
 }
 
+function formatBytes(bytes) {
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} МБ`;
+}
+
+// Размер картинки в пикселях (+ вес файла, если сервер его отдаёт)
+async function getImageInfo(url, file = null) {
+  const dims = await new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+  if (!dims) return null;
+  let bytes = file ? file.size : null;
+  if (bytes == null) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) bytes = (await res.blob()).size;
+    } catch (e) { /* чужой домен без CORS — вес неизвестен */ }
+  }
+  return { ...dims, bytes };
+}
+
+function imageInfoText(info, spec) {
+  if (!info) return 'Не удалось загрузить изображение';
+  let text = `Размер: ${info.width}×${info.height} px`;
+  if (info.bytes != null) text += ` · ${formatBytes(info.bytes)}`;
+  return text;
+}
+
+function imageSizeWarning(info, spec) {
+  if (!info || !spec) return '';
+  const ratio = info.width / info.height;
+  const expected = spec.width / spec.height;
+  if (Math.abs(ratio - expected) / expected > 0.1) {
+    return `⚠️ Пропорции отличаются от рекомендуемых (${spec.label}) — картинка будет обрезана`;
+  }
+  if (info.width < spec.width * 0.5) {
+    return `⚠️ Картинка маленькая — может выглядеть размыто, лучше ${spec.label}`;
+  }
+  return '';
+}
+
+async function uploadImage(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `HTTP ${res.status}`);
+  }
+  return (await res.json()).url;
+}
+
+async function apiSettings(method, path, body = null) {
+  const res = await fetch(`${API_BASE}/settings/${path}`, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function fetchJson(path) {
+  const res = await fetch(`${API_BASE}/settings/${path}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ---------- Настройки: загрузка и отрисовка ----------
+
 async function loadSettings() {
-  // Загрузка факультетов
-  try {
-    const res = await fetch(`${API_BASE}/settings/faculties`);
-    const faculties = await res.json();
-    settingsCache.faculties = faculties;
-    const container = document.getElementById('faculties-list');
-    container.innerHTML = faculties.map(f =>
-      settingsItemHtml(escapeHtml(f.name), `editFaculty(${f.id})`, `deleteFaculty(${f.id})`)
-    ).join('');
-  } catch (e) {
-    console.error('Error loading faculties:', e);
-  }
+  const keys = ['faculties', 'departments', 'groups', 'banners', 'ads', 'faq', 'support', 'app'];
+  const results = await Promise.allSettled(keys.map(key => fetchJson(key)));
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') settingsCache[keys[i]] = r.value;
+    else console.error(`Error loading ${keys[i]}:`, r.reason);
+  });
 
-  // Загрузка кафедр
-  try {
-    const res = await fetch(`${API_BASE}/settings/departments`);
-    const departments = await res.json();
-    settingsCache.departments = departments;
-    const container = document.getElementById('departments-list');
-    container.innerHTML = departments.map(d =>
-      settingsItemHtml(
-        `${escapeHtml(d.name)} (${escapeHtml(nameById(settingsCache.faculties, d.faculty_id))})`,
+  const c = settingsCache;
+  document.getElementById('faculties-list').innerHTML = c.faculties.length
+    ? c.faculties.map(f => {
+        const count = c.departments.filter(d => d.faculty_id === f.id).length;
+        return settingsItemHtml(`${escapeHtml(f.name)} <small>· кафедр: ${count}</small>`, `editFaculty(${f.id})`, `deleteFaculty(${f.id})`);
+      }).join('')
+    : emptyListHtml('Факультетов пока нет');
+
+  document.getElementById('departments-list').innerHTML = c.departments.length
+    ? c.departments.map(d => settingsItemHtml(
+        `${escapeHtml(d.name)} <small>(${escapeHtml(nameById(c.faculties, d.faculty_id))})</small>`,
         `editDepartment(${d.id})`, `deleteDepartment(${d.id})`
-      )
-    ).join('');
-  } catch (e) {
-    console.error('Error loading departments:', e);
-  }
+      )).join('')
+    : emptyListHtml('Кафедр пока нет');
 
-  // Загрузка групп
-  try {
-    const res = await fetch(`${API_BASE}/settings/groups`);
-    const groups = await res.json();
-    settingsCache.groups = groups;
-    const container = document.getElementById('groups-list');
-    container.innerHTML = groups.map(g =>
-      settingsItemHtml(
-        `${escapeHtml(g.name)} (${escapeHtml(nameById(settingsCache.faculties, g.faculty_id))} / ${escapeHtml(nameById(settingsCache.departments, g.department_id))})`,
+  document.getElementById('groups-list').innerHTML = c.groups.length
+    ? c.groups.map(g => settingsItemHtml(
+        `${escapeHtml(g.name)} <small>(${escapeHtml(nameById(c.faculties, g.faculty_id))} / ${escapeHtml(nameById(c.departments, g.department_id))})</small>`,
         `editGroup(${g.id})`, `deleteGroup(${g.id})`
-      )
-    ).join('');
-  } catch (e) {
-    console.error('Error loading groups:', e);
-  }
+      )).join('')
+    : emptyListHtml('Групп пока нет');
 
-  // Загрузка баннеров
-  try {
-    const res = await fetch(`${API_BASE}/settings/banners`);
-    const banners = await res.json();
-    settingsCache.banners = banners;
-    const container = document.getElementById('banners-list');
-    container.innerHTML = banners.map(b =>
-      settingsItemHtml(escapeHtml(b.title), `editBanner(${b.id})`, `deleteBanner(${b.id})`, b.is_active)
-    ).join('');
-  } catch (e) {
-    console.error('Error loading banners:', e);
-  }
+  document.getElementById('banners-list').innerHTML = c.banners.length
+    ? c.banners.map(b => settingsItemHtml(escapeHtml(b.title), `editBanner(${b.id})`, `deleteBanner(${b.id})`, b.is_active, b.image_url)).join('')
+    : emptyListHtml('Баннеров пока нет');
 
-  // Загрузка рекламы
-  try {
-    const res = await fetch(`${API_BASE}/settings/ads`);
-    const ads = await res.json();
-    settingsCache.ads = ads;
-    const container = document.getElementById('ads-list');
-    container.innerHTML = ads.map(a =>
-      settingsItemHtml(escapeHtml(a.title), `editAd(${a.id})`, `deleteAd(${a.id})`, a.is_active)
-    ).join('');
-  } catch (e) {
-    console.error('Error loading ads:', e);
-  }
+  document.getElementById('ads-list').innerHTML = c.ads.length
+    ? c.ads.map(a => settingsItemHtml(escapeHtml(a.title), `editAd(${a.id})`, `deleteAd(${a.id})`, a.is_active, a.image_url)).join('')
+    : emptyListHtml('Рекламы пока нет');
 
-  // Загрузка FAQ
-  try {
-    const res = await fetch(`${API_BASE}/settings/faq`);
-    const faqs = await res.json();
-    settingsCache.faq = faqs;
-    const container = document.getElementById('faq-list');
-    container.innerHTML = faqs.map(f =>
-      settingsItemHtml(
-        escapeHtml(f.question.length > 30 ? `${f.question.substring(0, 30)}...` : f.question),
+  document.getElementById('faq-list').innerHTML = c.faq.length
+    ? c.faq.map(f => settingsItemHtml(
+        escapeHtml(f.question.length > 40 ? `${f.question.substring(0, 40)}…` : f.question),
         `editFAQ(${f.id})`, `deleteFAQ(${f.id})`, f.is_active
-      )
-    ).join('');
-  } catch (e) {
-    console.error('Error loading FAQ:', e);
-  }
+      )).join('')
+    : emptyListHtml('Вопросов пока нет');
 
-  // Загрузка информации о поддержке
-  try {
-    const res = await fetch(`${API_BASE}/settings/support`);
-    const support = await res.json();
-    document.getElementById('support-info').innerHTML = `
-      <div class="settings-item">
-        <span>WhatsApp: ${support.whatsapp}</span>
-      </div>
-      <div class="settings-item">
-        <span>Instagram: ${support.instagram}</span>
-      </div>
-      <div class="settings-item">
-        <span>TikTok: ${support.tiktok}</span>
-      </div>
-      <div class="settings-item">
-        <span>Email: ${support.email}</span>
-      </div>
-      <div class="settings-item">
-        <span>Telegram: ${support.telegram}</span>
-      </div>
-    `;
-  } catch (e) {
-    console.error('Error loading support settings:', e);
-  }
+  const s = c.support || {};
+  document.getElementById('support-info').innerHTML = [
+    ['✈️ Telegram', s.telegram], ['💬 WhatsApp', s.whatsapp], ['📷 Instagram', s.instagram],
+    ['🎵 TikTok', s.tiktok], ['✉️ Email', s.email],
+  ].map(([label, value]) => `
+      <div class="settings-item"><span>${label}: ${escapeHtml(value || '—')}</span></div>
+    `).join('');
 
-  // Загрузка названия приложения
-  try {
-    const res = await fetch(`${API_BASE}/settings/app`);
-    const app = await res.json();
-    document.getElementById('app-name-info').innerHTML = `
-      <div class="settings-item">
-        <span>${app.app_name}</span>
-      </div>
-    `;
-  } catch (e) {
-    console.error('Error loading app settings:', e);
-  }
-
-  // Загрузка иконки
-  document.getElementById('icon-info').innerHTML = `
-    <div class="settings-item">
-      <span>🎓</span>
-    </div>
+  document.getElementById('app-name-info').innerHTML = `
+    <div class="settings-item"><span>${escapeHtml(c.app.app_name || '—')}</span></div>
   `;
+
+  renderIconInfo();
+  applyAdminFavicon(c.app.app_icon);
 }
 
-// Модальные окна для настроек
-function openFacultyModal() {
-  const name = prompt('Название факультета:');
-  if (name) {
-    createFaculty(name);
-  }
-}
-
-async function createFaculty(name) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/faculties`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Факультет добавлен');
-    } else {
-      alert('Ошибка при добавлении факультета');
-    }
-  } catch (e) {
-    console.error('Error creating faculty:', e);
-    alert('Ошибка при добавлении факультета');
-  }
-}
-
-async function openDepartmentModal() {
-  const name = prompt('Название кафедры:');
-  if (!name) return;
-  const facultyId = await pickFaculty();
-  if (!facultyId) return;
-  createDepartment(name, facultyId);
-}
-
-async function createDepartment(name, facultyId) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/departments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, faculty_id: facultyId })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Кафедра добавлена');
-    } else {
-      alert('Ошибка при добавлении кафедры');
-    }
-  } catch (e) {
-    console.error('Error creating department:', e);
-    alert('Ошибка при добавлении кафедры');
-  }
-}
-
-async function openGroupModal() {
-  const name = prompt('Название группы:');
-  if (!name) return;
-  const facultyId = await pickFaculty();
-  if (!facultyId) return;
-  const departmentId = await pickDepartment(facultyId);
-  if (!departmentId) return;
-  createGroup(name, facultyId, departmentId);
-}
-
-async function createGroup(name, facultyId, departmentId) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/groups`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, faculty_id: facultyId, department_id: departmentId })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Группа добавлена');
-    } else {
-      alert('Ошибка при добавлении группы');
-    }
-  } catch (e) {
-    console.error('Error creating group:', e);
-    alert('Ошибка при добавлении группы');
-  }
-}
-
-function openBannerModal() {
-  const title = prompt('Название баннера:');
-  if (!title) return;
-  const imageUrl = prompt('URL изображения:');
-  if (!imageUrl) return;
-  const linkUrl = prompt('URL ссылки:');
-  if (!linkUrl) return;
-  createBanner(title, imageUrl, linkUrl);
-}
-
-async function createBanner(title, imageUrl, linkUrl) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/banners`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, image_url: imageUrl, link_url: linkUrl })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Баннер добавлен');
-    } else {
-      alert('Ошибка при добавлении баннера');
-    }
-  } catch (e) {
-    console.error('Error creating banner:', e);
-    alert('Ошибка при добавлении баннера');
-  }
-}
-
-function openAdModal() {
-  const title = prompt('Название рекламы:');
-  if (!title) return;
-  const description = prompt('Описание:');
-  const imageUrl = prompt('URL изображения:');
-  if (!imageUrl) return;
-  const linkUrl = prompt('URL ссылки:');
-  if (!linkUrl) return;
-  createAd(title, description, imageUrl, linkUrl);
-}
-
-async function createAd(title, description, imageUrl, linkUrl) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/ads`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, image_url: imageUrl, link_url: linkUrl })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Реклама добавлена');
-    } else {
-      alert('Ошибка при добавлении рекламы');
-    }
-  } catch (e) {
-    console.error('Error creating ad:', e);
-    alert('Ошибка при добавлении рекламы');
-  }
-}
-
-function openFAQModal() {
-  const question = prompt('Вопрос:');
-  if (!question) return;
-  const answer = prompt('Ответ:');
-  if (!answer) return;
-  createFAQ(question, answer);
-}
-
-async function createFAQ(question, answer) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/faq`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, answer })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('FAQ добавлен');
-    } else {
-      alert('Ошибка при добавлении FAQ');
-    }
-  } catch (e) {
-    console.error('Error creating FAQ:', e);
-    alert('Ошибка при добавлении FAQ');
-  }
-}
-
-function openSupportModal() {
-  const whatsapp = prompt('WhatsApp:');
-  const instagram = prompt('Instagram:');
-  const tiktok = prompt('TikTok:');
-  const email = prompt('Email:');
-  const telegram = prompt('Telegram:');
-  updateSupportSettings(whatsapp, instagram, tiktok, email, telegram);
-}
-
-async function updateSupportSettings(whatsapp, instagram, tiktok, email, telegram) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/support`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ whatsapp, instagram, tiktok, email, telegram })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Настройки поддержки обновлены');
-    } else {
-      alert('Ошибка при обновлении настроек');
-    }
-  } catch (e) {
-    console.error('Error updating support settings:', e);
-    alert('Ошибка при обновлении настроек');
-  }
-}
-
-function openAppNameModal() {
-  const name = prompt('Название приложения:');
-  if (name) {
-    updateAppName(name);
-  }
-}
-
-async function updateAppName(name) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/app`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_name: name })
-    });
-    if (res.ok) {
-      loadSettings();
-      alert('Название обновлено');
-    } else {
-      alert('Ошибка при обновлении названия');
-    }
-  } catch (e) {
-    console.error('Error updating app name:', e);
-    alert('Ошибка при обновлении названия');
-  }
-}
-
-function openIconModal() {
-  const icon = prompt('URL иконки:');
+async function renderIconInfo() {
+  const container = document.getElementById('icon-info');
+  const icon = settingsCache.app.app_icon;
+  const spec = IMAGE_SPECS.icon;
+  container.innerHTML = `
+    <div class="icon-card">
+      <div class="icon-preview-wrap">
+        ${icon ? `<img class="icon-preview" src="${escapeHtml(icon)}" alt="">` : '<div class="icon-preview icon-placeholder">🎓</div>'}
+      </div>
+      <div class="icon-meta">
+        <div id="icon-size">${icon ? 'Определяем размер…' : 'Иконка не загружена'}</div>
+        <div class="field-hint">Рекомендуемый размер: ${spec.label}</div>
+        <div id="icon-warning" class="field-warning"></div>
+      </div>
+    </div>
+    <input type="file" id="icon-file" accept="image/*" hidden onchange="handleIconFile(this)">
+    <button class="btn-primary" onclick="document.getElementById('icon-file').click()">⬆️ Загрузить новую иконку</button>
+  `;
   if (icon) {
-    updateAppIcon(icon);
+    const info = await getImageInfo(icon);
+    document.getElementById('icon-size').textContent = imageInfoText(info, spec);
+    document.getElementById('icon-warning').textContent = imageSizeWarning(info, spec);
   }
 }
 
-async function updateAppIcon(icon) {
+async function handleIconFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const sizeEl = document.getElementById('icon-size');
+  sizeEl.textContent = 'Загрузка…';
   try {
-    const res = await fetch(`${API_BASE}/settings/app`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_icon: icon })
+    const url = await uploadImage(file);
+    await apiSettings('PUT', 'app', { app_icon: url });
+    await loadSettings();
+    alert('Иконка обновлена');
+  } catch (e) {
+    console.error('Error uploading icon:', e);
+    sizeEl.textContent = 'Ошибка загрузки';
+    alert(`Ошибка при загрузке иконки: ${e.message}`);
+  }
+}
+
+function applyAdminFavicon(url) {
+  if (!url) return;
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
+
+// ---------- Полноэкранная форма настроек ----------
+
+let activeSettingsForm = null;
+
+function fieldId(name) {
+  return `sf-${name}`;
+}
+
+function renderSelectOptions(field, values) {
+  const options = field.options(values);
+  const current = values[field.name];
+  const placeholder = options.length ? (field.placeholder || 'Выберите...') : (field.emptyText || 'Список пуст');
+  return `<option value="">${escapeHtml(placeholder)}</option>` + options.map(o =>
+    `<option value="${escapeHtml(o.value)}"${String(o.value) === String(current) ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
+  ).join('');
+}
+
+function renderFormField(field, values) {
+  const id = fieldId(field.name);
+  const value = values[field.name] ?? '';
+  const req = field.required ? ' <span class="req">*</span>' : '';
+  const hint = field.hint ? `<div class="field-hint">${field.hint}</div>` : '';
+  switch (field.type) {
+    case 'textarea':
+      return `<div class="form-field"><label for="${id}">${field.label}${req}</label>
+        <textarea id="${id}" placeholder="${escapeHtml(field.placeholder || '')}">${escapeHtml(value)}</textarea>${hint}</div>`;
+    case 'number':
+      return `<div class="form-field"><label for="${id}">${field.label}${req}</label>
+        <input id="${id}" type="number" step="1" value="${escapeHtml(value)}">${hint}</div>`;
+    case 'checkbox':
+      return `<div class="form-field form-field-checkbox"><label class="checkbox-row" for="${id}">
+        <input id="${id}" type="checkbox"${value ? ' checked' : ''}> ${field.label}</label>${hint}</div>`;
+    case 'select':
+      return `<div class="form-field"><label for="${id}">${field.label}${req}</label>
+        <select id="${id}" data-select="${field.name}">${renderSelectOptions(field, values)}</select>${hint}</div>`;
+    case 'image': {
+      const spec = IMAGE_SPECS[field.spec];
+      return `<div class="form-field image-field"><label>${field.label}${req}</label>
+        <div class="image-preview${value ? '' : ' empty'}" id="${id}-preview"
+             style="aspect-ratio: ${spec.width} / ${spec.height}">
+          ${value ? `<img src="${escapeHtml(value)}" alt="">` : '<span>Фото не выбрано</span>'}
+        </div>
+        <div class="field-hint">Рекомендуемый размер: <b>${spec.label}</b>, до 15 МБ</div>
+        <div class="field-info" id="${id}-info"></div>
+        <div class="field-warning" id="${id}-warning"></div>
+        <input type="file" id="${id}-file" accept="image/*" hidden>
+        <button type="button" class="btn-secondary" id="${id}-upload">⬆️ ${value ? 'Заменить фото' : 'Загрузить фото'}</button>
+        <input id="${id}" type="text" value="${escapeHtml(value)}" placeholder="или вставьте ссылку на изображение https://...">
+      </div>`;
+    }
+    default:
+      return `<div class="form-field"><label for="${id}">${field.label}${req}</label>
+        <input id="${id}" type="${field.type === 'url' ? 'url' : 'text'}" value="${escapeHtml(value)}"
+               placeholder="${escapeHtml(field.placeholder || '')}">${hint}</div>`;
+  }
+}
+
+function readFormValues(fields) {
+  const values = {};
+  for (const field of fields) {
+    const el = document.getElementById(fieldId(field.name));
+    if (!el) continue;
+    if (field.type === 'checkbox') values[field.name] = el.checked;
+    else if (field.type === 'number') values[field.name] = el.value === '' ? 0 : parseInt(el.value, 10);
+    else if (field.type === 'select') values[field.name] = el.value === '' ? null : (field.numeric ? parseInt(el.value, 10) : el.value);
+    else values[field.name] = el.value.trim();
+  }
+  return values;
+}
+
+async function updateImageField(field, url, file = null) {
+  const id = fieldId(field.name);
+  const spec = IMAGE_SPECS[field.spec];
+  const preview = document.getElementById(`${id}-preview`);
+  const infoEl = document.getElementById(`${id}-info`);
+  const warnEl = document.getElementById(`${id}-warning`);
+  if (!url) {
+    preview.classList.add('empty');
+    preview.innerHTML = '<span>Фото не выбрано</span>';
+    infoEl.textContent = '';
+    warnEl.textContent = '';
+    return;
+  }
+  preview.classList.remove('empty');
+  preview.innerHTML = `<img src="${escapeHtml(url)}" alt="">`;
+  infoEl.textContent = 'Определяем размер…';
+  const info = await getImageInfo(url, file);
+  infoEl.textContent = imageInfoText(info, spec);
+  warnEl.textContent = imageSizeWarning(info, spec);
+}
+
+function bindFormField(field) {
+  const id = fieldId(field.name);
+  if (field.type === 'image') {
+    const urlInput = document.getElementById(id);
+    const fileInput = document.getElementById(`${id}-file`);
+    const uploadBtn = document.getElementById(`${id}-upload`);
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Загрузка…';
+      try {
+        const url = await uploadImage(file);
+        urlInput.value = url;
+        await updateImageField(field, url, file);
+        uploadBtn.textContent = '⬆️ Заменить фото';
+      } catch (e) {
+        alert(`Ошибка загрузки фото: ${e.message}`);
+        uploadBtn.textContent = '⬆️ Загрузить фото';
+      } finally {
+        uploadBtn.disabled = false;
+        fileInput.value = '';
+      }
     });
-    if (res.ok) {
-      loadSettings();
-      alert('Иконка обновлена');
-    } else {
-      alert('Ошибка при обновлении иконки');
-    }
-  } catch (e) {
-    console.error('Error updating app icon:', e);
-    alert('Ошибка при обновлении иконки');
+    urlInput.addEventListener('change', () => updateImageField(field, urlInput.value.trim()));
+    if (urlInput.value) updateImageField(field, urlInput.value);
   }
-}
-
-async function deleteFaculty(id) {
-  if (confirm('Удалить факультет?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/faculties/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('Факультет удалён');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting faculty:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-async function deleteDepartment(id) {
-  if (confirm('Удалить кафедру?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/departments/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('Кафедра удалена');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting department:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-async function deleteGroup(id) {
-  if (confirm('Удалить группу?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/groups/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('Группа удалена');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting group:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-async function deleteBanner(id) {
-  if (confirm('Удалить баннер?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/banners/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('Баннер удалён');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting banner:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-async function deleteAd(id) {
-  if (confirm('Удалить рекламу?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/ads/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('Реклама удалена');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting ad:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-async function deleteFAQ(id) {
-  if (confirm('Удалить FAQ?')) {
-    try {
-      const res = await fetch(`${API_BASE}/settings/faq/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadSettings();
-        alert('FAQ удалён');
-      } else {
-        alert('Ошибка при удалении');
-      }
-    } catch (e) {
-      console.error('Error deleting FAQ:', e);
-      alert('Ошибка при удалении');
-    }
-  }
-}
-
-// ---------- Выбор факультета/кафедры из списка ----------
-
-// Показывает пронумерованный список и возвращает выбранный элемент (по номеру, ID или названию).
-function pickFromList(title, items, currentId = null) {
-  if (items.length === 0) {
-    alert(`${title}: список пуст — сначала добавьте записи`);
-    return null;
-  }
-  const lines = items.map((item, i) => `${i + 1}. ${item.name} (ID: ${item.id})`).join('\n');
-  const currentIndex = items.findIndex(item => item.id === currentId);
-  const input = prompt(
-    `${title}\nВведите номер из списка или название:\n\n${lines}`,
-    currentIndex >= 0 ? String(currentIndex + 1) : ''
-  );
-  if (input === null) return null;
-  const value = input.trim();
-  const byNumber = /^\d+$/.test(value) ? items[parseInt(value, 10) - 1] : null;
-  const byName = items.find(item => item.name.toLowerCase() === value.toLowerCase());
-  const picked = byNumber || byName;
-  if (!picked) {
-    alert('Не найдено. Попробуйте ещё раз.');
-    return null;
-  }
-  return picked.id;
-}
-
-async function pickFaculty(currentId = null) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/faculties`);
-    const faculties = await res.json();
-    return pickFromList('Выберите факультет', faculties, currentId);
-  } catch (e) {
-    console.error('Error loading faculties:', e);
-    alert('Ошибка при загрузке факультетов');
-    return null;
-  }
-}
-
-async function pickDepartment(facultyId, currentId = null) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/departments?faculty_id=${facultyId}`);
-    const departments = await res.json();
-    return pickFromList('Выберите кафедру', departments, currentId);
-  } catch (e) {
-    console.error('Error loading departments:', e);
-    alert('Ошибка при загрузке кафедр');
-    return null;
-  }
-}
-
-// ---------- Редактирование настроек ----------
-
-async function updateSetting(path, id, body, label) {
-  try {
-    const res = await fetch(`${API_BASE}/settings/${path}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+  if (field.type === 'select') {
+    document.getElementById(id).addEventListener('change', () => {
+      // перерисовываем зависимые селекты (например, кафедры после смены факультета)
+      const values = readFormValues(activeSettingsForm.fields);
+      activeSettingsForm.fields
+        .filter(f => f.type === 'select' && f.dependsOn === field.name)
+        .forEach(f => {
+          values[f.name] = null;
+          document.getElementById(fieldId(f.name)).innerHTML = renderSelectOptions(f, values);
+        });
     });
-    if (res.ok) {
-      loadSettings();
-      alert(`${label} обновлено`);
-    } else {
-      const err = await res.json().catch(() => ({}));
-      alert(`Ошибка при обновлении: ${err.detail || res.status}`);
-    }
-  } catch (e) {
-    console.error(`Error updating ${path}:`, e);
-    alert('Ошибка при обновлении');
   }
 }
+
+function openSettingsForm({ title, fields, values = {}, submitLabel = 'Сохранить', onSubmit }) {
+  activeSettingsForm = { fields, onSubmit };
+  document.getElementById('settings-form-title').textContent = title;
+  const form = document.getElementById('settings-form');
+  form.innerHTML = fields.map(f => renderFormField(f, values)).join('') + `
+    <div class="form-error hidden" id="settings-form-error"></div>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" onclick="closeSettingsForm()">Отмена</button>
+      <button type="submit" class="btn-primary" id="settings-form-submit">${submitLabel}</button>
+    </div>`;
+  fields.forEach(bindFormField);
+  document.getElementById('settings-form-overlay').classList.remove('hidden');
+  document.body.classList.add('no-scroll');
+  const first = form.querySelector('input:not([type=file]):not([type=checkbox]), textarea, select');
+  if (first) first.focus();
+}
+
+function closeSettingsForm() {
+  document.getElementById('settings-form-overlay').classList.add('hidden');
+  document.body.classList.remove('no-scroll');
+  activeSettingsForm = null;
+}
+
+function showFormError(text) {
+  const el = document.getElementById('settings-form-error');
+  el.textContent = text;
+  el.classList.toggle('hidden', !text);
+}
+
+document.getElementById('settings-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!activeSettingsForm) return;
+  const { fields, onSubmit } = activeSettingsForm;
+  const values = readFormValues(fields);
+
+  const missing = fields.find(f => f.required && (values[f.name] === null || values[f.name] === ''));
+  if (missing) return showFormError(`Заполните поле «${missing.label}»`);
+  const badLink = fields.find(f => f.type === 'url' && values[f.name] && !/^(https?:\/\/|tg:\/\/|mailto:)/i.test(values[f.name]));
+  if (badLink) return showFormError(`«${badLink.label}» должна начинаться с https://`);
+  if (fields.some(f => f.type === 'number' && Number.isNaN(values[f.name]))) return showFormError('Порядок должен быть числом');
+
+  const submitBtn = document.getElementById('settings-form-submit');
+  submitBtn.disabled = true;
+  showFormError('');
+  try {
+    await onSubmit(values);
+    closeSettingsForm();
+    await loadSettings();
+  } catch (err) {
+    console.error('Error saving settings:', err);
+    showFormError(`Ошибка при сохранении: ${err.message}`);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('settings-form-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'settings-form-overlay') closeSettingsForm();
+});
+
+// ---------- Описание форм ----------
+
+const facultyOptions = () => settingsCache.faculties.map(f => ({ value: f.id, label: f.name }));
+const departmentOptions = (values) => settingsCache.departments
+  .filter(d => d.faculty_id === values.faculty_id)
+  .map(d => ({ value: d.id, label: d.name }));
+
+const FACULTY_FIELDS = [
+  { name: 'name', label: 'Название факультета', required: true, placeholder: 'Например: Информационные технологии' },
+];
+const DEPARTMENT_FIELDS = [
+  { name: 'name', label: 'Название кафедры', required: true },
+  { name: 'faculty_id', label: 'Факультет', type: 'select', numeric: true, required: true, options: facultyOptions,
+    emptyText: 'Сначала добавьте факультет' },
+];
+const GROUP_FIELDS = [
+  { name: 'name', label: 'Название группы', required: true, placeholder: 'Например: ИС-21' },
+  { name: 'faculty_id', label: 'Факультет', type: 'select', numeric: true, required: true, options: facultyOptions,
+    emptyText: 'Сначала добавьте факультет' },
+  { name: 'department_id', label: 'Кафедра', type: 'select', numeric: true, required: true, options: departmentOptions,
+    dependsOn: 'faculty_id', placeholder: 'Выберите кафедру...', emptyText: 'Сначала выберите факультет (или добавьте кафедру)' },
+];
+
+function promoFields(kind) {
+  const noun = kind === 'banner' ? 'баннера' : 'рекламы';
+  return [
+    { name: 'image_url', label: 'Фото', type: 'image', spec: kind, required: true },
+    { name: 'title', label: `Название ${noun}`, required: true },
+    { name: 'description', label: 'Описание', type: 'textarea', placeholder: 'Короткий текст под названием (необязательно)' },
+    { name: 'link_url', label: 'Ссылка', type: 'url', required: true, placeholder: 'https://...',
+      hint: `Откроется при нажатии на ${kind === 'banner' ? 'баннер' : 'рекламу'}` },
+    { name: 'order', label: 'Порядок показа', type: 'number', hint: 'Меньше — раньше' },
+    { name: 'is_active', label: 'Показывать в приложении', type: 'checkbox' },
+  ];
+}
+
+const FAQ_FIELDS = [
+  { name: 'question', label: 'Вопрос', required: true },
+  { name: 'answer', label: 'Ответ', type: 'textarea', required: true },
+  { name: 'order', label: 'Порядок показа', type: 'number', hint: 'Меньше — выше в списке' },
+  { name: 'is_active', label: 'Показывать в приложении', type: 'checkbox' },
+];
+
+const SUPPORT_FIELDS = [
+  { name: 'telegram', label: 'Telegram', placeholder: 'https://t.me/username или @username' },
+  { name: 'whatsapp', label: 'WhatsApp', placeholder: '+7 700 000 00 00' },
+  { name: 'instagram', label: 'Instagram', placeholder: 'https://www.instagram.com/...' },
+  { name: 'tiktok', label: 'TikTok', placeholder: 'https://www.tiktok.com/@...' },
+  { name: 'email', label: 'Email', placeholder: 'support@example.com' },
+];
 
 function findCached(key, id) {
   const item = settingsCache[key].find(x => x.id === id);
@@ -1262,99 +1156,174 @@ function findCached(key, id) {
   return item;
 }
 
-// prompt с текущим значением; null — отмена, пустая строка для обязательного поля — тоже отмена
-function promptRequired(label, current) {
-  const value = prompt(label, current ?? '');
-  if (value === null || !value.trim()) return null;
-  return value.trim();
+function nextOrder(list) {
+  return list.length ? Math.max(...list.map(x => x.order || 0)) + 1 : 0;
 }
 
-function promptOrder(current) {
-  const value = prompt('Порядок (число):', String(current ?? 0));
-  if (value === null) return null;
-  const order = parseInt(value, 10);
-  if (Number.isNaN(order)) {
-    alert('Порядок должен быть числом');
-    return null;
-  }
-  return order;
+// ---------- Добавление ----------
+
+function openFacultyModal() {
+  openSettingsForm({
+    title: 'Новый факультет', fields: FACULTY_FIELDS, submitLabel: 'Добавить',
+    onSubmit: v => apiSettings('POST', 'faculties', v),
+  });
 }
+
+function openDepartmentModal() {
+  openSettingsForm({
+    title: 'Новая кафедра', fields: DEPARTMENT_FIELDS, submitLabel: 'Добавить',
+    onSubmit: v => apiSettings('POST', 'departments', v),
+  });
+}
+
+function openGroupModal() {
+  openSettingsForm({
+    title: 'Новая группа', fields: GROUP_FIELDS, submitLabel: 'Добавить',
+    onSubmit: v => apiSettings('POST', 'groups', v),
+  });
+}
+
+function openBannerModal() {
+  openSettingsForm({
+    title: 'Новый баннер', fields: promoFields('banner'), submitLabel: 'Добавить',
+    values: { is_active: true, order: nextOrder(settingsCache.banners) },
+    onSubmit: v => apiSettings('POST', 'banners', v),
+  });
+}
+
+function openAdModal() {
+  openSettingsForm({
+    title: 'Новая реклама', fields: promoFields('ad'), submitLabel: 'Добавить',
+    values: { is_active: true, order: nextOrder(settingsCache.ads) },
+    onSubmit: v => apiSettings('POST', 'ads', v),
+  });
+}
+
+function openFAQModal() {
+  openSettingsForm({
+    title: 'Новый вопрос FAQ', fields: FAQ_FIELDS, submitLabel: 'Добавить',
+    values: { is_active: true, order: nextOrder(settingsCache.faq) },
+    onSubmit: v => apiSettings('POST', 'faq', v),
+  });
+}
+
+function openSupportModal() {
+  openSettingsForm({
+    title: 'Контакты поддержки', fields: SUPPORT_FIELDS, values: settingsCache.support,
+    onSubmit: v => apiSettings('PUT', 'support', v),
+  });
+}
+
+function openAppNameModal() {
+  openSettingsForm({
+    title: 'Название приложения',
+    fields: [{ name: 'app_name', label: 'Название', required: true }],
+    values: settingsCache.app,
+    onSubmit: v => apiSettings('PUT', 'app', v),
+  });
+}
+
+function openIconModal() {
+  document.getElementById('icon-file')?.click();
+}
+
+// ---------- Изменение ----------
 
 function editFaculty(id) {
-  const faculty = findCached('faculties', id);
-  if (!faculty) return;
-  const name = promptRequired('Название факультета:', faculty.name);
-  if (name === null) return;
-  updateSetting('faculties', id, { name }, 'Факультет');
+  const item = findCached('faculties', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить факультет', fields: FACULTY_FIELDS, values: item,
+    onSubmit: v => apiSettings('PUT', `faculties/${id}`, v),
+  });
 }
 
-async function editDepartment(id) {
-  const department = findCached('departments', id);
-  if (!department) return;
-  const name = promptRequired('Название кафедры:', department.name);
-  if (name === null) return;
-  const facultyId = await pickFaculty(department.faculty_id);
-  if (!facultyId) return;
-  updateSetting('departments', id, { name, faculty_id: facultyId }, 'Кафедра');
+function editDepartment(id) {
+  const item = findCached('departments', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить кафедру', fields: DEPARTMENT_FIELDS, values: item,
+    onSubmit: v => apiSettings('PUT', `departments/${id}`, v),
+  });
 }
 
-async function editGroup(id) {
-  const group = findCached('groups', id);
-  if (!group) return;
-  const name = promptRequired('Название группы:', group.name);
-  if (name === null) return;
-  const facultyId = await pickFaculty(group.faculty_id);
-  if (!facultyId) return;
-  const departmentId = await pickDepartment(
-    facultyId, facultyId === group.faculty_id ? group.department_id : null
-  );
-  if (!departmentId) return;
-  updateSetting('groups', id, { name, faculty_id: facultyId, department_id: departmentId }, 'Группа');
+function editGroup(id) {
+  const item = findCached('groups', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить группу', fields: GROUP_FIELDS, values: item,
+    onSubmit: v => apiSettings('PUT', `groups/${id}`, v),
+  });
 }
 
 function editBanner(id) {
-  const banner = findCached('banners', id);
-  if (!banner) return;
-  const title = promptRequired('Название баннера:', banner.title);
-  if (title === null) return;
-  const imageUrl = promptRequired('URL изображения:', banner.image_url);
-  if (imageUrl === null) return;
-  const linkUrl = promptRequired('URL ссылки:', banner.link_url);
-  if (linkUrl === null) return;
-  const order = promptOrder(banner.order);
-  if (order === null) return;
-  const isActive = confirm('Показывать баннер? (OK — да, Отмена — скрыть)');
-  updateSetting('banners', id, { title, image_url: imageUrl, link_url: linkUrl, order, is_active: isActive }, 'Баннер');
+  const item = findCached('banners', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить баннер', fields: promoFields('banner'), values: item,
+    onSubmit: v => apiSettings('PUT', `banners/${id}`, { ...v, description: v.description || null }),
+  });
 }
 
 function editAd(id) {
-  const ad = findCached('ads', id);
-  if (!ad) return;
-  const title = promptRequired('Название рекламы:', ad.title);
-  if (title === null) return;
-  const description = prompt('Описание:', ad.description ?? '');
-  if (description === null) return;
-  const imageUrl = promptRequired('URL изображения:', ad.image_url);
-  if (imageUrl === null) return;
-  const linkUrl = promptRequired('URL ссылки:', ad.link_url);
-  if (linkUrl === null) return;
-  const order = promptOrder(ad.order);
-  if (order === null) return;
-  const isActive = confirm('Показывать рекламу? (OK — да, Отмена — скрыть)');
-  updateSetting('ads', id, {
-    title, description: description.trim() || null, image_url: imageUrl, link_url: linkUrl, order, is_active: isActive
-  }, 'Реклама');
+  const item = findCached('ads', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить рекламу', fields: promoFields('ad'), values: item,
+    onSubmit: v => apiSettings('PUT', `ads/${id}`, { ...v, description: v.description || null }),
+  });
 }
 
 function editFAQ(id) {
-  const faq = findCached('faq', id);
-  if (!faq) return;
-  const question = promptRequired('Вопрос:', faq.question);
-  if (question === null) return;
-  const answer = promptRequired('Ответ:', faq.answer);
-  if (answer === null) return;
-  const order = promptOrder(faq.order);
-  if (order === null) return;
-  const isActive = confirm('Показывать вопрос? (OK — да, Отмена — скрыть)');
-  updateSetting('faq', id, { question, answer, order, is_active: isActive }, 'FAQ');
+  const item = findCached('faq', id);
+  if (!item) return;
+  openSettingsForm({
+    title: 'Изменить вопрос FAQ', fields: FAQ_FIELDS, values: item,
+    onSubmit: v => apiSettings('PUT', `faq/${id}`, v),
+  });
 }
+
+// ---------- Удаление ----------
+
+async function deleteSetting(path, id, question) {
+  if (!confirm(question)) return;
+  try {
+    await apiSettings('DELETE', `${path}/${id}`);
+    await loadSettings();
+  } catch (e) {
+    console.error(`Error deleting ${path}:`, e);
+    alert(`Ошибка при удалении: ${e.message}`);
+  }
+}
+
+function deleteFaculty(id) {
+  const depCount = settingsCache.departments.filter(d => d.faculty_id === id).length;
+  const groupCount = settingsCache.groups.filter(g => g.faculty_id === id).length;
+  const extra = depCount || groupCount ? `\nВместе с ним удалятся кафедры (${depCount}) и группы (${groupCount}).` : '';
+  deleteSetting('faculties', id, `Удалить факультет «${nameById(settingsCache.faculties, id)}»?${extra}`);
+}
+
+function deleteDepartment(id) {
+  const groupCount = settingsCache.groups.filter(g => g.department_id === id).length;
+  const extra = groupCount ? `\nВместе с ней удалятся группы (${groupCount}).` : '';
+  deleteSetting('departments', id, `Удалить кафедру «${nameById(settingsCache.departments, id)}»?${extra}`);
+}
+
+function deleteGroup(id) {
+  deleteSetting('groups', id, `Удалить группу «${nameById(settingsCache.groups, id)}»?`);
+}
+
+function deleteBanner(id) {
+  deleteSetting('banners', id, 'Удалить баннер?');
+}
+
+function deleteAd(id) {
+  deleteSetting('ads', id, 'Удалить рекламу?');
+}
+
+function deleteFAQ(id) {
+  deleteSetting('faq', id, 'Удалить вопрос FAQ?');
+}
+
+// иконка приложения во вкладке браузера и в админке
+fetch(`${API_BASE}/settings/app`).then(r => r.json()).then(app => applyAdminFavicon(app.app_icon)).catch(() => {});

@@ -1581,3 +1581,46 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 }
 
 .profile-info { margin-top: 56px; }
+
+/* ===== Баннеры и реклама из админки ===== */
+.banner.banner-images { height: auto; aspect-ratio: 3 / 1; }
+
+.banner-slide-image {
+  background-size: cover;
+  background-position: center;
+  align-items: flex-end;
+  padding: 0;
+  cursor: pointer;
+}
+
+.banner-caption {
+  width: 100%;
+  padding: 18px 14px 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0));
+}
+
+.banner-caption-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+.banner-caption-desc { font-size: 12px; opacity: 0.9; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.logo-badge img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; display: block; }
+
+.ads-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+
+.ad-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  background: var(--tg-theme-secondary-bg-color, rgba(127, 127, 127, 0.1));
+}
+
+.ad-card-image { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.ad-card-body { padding: 10px 14px 12px; }
+.ad-card-title { font-size: 15px; font-weight: 700; }
+.ad-card-desc { font-size: 13px; opacity: 0.75; margin-top: 4px; line-height: 1.4; }

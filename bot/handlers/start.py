@@ -1,3 +1,5 @@
+import html
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, CommandObject, Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -8,6 +10,34 @@ from database import crud
 from bot.avatar import refresh_user_avatar
 
 router = Router(name="start")
+
+
+def support_link(kind: str, value: str | None) -> str | None:
+    """Превращает значение из настроек поддержки в кликабельную ссылку."""
+    value = (value or "").strip()
+    if not value:
+        return None
+    if kind == "whatsapp" and not value.startswith("http"):
+        digits = "".join(ch for ch in value if ch.isdigit())
+        return f"https://wa.me/{digits}" if digits else None
+    if kind == "telegram" and not value.startswith("http"):
+        return f"https://t.me/{value.lstrip('@')}"
+    if kind == "email" and not value.startswith("mailto:"):
+        return f"mailto:{value}"
+    return value
+
+
+def _support_links_html(support) -> str:
+    channels = [
+        ("telegram", "✈️ Telegram"), ("whatsapp", "📱 WhatsApp"), ("instagram", "📷 Instagram"),
+        ("tiktok", "🎵 TikTok"), ("email", "✉️ Email"),
+    ]
+    links = []
+    for kind, label in channels:
+        url = support_link(kind, getattr(support, kind))
+        if url:
+            links.append(f'<a href="{html.escape(url, quote=True)}">{label}</a>')
+    return "\n".join(links)
 
 
 @router.message(CommandStart())
@@ -57,6 +87,9 @@ async def administration_access_denied(message: Message):
         # Если это админ, он обрабатывается в admin.py
         return
 
+    async with async_session() as session:
+        support = await crud.get_support_settings(session)
+
     await message.answer(
         "🚫 <b>Доступ запрещён</b>\n\n"
         "Эта команда доступна только администраторам Bereket.\n\n"
@@ -65,10 +98,7 @@ async def administration_access_denied(message: Message):
         "• <b>Разместить объявление</b> — мини-приложение → Разместить\n"
         "• <b>Поддержка</b> — мини-приложение → Профиль → Поддержка\n\n"
         "Если у вас есть вопросы — напишите нам:\n"
-        "<a href=\"https://wa.me/77003626026\">📱 WhatsApp</a>\n"
-        "<a href=\"https://www.instagram.com/bereket_app.sh\">📷 Instagram</a>\n"
-        "<a href=\"https://www.tiktok.com/@bereket_app\">🎵 TikTok</a>\n"
-        "<a href=\"mailto:rozybayewdemon@gmail.com\">✉️ Email</a>\n\n"
+        f"{_support_links_html(support)}\n\n"
         "Жмите кнопку ниже для работы с приложением 👇",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))

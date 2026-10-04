@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session
@@ -487,9 +487,12 @@ async def update_faculty(faculty_id: int, data: dict):
     fields = _pick(data, ("name",))
     _require_non_empty(fields, ("name",))
     async with async_session() as session:
-        faculty = await crud.update_faculty(session, faculty_id, **fields)
-        if not faculty:
+        existing = await session.get(Faculty, faculty_id)
+        if not existing:
             raise HTTPException(status_code=404, detail="Faculty not found")
+        old_name = existing.name
+        faculty = await crud.update_faculty(session, faculty_id, **fields)
+        await crud.rename_academic_value(session, "faculty", old_name, faculty.name)
         return {"id": faculty.id, "name": faculty.name}
 
 @router.get("/settings/departments")
@@ -508,6 +511,7 @@ async def create_department(data: dict):
     if not name or not faculty_id:
         raise HTTPException(status_code=400, detail="Name and faculty_id required")
     async with async_session() as session:
+        await _ensure_faculty_and_department(session, faculty_id=faculty_id)
         department = await crud.create_department(session, name, faculty_id)
         return {"id": department.id, "name": department.name, "faculty_id": department.faculty_id}
 
@@ -529,9 +533,17 @@ async def update_department(department_id: int, data: dict):
     _require_non_empty(fields, ("name", "faculty_id"))
     async with async_session() as session:
         await _ensure_faculty_and_department(session, faculty_id=fields.get("faculty_id"))
-        department = await crud.update_department(session, department_id, **fields)
-        if not department:
+        existing = await session.get(Department, department_id)
+        if not existing:
             raise HTTPException(status_code=404, detail="Department not found")
+        old_name = existing.name
+        department = await crud.update_department(session, department_id, **fields)
+        await crud.rename_academic_value(session, "department", old_name, department.name)
+        # кафедра переехала на другой факультет — группы переезжают вместе с ней
+        await session.execute(
+            update(Group).where(Group.department_id == department_id).values(faculty_id=department.faculty_id)
+        )
+        await session.commit()
         return {"id": department.id, "name": department.name, "faculty_id": department.faculty_id}
 
 @router.get("/settings/groups")
@@ -551,6 +563,7 @@ async def create_group(data: dict):
     if not name or not faculty_id or not department_id:
         raise HTTPException(status_code=400, detail="Name, faculty_id and department_id required")
     async with async_session() as session:
+        await _ensure_faculty_and_department(session, faculty_id=faculty_id, department_id=department_id)
         group = await crud.create_group(session, name, faculty_id, department_id)
         return {"id": group.id, "name": group.name, "faculty_id": group.faculty_id, "department_id": group.department_id}
 
@@ -579,7 +592,9 @@ async def update_group(group_id: int, data: dict):
             faculty_id=fields.get("faculty_id", group.faculty_id),
             department_id=fields.get("department_id", group.department_id),
         )
+        old_name = group.name
         group = await crud.update_group(session, group_id, **fields)
+        await crud.rename_academic_value(session, "group_name", old_name, group.name)
         return {"id": group.id, "name": group.name, "faculty_id": group.faculty_id, "department_id": group.department_id}
 
 @router.get("/settings/banners")
@@ -596,11 +611,13 @@ async def create_banner(data: dict):
     title = data.get("title")
     image_url = data.get("image_url")
     link_url = data.get("link_url")
-    order = data.get("order", 0)
     if not title or not image_url or not link_url:
         raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
     async with async_session() as session:
-        banner = await crud.create_banner(session, title, image_url, link_url, order)
+        banner = await crud.create_banner(
+            session, title, image_url, link_url, data.get("order") or 0,
+            description=data.get("description") or None, is_active=data.get("is_active", True),
+        )
         return _banner_out(banner)
 
 
@@ -615,13 +632,13 @@ async def delete_banner(banner_id: int):
 
 
 def _banner_out(b: Banner) -> dict:
-    return {"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order": b.order, "is_active": b.is_active}
+    return {"id": b.id, "title": b.title, "description": b.description, "image_url": b.image_url, "link_url": b.link_url, "order": b.order, "is_active": b.is_active}
 
 
 @router.put("/settings/banners/{banner_id}")
 async def update_banner(banner_id: int, data: dict):
     """Изменить баннер"""
-    fields = _pick(data, ("title", "image_url", "link_url", "order", "is_active"))
+    fields = _pick(data, ("title", "description", "image_url", "link_url", "order", "is_active"))
     _require_non_empty(fields, ("title", "image_url", "link_url", "order", "is_active"))
     async with async_session() as session:
         banner = await crud.update_banner(session, banner_id, **fields)
@@ -644,11 +661,13 @@ async def create_ad(data: dict):
     description = data.get("description")
     image_url = data.get("image_url")
     link_url = data.get("link_url")
-    order = data.get("order", 0)
     if not title or not image_url or not link_url:
         raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
     async with async_session() as session:
-        ad = await crud.create_advertisement(session, title, description, image_url, link_url, order)
+        ad = await crud.create_advertisement(
+            session, title, description or None, image_url, link_url, data.get("order") or 0,
+            is_active=data.get("is_active", True),
+        )
         return _ad_out(ad)
 
 
@@ -693,11 +712,12 @@ async def create_faq(data: dict):
     """Создать FAQ"""
     question = data.get("question")
     answer = data.get("answer")
-    order = data.get("order", 0)
     if not question or not answer:
         raise HTTPException(status_code=400, detail="Question and answer required")
     async with async_session() as session:
-        faq = await crud.create_faq(session, question, answer, order)
+        faq = await crud.create_faq(
+            session, question, answer, data.get("order") or 0, is_active=data.get("is_active", True)
+        )
         return _faq_out(faq)
 
 

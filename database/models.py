@@ -3,7 +3,7 @@ import datetime as dt
 from datetime import timezone
 
 from sqlalchemy import (
-    String, Integer, BigInteger, Text, DateTime, Enum, ForeignKey, Boolean
+    String, Integer, BigInteger, Text, DateTime, Enum, ForeignKey, Boolean, false
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -194,6 +194,7 @@ class Banner(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     image_url: Mapped[str] = mapped_column(Text)
     link_url: Mapped[str] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -234,6 +235,8 @@ class AppSettings(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     app_name: Mapped[str] = mapped_column(String(64), default="Bereket")
     app_icon: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Стартовые факультеты/FAQ добавляются один раз — после удаления админом не возвращаются
+    defaults_seeded: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc), onupdate=lambda: dt.datetime.now(timezone.utc))
 
 

@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session
 from database.models import (
-    User, Order, OrderStatus, Listing, ListingStatus, QuizCatalogItem
+    User, Order, OrderStatus, OrderType, Listing, ListingStatus, QuizCatalogItem
 )
 from database import crud
-from config import ADMIN_CHAT_ID
+from config import ADMIN_CHAT_ID, BOT_USERNAME
 from api.schemas import CreateQuizIn, UpdateQuizIn
 
 router = APIRouter()
@@ -60,7 +60,7 @@ async def get_pending_items():
 async def get_orders(filter: str = "all"):
     """Список заказов с фильтром"""
     async with async_session() as session:
-        stmt = select(Order).order_by(Order.created_at.desc())
+        stmt = select(Order, User).join(User, Order.user_id == User.id).order_by(Order.created_at.desc())
 
         if filter == "awaiting_payment":
             stmt = stmt.where(Order.status == OrderStatus.awaiting_payment)
@@ -72,25 +72,47 @@ async def get_orders(filter: str = "all"):
             stmt = stmt.where(Order.status == OrderStatus.done)
 
         result = await session.execute(stmt)
-        orders = result.scalars().all()
+        rows = result.all()
 
-        return [
-            {
+        orders_data = []
+        for o, u in rows:
+            title = f"Индивидуальный заказ #{o.id}"
+            if o.order_type == OrderType.ready_quiz and o.catalog_item_id:
+                # Загрузить название теста
+                quiz_result = await session.execute(
+                    select(QuizCatalogItem).where(QuizCatalogItem.id == o.catalog_item_id)
+                )
+                quiz = quiz_result.scalar_one_or_none()
+                if quiz:
+                    title = quiz.title
+                else:
+                    title = f"Готовый тест #{o.catalog_item_id}"
+
+            orders_data.append({
                 "id": o.id,
                 "type": o.order_type.value,
                 "price": o.price,
                 "status": o.status.value,
                 "created_at": o.created_at.strftime("%Y-%m-%d %H:%M"),
-            }
-            for o in orders
-        ]
+                "user": {
+                    "id": u.id,
+                    "tg_id": u.tg_id,
+                    "username": u.username,
+                    "full_name": u.full_name,
+                    "phone": u.phone,
+                },
+                "title": title,
+                "telegram_link": f"https://t.me/{BOT_USERNAME}" if u.username else f"https://t.me/{u.tg_id}",
+            })
+
+        return orders_data
 
 
 @router.get("/listings")
 async def get_listings(filter: str = "all"):
     """Список объявлений с фильтром"""
     async with async_session() as session:
-        stmt = select(Listing).order_by(Listing.created_at.desc())
+        stmt = select(Listing, User).join(User, Listing.seller_id == User.id).order_by(Listing.created_at.desc())
 
         if filter == "pending":
             stmt = stmt.where(Listing.status == ListingStatus.pending)
@@ -100,7 +122,7 @@ async def get_listings(filter: str = "all"):
             stmt = stmt.where(Listing.status == ListingStatus.rejected)
 
         result = await session.execute(stmt)
-        listings = result.scalars().all()
+        rows = result.all()
 
         return [
             {
@@ -110,10 +132,83 @@ async def get_listings(filter: str = "all"):
                 "price": l.price,
                 "status": l.status.value,
                 "category": l.category.value,
+                "subcategory": l.subcategory,
                 "created_at": l.created_at.strftime("%Y-%m-%d %H:%M"),
+                "expires_at": l.expires_at.strftime("%Y-%m-%d") if l.expires_at else None,
+                "seller": {
+                    "id": u.id,
+                    "tg_id": u.tg_id,
+                    "username": u.username,
+                    "full_name": u.full_name,
+                    "phone": u.phone,
+                },
+                "contact": l.contact,
+                "photo_urls": l.photo_urls,
             }
-            for l in listings
+            for l, u in rows
         ]
+
+
+@router.get("/listings/{listing_id}")
+async def get_listing_detail(listing_id: int):
+    """Детальная информация об объявлении"""
+    async with async_session() as session:
+        stmt = select(Listing, User).join(User, Listing.seller_id == User.id).where(Listing.id == listing_id)
+        result = await session.execute(stmt)
+        row = result.first()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+
+        l, u = row
+
+        return {
+            "id": l.id,
+            "title": l.title,
+            "description": l.description,
+            "price": l.price,
+            "status": l.status.value,
+            "category": l.category.value,
+            "subcategory": l.subcategory,
+            "created_at": l.created_at.strftime("%Y-%m-%d %H:%M"),
+            "expires_at": l.expires_at.strftime("%Y-%m-%d") if l.expires_at else None,
+            "seller": {
+                "id": u.id,
+                "tg_id": u.tg_id,
+                "username": u.username,
+                "full_name": u.full_name,
+                "phone": u.phone,
+            },
+            "contact": l.contact,
+            "photo_urls": l.photo_urls,
+            "course": l.course,
+            "group_name": l.group_name,
+            "faculty": l.faculty,
+            "department": l.department,
+            "subject": l.subject,
+        }
+
+
+@router.put("/listings/{listing_id}")
+async def update_listing(listing_id: int, title: str = None, description: str = None, price: int = None, expires_at: str = None):
+    """Обновить объявление"""
+    async with async_session() as session:
+        listing = await crud.get_listing(session, listing_id)
+        if not listing:
+            raise HTTPException(status_code=404, detail="Listing not found")
+
+        if title:
+            listing.title = title
+        if description:
+            listing.description = description
+        if price:
+            listing.price = price
+        if expires_at:
+            from datetime import datetime
+            listing.expires_at = datetime.strptime(expires_at, "%Y-%m-%d")
+
+        await session.commit()
+        return {"success": True}
 
 
 @router.get("/quizzes")
@@ -218,6 +313,34 @@ async def reject_listing(listing_id: int, reason: str):
 
         listing = await crud.set_listing_status(session, listing, ListingStatus.rejected)
         # TODO: отправить уведомление пользователю с причиной
+        return {"success": True}
+
+
+@router.post("/orders/{order_id}/approve")
+async def approve_order(order_id: int):
+    """Одобрить заказ"""
+    async with async_session() as session:
+        result = await session.execute(select(Order).where(Order.id == order_id))
+        order = result.scalar_one_or_none()
+
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        order = await crud.set_order_status(session, order, OrderStatus.in_progress)
+        return {"success": True}
+
+
+@router.post("/orders/{order_id}/reject")
+async def reject_order(order_id: int, reason: str):
+    """Отклонить заказ"""
+    async with async_session() as session:
+        result = await session.execute(select(Order).where(Order.id == order_id))
+        order = result.scalar_one_or_none()
+
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        order = await crud.reject_order_with_reason(session, order, reason)
         return {"success": True}
 
 

@@ -122,12 +122,28 @@ async function loadOrders() {
     container.innerHTML = orders.map(order => `
       <div class="card">
         <div class="card-title">Заказ #${order.id}</div>
-        <div class="card-desc">${order.type}</div>
+        <div class="card-desc">${order.title}</div>
         <div class="card-price">${order.price} ₸</div>
         <div class="card-meta">
-          <span class="status-badge status-${order.status}">${order.status}</span>
-          · ${order.created_at}
+          <span class="user-info">
+            👤 ${order.user.full_name || 'Без имени'}
+            ${order.user.username ? `(@${order.user.username})` : ''}
+          </span>
+          <a href="${order.telegram_link}" target="_blank" class="profile-link">🔗 Профиль</a>
         </div>
+        <div class="card-meta">
+          📞 ${order.user.phone || 'Нет телефона'}
+          · 🕐 ${order.created_at}
+        </div>
+        <div class="card-meta">
+          <span class="status-badge status-${order.status}">${order.status}</span>
+        </div>
+        ${order.status === 'awaiting_payment' || order.status === 'payment_review' ? `
+          <div class="btn-row">
+            <button class="btn-success" onclick="approveOrder(${order.id})">✓ Принять</button>
+            <button class="btn-danger" onclick="rejectOrder(${order.id})">✗ Отклонить</button>
+          </div>
+        ` : ''}
       </div>
     `).join('');
   } catch (e) {
@@ -249,6 +265,43 @@ async function rejectItem(type, id) {
   } catch (e) {
     console.error('Error rejecting item:', e);
     alert('Ошибка при отклонении');
+  }
+}
+
+async function approveOrder(orderId) {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/approve`, { method: 'POST' });
+    if (res.ok) {
+      loadOrders();
+      alert('Заказ принят');
+    } else {
+      alert('Ошибка при принятии заказа');
+    }
+  } catch (e) {
+    console.error('Error approving order:', e);
+    alert('Ошибка при принятии заказа');
+  }
+}
+
+async function rejectOrder(orderId) {
+  const reason = prompt('Укажите причину отказа:');
+  if (!reason) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason })
+    });
+    if (res.ok) {
+      loadOrders();
+      alert('Заказ отклонён');
+    } else {
+      alert('Ошибка при отклонении заказа');
+    }
+  } catch (e) {
+    console.error('Error rejecting order:', e);
+    alert('Ошибка при отклонении заказа');
   }
 }
 

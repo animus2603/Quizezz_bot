@@ -190,7 +190,7 @@ async def get_listing_detail(listing_id: int):
 
 
 @router.put("/listings/{listing_id}")
-async def update_listing(listing_id: int, title: str = None, description: str = None, price: int = None, expires_at: str = None):
+async def update_listing(listing_id: int, title: str = None, description: str = None, price: int = None, expires_at: str = None, contact: str = None):
     """Обновить объявление"""
     async with async_session() as session:
         listing = await crud.get_listing(session, listing_id)
@@ -206,8 +206,20 @@ async def update_listing(listing_id: int, title: str = None, description: str = 
         if expires_at:
             from datetime import datetime
             listing.expires_at = datetime.strptime(expires_at, "%Y-%m-%d")
+        if contact:
+            listing.contact = contact
 
         await session.commit()
+        return {"success": True}
+
+
+@router.delete("/listings/{listing_id}")
+async def delete_listing_admin(listing_id: int):
+    """Удалить объявление (админ)"""
+    async with async_session() as session:
+        ok = await crud.delete_listing(session, listing_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Listing not found")
         return {"success": True}
 
 
@@ -284,8 +296,11 @@ async def get_users():
                 "tg_id": u.tg_id,
                 "username": u.username,
                 "full_name": u.full_name,
+                "phone": u.phone,
                 "points": u.points,
                 "created_at": u.created_at.strftime("%Y-%m-%d %H:%M"),
+                "is_admin": u.tg_id == ADMIN_CHAT_ID,
+                "telegram_link": f"https://t.me/{BOT_USERNAME}" if u.username else f"https://t.me/{u.tg_id}",
             }
             for u in users
         ]

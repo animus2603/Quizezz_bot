@@ -164,18 +164,123 @@ async function loadListings() {
     }
 
     container.innerHTML = listings.map(listing => `
-      <div class="card">
+      <div class="card listing-card" onclick="openListingDetail(${listing.id})">
         <div class="card-title">${listing.title}</div>
         <div class="card-desc">${listing.description || 'Без описания'}</div>
         <div class="card-price">${listing.price || 'Бесплатно'} ₸</div>
         <div class="card-meta">
           <span class="status-badge status-${listing.status}">${listing.status}</span>
           · ${listing.category}
+          ${listing.subcategory ? ` · ${listing.subcategory}` : ''}
+        </div>
+        <div class="card-meta">
+          👤 ${listing.seller.full_name || 'Без имени'}
+          ${listing.seller.username ? `(@${listing.seller.username})` : ''}
         </div>
       </div>
     `).join('');
   } catch (e) {
     console.error('Error loading listings:', e);
+  }
+}
+
+async function openListingDetail(listingId) {
+  try {
+    const res = await fetch(`${API_BASE}/listings/${listingId}`);
+    const listing = await res.json();
+
+    const html = `
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Редактировать объявление #${listing.id}</h3>
+          <button class="btn-close" onclick="closeListingModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>Название</label>
+          <input type="text" id="edit-title" value="${listing.title}">
+          <label>Описание</label>
+          <textarea id="edit-description">${listing.description || ''}</textarea>
+          <label>Цена (₸)</label>
+          <input type="number" id="edit-price" value="${listing.price || ''}">
+          <label>Показывать до (дата)</label>
+          <input type="date" id="edit-expires" value="${listing.expires_at || ''}">
+          <label>Контакт</label>
+          <input type="text" id="edit-contact" value="${listing.contact}">
+          <div class="btn-row">
+            <button class="btn-success" onclick="saveListing(${listing.id})">💾 Сохранить</button>
+            <button class="btn-danger" onclick="deleteListing(${listing.id})">🗑️ Удалить</button>
+          </div>
+          <div class="listing-info">
+            <div><strong>Продавец:</strong> ${listing.seller.full_name}</div>
+            <div><strong>Телефон:</strong> ${listing.seller.phone || 'Нет'}</div>
+            <div><strong>Категория:</strong> ${listing.category}</div>
+            <div><strong>Тип:</strong> ${listing.subcategory || 'Не указан'}</div>
+            <div><strong>Создано:</strong> ${listing.created_at}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('quiz-form-overlay').innerHTML = html;
+    document.getElementById('quiz-form-overlay').classList.remove('hidden');
+  } catch (e) {
+    console.error('Error loading listing detail:', e);
+    alert('Ошибка при загрузке объявления');
+  }
+}
+
+function closeListingModal() {
+  document.getElementById('quiz-form-overlay').classList.add('hidden');
+}
+
+async function saveListing(listingId) {
+  const title = document.getElementById('edit-title').value;
+  const description = document.getElementById('edit-description').value;
+  const price = parseInt(document.getElementById('edit-price').value);
+  const expiresAt = document.getElementById('edit-expires').value;
+  const contact = document.getElementById('edit-contact').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/listings/${listingId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        price,
+        expires_at: expiresAt || null,
+        contact,
+      })
+    });
+
+    if (res.ok) {
+      closeListingModal();
+      loadListings();
+      alert('Объявление обновлено');
+    } else {
+      alert('Ошибка при обновлении');
+    }
+  } catch (e) {
+    console.error('Error saving listing:', e);
+    alert('Ошибка при обновлении');
+  }
+}
+
+async function deleteListing(listingId) {
+  if (!confirm('Удалить это объявление?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/listings/${listingId}`, { method: 'DELETE' });
+    if (res.ok) {
+      closeListingModal();
+      loadListings();
+      alert('Объявление удалено');
+    } else {
+      alert('Ошибка при удалении');
+    }
+  } catch (e) {
+    console.error('Error deleting listing:', e);
+    alert('Ошибка при удалении');
   }
 }
 
@@ -220,10 +325,40 @@ async function loadUsers() {
     }
 
     container.innerHTML = users.map(user => `
-      <div class="card">
-        <div class="card-title">${user.full_name || 'Без имени'}</div>
-        <div class="card-desc">@${user.username || 'no username'}</div>
-        <div class="card-meta">ID: ${user.tg_id} · Баллы: ${user.points}</div>
+      <div class="card user-card">
+        <div class="user-header">
+          <div class="user-avatar">
+            ${user.username ? `@${user.username[0].toUpperCase()}` : '👤'}
+          </div>
+          <div class="user-info">
+            <div class="user-name">${user.full_name || 'Без имени'}</div>
+            <div class="user-username">@${user.username || 'no username'}</div>
+          </div>
+          <div class="user-status">
+            ${user.is_admin ? '<span class="admin-badge-small">Админ</span>' : '<span class="guest-badge-small">Гость</span>'}
+          </div>
+        </div>
+        <div class="user-details">
+          <div class="user-detail">
+            <span class="detail-label">🆔 ID:</span>
+            <span class="detail-value">${user.tg_id}</span>
+          </div>
+          <div class="user-detail">
+            <span class="detail-label">📞 Телефон:</span>
+            <span class="detail-value">${user.phone || 'Не привязан'}</span>
+          </div>
+          <div class="user-detail">
+            <span class="detail-label">💎 Баллы:</span>
+            <span class="detail-value">${user.points}</span>
+          </div>
+          <div class="user-detail">
+            <span class="detail-label">📅 Регистрация:</span>
+            <span class="detail-value">${user.created_at}</span>
+          </div>
+        </div>
+        <div class="user-actions">
+          <a href="${user.telegram_link}" target="_blank" class="profile-link">🔗 Профиль</a>
+        </div>
       </div>
     `).join('');
   } catch (e) {

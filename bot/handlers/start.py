@@ -62,13 +62,14 @@ async def administration_access_denied(message: Message):
         "• <b>Разместить объявление</b> — мини-приложение → Разместить\n"
         "• <b>Поддержка</b> — мини-приложение → Профиль → Поддержка\n\n"
         "Если у вас есть вопросы — напишите нам:\n"
-        "📱 WhatsApp: +7 700 362 60 26\n"
-        "📷 Instagram: @bereket_app.sh\n"
-        "🎵 TikTok: @bereket_app\n"
-        "✉️ Email: rozybayewdemon@gmail.com\n\n"
+        "<a href=\"https://wa.me/77003626026\">📱 WhatsApp</a>\n"
+        "<a href=\"https://www.instagram.com/bereket_app.sh\">📷 Instagram</a>\n"
+        "<a href=\"https://www.tiktok.com/@bereket_app\">🎵 TikTok</a>\n"
+        "<a href=\"mailto:rozybayewdemon@gmail.com\">✉️ Email</a>\n\n"
         "Жмите кнопку ниже для работы с приложением 👇",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))
         ]]),
-        parse_mode="HTML"
+        parse_mode="HTML",
+        disable_web_page_preview=True
     )

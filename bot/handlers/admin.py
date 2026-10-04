@@ -13,7 +13,7 @@ from database import crud
 from config import ADMIN_CHAT_ID, WEBAPP_URL
 
 router = Router(name="admin")
-router.message.filter(F.chat.id == ADMIN_CHAT_ID)
+# Убран глобальный фильтр - теперь проверка внутри каждого хендлера
 router.callback_query.filter(F.message.chat.id == ADMIN_CHAT_ID)
 
 REJECT_REASON_TIMEOUT = 180  # 3 минуты на причину отказа
@@ -333,6 +333,10 @@ async def remove_quiz_cmd(message: Message):
 @router.message(Command("administration"))
 async def administration_panel(message: Message):
     """Открывает админ-панель как mini app (только для админа)"""
+    if message.chat.id != ADMIN_CHAT_ID:
+        # Если не админ - не обрабатываем, перехватит start.py
+        return
+
     admin_webapp_url = WEBAPP_URL.replace("/webapp/index.html", "/admin/index.html")
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🔧 Открыть админ-панель", web_app=WebAppInfo(url=admin_webapp_url))

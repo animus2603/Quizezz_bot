@@ -34,10 +34,7 @@ async def cmd_start(message: Message, command: CommandObject):
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))
     ]])
-    
-    # Логируем URL для отладки
-    print(f"WEBAPP_URL used: {WEBAPP_URL}")
-    
+
     await message.answer(
         "🎓 <b>Добро пожаловать в Bereket!</b>\n\n"
         "Твой университетский помощник — всё в одном месте:\n\n"
@@ -45,7 +42,6 @@ async def cmd_start(message: Message, command: CommandObject):
         "✍️ <b>Индивидуальные заказы</b> — мы решим за тебя\n"
         "🛒 <b>Маркетплейс</b> — продавай и покупай учебное и товары\n"
         "💎 <b>Бонусы</b> — приглашай друзей и получай баллы\n\n"
-        f"🔗 URL: {WEBAPP_URL}\n\n"
         "Жми кнопку ниже и начни прямо сейчас! 👇",
         reply_markup=kb,
         parse_mode="HTML"

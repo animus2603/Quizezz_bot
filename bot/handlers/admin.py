@@ -339,12 +339,13 @@ async def administration_panel(message: Message):
 
     # Формируем URL админ-панели на основе WEBAPP_URL
     # Заменяем /webapp/index.html на /admin/index.html
-    if "/webapp/index.html" in WEBAPP_URL:
+    if WEBAPP_URL.endswith("/webapp/index.html"):
         admin_webapp_url = WEBAPP_URL.replace("/webapp/index.html", "/admin/index.html")
+    elif WEBAPP_URL.endswith("/index.html"):
+        admin_webapp_url = WEBAPP_URL.replace("/index.html", "/admin/index.html")
     else:
-        # Если WEBAPP_URL в другом формате, формируем вручную
-        base_url = WEBAPP_URL.replace("/webapp/index.html", "").replace("/index.html", "")
-        admin_webapp_url = f"{base_url}/admin/index.html"
+        # Если WEBAPP_URL без пути, добавляем /admin/index.html
+        admin_webapp_url = WEBAPP_URL.rstrip("/") + "/admin/index.html"
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🔧 Открыть админ-панель", web_app=WebAppInfo(url=admin_webapp_url))
@@ -358,7 +359,6 @@ async def administration_panel(message: Message):
         "• Управление заказами\n"
         "• Редактирование тестов\n"
         "• Просмотр пользователей\n\n"
-        f"🔗 URL: {admin_webapp_url}\n\n"
         "Жми кнопку ниже 👇",
         reply_markup=kb,
         parse_mode="HTML"

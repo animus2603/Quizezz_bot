@@ -131,6 +131,80 @@
       <h2>👥 Пользователи</h2>
       <div id="users-list" class="list">Загрузка...</div>
     </section>
+
+    <!-- ===== НАСТРОЙКИ ===== -->
+    <section id="tab-settings" class="tab-content">
+      <h2>⚙️ Настройки</h2>
+      
+      <div class="settings-section">
+        <h3>🎓 Структура</h3>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h4>Факультеты</h4>
+            <button class="btn-primary" onclick="openFacultyModal()">+ Добавить</button>
+            <div id="faculties-list" class="settings-list"></div>
+          </div>
+          <div class="settings-card">
+            <h4>Кафедры</h4>
+            <button class="btn-primary" onclick="openDepartmentModal()">+ Добавить</button>
+            <div id="departments-list" class="settings-list"></div>
+          </div>
+          <div class="settings-card">
+            <h4>Группы</h4>
+            <button class="btn-primary" onclick="openGroupModal()">+ Добавить</button>
+            <div id="groups-list" class="settings-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>📢 Контент</h3>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h4>Баннеры</h4>
+            <button class="btn-primary" onclick="openBannerModal()">+ Добавить</button>
+            <div id="banners-list" class="settings-list"></div>
+          </div>
+          <div class="settings-card">
+            <h4>Реклама</h4>
+            <button class="btn-primary" onclick="openAdModal()">+ Добавить</button>
+            <div id="ads-list" class="settings-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>❓ Информация</h3>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h4>FAQ</h4>
+            <button class="btn-primary" onclick="openFAQModal()">+ Добавить</button>
+            <div id="faq-list" class="settings-list"></div>
+          </div>
+          <div class="settings-card">
+            <h4>Поддержка</h4>
+            <button class="btn-primary" onclick="openSupportModal()">+ Изменить</button>
+            <div id="support-info" class="settings-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>🏷️ Брендинг</h3>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h4>Название приложения</h4>
+            <button class="btn-primary" onclick="openAppNameModal()">+ Изменить</button>
+            <div id="app-name-info" class="settings-list"></div>
+          </div>
+          <div class="settings-card">
+            <h4>Иконка</h4>
+            <button class="btn-primary" onclick="openIconModal()">+ Изменить</button>
+            <div id="icon-info" class="settings-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- ===== НИЖНЕЕ МЕНЮ ===== -->
@@ -154,6 +228,10 @@
     <button class="nav-item" data-tab="users">
       <span class="nav-icon">👥</span>
       <span class="nav-label">Пользователи</span>
+    </button>
+    <button class="nav-item" data-tab="settings">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Настройки</span>
     </button>
   </nav>
 </div>

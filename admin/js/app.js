@@ -667,3 +667,151 @@ document.getElementById('btn-add-quiz').addEventListener('click', async () => {
     console.error('Error loading faculties:', e);
   }
 });
+
+// ---------- Настройки ----------
+
+document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
+
+async function loadSettings() {
+  // Загрузка факультетов
+  try {
+    const res = await fetch(`${API_BASE}/cascade/faculties`);
+    const faculties = await res.json();
+    const container = document.getElementById('faculties-list');
+    container.innerHTML = faculties.map(f => `
+      <div class="settings-item">
+        <span>${f}</span>
+        <button class="btn-danger" onclick="deleteFaculty('${f}')">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading faculties:', e);
+  }
+
+  // Загрузка кафедр
+  try {
+    const res = await fetch(`${API_BASE}/cascade/departments`);
+    const departments = await res.json();
+    const container = document.getElementById('departments-list');
+    container.innerHTML = departments.map(d => `
+      <div class="settings-item">
+        <span>${d}</span>
+        <button class="btn-danger" onclick="deleteDepartment('${d}')">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading departments:', e);
+  }
+
+  // Загрузка групп
+  try {
+    const res = await fetch(`${API_BASE}/cascade/groups`);
+    const groups = await res.json();
+    const container = document.getElementById('groups-list');
+    container.innerHTML = groups.map(g => `
+      <div class="settings-item">
+        <span>${g}</span>
+        <button class="btn-danger" onclick="deleteGroup('${g}')">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading groups:', e);
+  }
+
+  // Загрузка информации о поддержке
+  document.getElementById('support-info').innerHTML = `
+    <div class="settings-item">
+      <span>WhatsApp: +7 700 362 60 26</span>
+    </div>
+    <div class="settings-item">
+      <span>Instagram: @bereket_app</span>
+    </div>
+    <div class="settings-item">
+      <span>TikTok: @bereket_app</span>
+    </div>
+    <div class="settings-item">
+      <span>Email: rozybayewdemon@gmail.com</span>
+    </div>
+  `;
+
+  // Загрузка названия приложения
+  document.getElementById('app-name-info').innerHTML = `
+    <div class="settings-item">
+      <span>Bereket</span>
+    </div>
+  `;
+
+  // Загрузка иконки
+  document.getElementById('icon-info').innerHTML = `
+    <div class="settings-item">
+      <span>🎓</span>
+    </div>
+  `;
+}
+
+// Модальные окна для настроек
+function openFacultyModal() {
+  const name = prompt('Название факультета:');
+  if (name) {
+    alert('Функция добавления факультета будет реализована после создания таблицы в БД');
+  }
+}
+
+function openDepartmentModal() {
+  const name = prompt('Название кафедры:');
+  if (name) {
+    alert('Функция добавления кафедры будет реализована после создания таблицы в БД');
+  }
+}
+
+function openGroupModal() {
+  const name = prompt('Название группы:');
+  if (name) {
+    alert('Функция добавления группы будет реализована после создания таблицы в БД');
+  }
+}
+
+function openBannerModal() {
+  alert('Функция баннеров будет реализована после создания таблицы в БД');
+}
+
+function openAdModal() {
+  alert('Функция рекламы будет реализована после создания таблицы в БД');
+}
+
+function openFAQModal() {
+  alert('Функция FAQ будет реализована после создания таблицы в БД');
+}
+
+function openSupportModal() {
+  alert('Функция редактирования поддержки будет реализована');
+}
+
+function openAppNameModal() {
+  const name = prompt('Название приложения:');
+  if (name) {
+    alert('Функция изменения названия будет реализована');
+  }
+}
+
+function openIconModal() {
+  alert('Функция изменения иконки будет реализована');
+}
+
+function deleteFaculty(name) {
+  if (confirm(`Удалить факультет "${name}"?`)) {
+    alert('Функция удаления будет реализована после создания таблицы в БД');
+  }
+}
+
+function deleteDepartment(name) {
+  if (confirm(`Удалить кафедру "${name}"?`)) {
+    alert('Функция удаления будет реализована после создания таблицы в БД');
+  }
+}
+
+function deleteGroup(name) {
+  if (confirm(`Удалить группу "${name}"?`)) {
+    alert('Функция удаления будет реализована после создания таблицы в БД');
+  }
+}

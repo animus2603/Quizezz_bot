@@ -1,8 +1,8 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart, CommandObject
+from aiogram.filters import CommandStart, CommandObject, Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-from config import WEBAPP_URL
+from config import WEBAPP_URL, ADMIN_CHAT_ID
 from database.engine import async_session
 from database import crud
 
@@ -43,5 +43,32 @@ async def cmd_start(message: Message, command: CommandObject):
         "💎 <b>Бонусы</b> — приглашай друзей и получай баллы\n\n"
         "Жми кнопку ниже и начни прямо сейчас! 👇",
         reply_markup=kb,
+        parse_mode="HTML"
+    )
+
+
+@router.message(Command("administration"))
+async def administration_access_denied(message: Message):
+    """Красивое сообщение для не-админов при попытке доступа к админ-панели"""
+    if message.chat.id == ADMIN_CHAT_ID:
+        # Если это админ, он обрабатывается в admin.py
+        return
+
+    await message.answer(
+        "🚫 <b>Доступ запрещён</b>\n\n"
+        "Эта команда доступна только администраторам Bereket.\n\n"
+        "🤔 <b>Что вы хотели сделать?</b>\n\n"
+        "• <b>Купить тест</b> — используйте мини-приложение (кнопка ниже)\n"
+        "• <b>Разместить объявление</b> — мини-приложение → Разместить\n"
+        "• <b>Поддержка</b> — мини-приложение → Профиль → Поддержка\n\n"
+        "Если у вас есть вопросы — напишите нам:\n"
+        "📱 WhatsApp: +7 700 362 60 26\n"
+        "📷 Instagram: @bereket_app.sh\n"
+        "🎵 TikTok: @bereket_app\n"
+        "✉️ Email: rozybayewdemon@gmail.com\n\n"
+        "Жмите кнопку ниже для работы с приложением 👇",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))
+        ]]),
         parse_mode="HTML"
     )

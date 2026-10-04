@@ -8,6 +8,7 @@ from database.models import (
 )
 from database import crud
 from config import ADMIN_CHAT_ID
+from api.schemas import CreateQuizIn, UpdateQuizIn
 
 router = APIRouter()
 
@@ -116,13 +117,18 @@ async def get_listings(filter: str = "all"):
 
 
 @router.get("/quizzes")
-async def get_quizzes():
-    """Список тестов"""
+async def get_quizzes(search: str = ""):
+    """Список тестов с поиском"""
     async with async_session() as session:
-        result = await session.execute(
-            select(QuizCatalogItem)
-            .order_by(QuizCatalogItem.created_at.desc())
-        )
+        stmt = select(QuizCatalogItem).order_by(QuizCatalogItem.created_at.desc())
+
+        if search:
+            stmt = stmt.where(
+                (QuizCatalogItem.title.ilike(f"%{search}%")) |
+                (QuizCatalogItem.subject.ilike(f"%{search}%"))
+            )
+
+        result = await session.execute(stmt)
         quizzes = result.scalars().all()
 
         return [
@@ -135,6 +141,35 @@ async def get_quizzes():
             }
             for q in quizzes
         ]
+
+
+@router.put("/quizzes/{quiz_id}")
+async def update_quiz(quiz_id: int, data: UpdateQuizIn):
+    """Обновить тест"""
+    async with async_session() as session:
+        result = await session.execute(select(QuizCatalogItem).where(QuizCatalogItem.id == quiz_id))
+        quiz = result.scalar_one_or_none()
+
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+
+        if data.title:
+            quiz.title = data.title
+        if data.price:
+            quiz.price = data.price
+
+        await session.commit()
+        return {"success": True}
+
+
+@router.delete("/quizzes/{quiz_id}")
+async def delete_quiz(quiz_id: int):
+    """Удалить тест"""
+    async with async_session() as session:
+        ok = await crud.delete_catalog_item(session, quiz_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        return {"success": True}
 
 
 @router.get("/users")
@@ -184,3 +219,25 @@ async def reject_listing(listing_id: int, reason: str):
         listing = await crud.set_listing_status(session, listing, ListingStatus.rejected)
         # TODO: отправить уведомление пользователю с причиной
         return {"success": True}
+
+
+@router.post("/quizzes")
+async def create_quiz(data: CreateQuizIn):
+    """Создать новый тест"""
+    async with async_session() as session:
+        quiz = QuizCatalogItem(
+            title=data.title,
+            subject=data.subject,
+            description=data.description,
+            faculty=data.faculty,
+            department=data.department,
+            course=data.course,
+            group_name=data.group_name,
+            price=data.price,
+            file_url=data.file_url or "",
+            preview_text=data.preview_text,
+        )
+        session.add(quiz)
+        await session.commit()
+        await session.refresh(quiz)
+        return {"success": True, "id": quiz.id}

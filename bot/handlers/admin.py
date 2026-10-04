@@ -332,7 +332,7 @@ async def remove_quiz_cmd(message: Message):
 
 @router.message(Command("administration"))
 async def administration_panel(message: Message):
-    """Открывает админ-панель как mini app"""
+    """Открывает админ-панель как mini app (только для админа)"""
     admin_webapp_url = WEBAPP_URL.replace("/webapp/index.html", "/admin/index.html")
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🔧 Открыть админ-панель", web_app=WebAppInfo(url=admin_webapp_url))
@@ -340,10 +340,21 @@ async def administration_panel(message: Message):
     await message.answer(
         "🔧 <b>Панель администратора</b>\n\n"
         "Управляйте заказами, объявлениями, тестами и пользователями через удобный интерфейс.\n\n"
+        "📊 <b>Доступные функции:</b>\n"
+        "• Статистика в реальном времени\n"
+        "• Модерация объявлений\n"
+        "• Управление заказами\n"
+        "• Редактирование тестов\n"
+        "• Просмотр пользователей\n\n"
         "Жми кнопку ниже 👇",
         reply_markup=kb,
         parse_mode="HTML"
     )
+
+
+# Обработчик для не-админов (в start.py, но здесь добавим fallback)
+# Фильтр уже есть в начале: router.message.filter(F.chat.id == ADMIN_CHAT_ID)
+# Так что для не-админов этот хендлер не сработает
 
 
 

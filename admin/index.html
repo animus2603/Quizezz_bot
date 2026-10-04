@@ -78,8 +78,44 @@
     <section id="tab-quizzes" class="tab-content">
       <h2>📚 Тесты</h2>
       <button id="btn-add-quiz" class="btn-primary">+ Добавить тест</button>
+      <div class="filter-row">
+        <input type="text" id="quiz-search" placeholder="🔍 Поиск по названию или предмету..." class="search-input">
+      </div>
       <div id="quizzes-list" class="list">Загрузка...</div>
     </section>
+
+    <!-- ===== ФОРМА ДОБАВЛЕНИЯ ТЕСТА ===== -->
+    <div id="quiz-form-overlay" class="overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Добавить тест</h3>
+          <button id="btn-close-quiz-form" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>Название</label>
+          <input type="text" id="quiz-title" placeholder="Например: Математический анализ — Модуль 1">
+          <label>Предмет</label>
+          <input type="text" id="quiz-subject" placeholder="Например: Математика">
+          <label>Описание</label>
+          <textarea id="quiz-description" placeholder="Краткое описание..."></textarea>
+          <label>Факультет</label>
+          <input type="text" id="quiz-faculty" placeholder="Например: Информационные технологии">
+          <label>Кафедра</label>
+          <input type="text" id="quiz-department" placeholder="Например: Прикладная математика">
+          <label>Курс</label>
+          <input type="text" id="quiz-course" placeholder="Например: 1">
+          <label>Группа</label>
+          <input type="text" id="quiz-group" placeholder="Например: ИС-21">
+          <label>Цена (₸)</label>
+          <input type="number" id="quiz-price" placeholder="3000">
+          <label>Ссылка на файл</label>
+          <input type="text" id="quiz-file-url" placeholder="https://example.com/quiz/math-1.pdf">
+          <label>Пример вопросов (превью)</label>
+          <textarea id="quiz-preview" placeholder="1. Вопрос 1&#10;2. Вопрос 2&#10;..."></textarea>
+          <button id="btn-save-quiz" class="btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== ПОЛЬЗОВАТЕЛИ ===== -->
     <section id="tab-users" class="tab-content">

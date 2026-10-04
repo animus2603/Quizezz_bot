@@ -252,3 +252,21 @@ class AskSupportIn(BaseModel):
 
 class UnreadCountOut(BaseModel):
     count: int
+
+
+class CreateQuizIn(BaseModel):
+    title: str
+    price: int
+    subject: str | None = None
+    description: str | None = None
+    faculty: str | None = None
+    department: str | None = None
+    course: str | None = None
+    group_name: str | None = None
+    file_url: str | None = None
+    preview_text: str | None = None
+
+
+class UpdateQuizIn(BaseModel):
+    title: str | None = None
+    price: int | None = None

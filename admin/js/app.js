@@ -141,7 +141,8 @@ async function loadListings() {
 
 async function loadQuizzes() {
   try {
-    const res = await fetch(`${API_BASE}/quizzes`);
+    const search = document.getElementById('quiz-search').value;
+    const res = await fetch(`${API_BASE}/quizzes?search=${encodeURIComponent(search)}`);
     const quizzes = await res.json();
 
     const container = document.getElementById('quizzes-list');
@@ -156,6 +157,10 @@ async function loadQuizzes() {
         <div class="card-desc">${quiz.subject}</div>
         <div class="card-price">${quiz.price} ₸</div>
         <div class="card-meta">${quiz.created_at}</div>
+        <div class="btn-row">
+          <button class="btn-success" onclick="editQuiz(${quiz.id})">✏️ Изменить</button>
+          <button class="btn-danger" onclick="deleteQuiz(${quiz.id})">🗑️ Удалить</button>
+        </div>
       </div>
     `).join('');
   } catch (e) {
@@ -223,11 +228,123 @@ async function rejectItem(type, id) {
   }
 }
 
+async function editQuiz(id) {
+  const title = prompt('Название теста:');
+  if (!title) return;
+
+  const price = prompt('Цена (₸):');
+  if (!price) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/quizzes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, price: parseInt(price) })
+    });
+    if (res.ok) {
+      loadQuizzes();
+      alert('Тест обновлён');
+    } else {
+      alert('Ошибка при обновлении');
+    }
+  } catch (e) {
+    console.error('Error editing quiz:', e);
+    alert('Ошибка при обновлении');
+  }
+}
+
+async function deleteQuiz(id) {
+  if (!confirm('Удалить этот тест?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/quizzes/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      loadQuizzes();
+      alert('Тест удалён');
+    } else {
+      alert('Ошибка при удалении');
+    }
+  } catch (e) {
+    console.error('Error deleting quiz:', e);
+    alert('Ошибка при удалении');
+  }
+}
+
 // ---------- Фильтры ----------
 
 document.getElementById('order-filter').addEventListener('change', loadOrders);
 document.getElementById('listing-filter').addEventListener('change', loadListings);
+document.getElementById('quiz-search').addEventListener('input', loadQuizzes);
 
 // ---------- Инициализация ----------
 
 loadDashboard();
+
+// ---------- Форма добавления теста ----------
+
+document.getElementById('btn-add-quiz').addEventListener('click', () => {
+  document.getElementById('quiz-form-overlay').classList.remove('hidden');
+});
+
+document.getElementById('btn-close-quiz-form').addEventListener('click', () => {
+  document.getElementById('quiz-form-overlay').classList.add('hidden');
+});
+
+document.getElementById('btn-save-quiz').addEventListener('click', async () => {
+  const title = document.getElementById('quiz-title').value;
+  const subject = document.getElementById('quiz-subject').value;
+  const description = document.getElementById('quiz-description').value;
+  const faculty = document.getElementById('quiz-faculty').value;
+  const department = document.getElementById('quiz-department').value;
+  const course = document.getElementById('quiz-course').value;
+  const group = document.getElementById('quiz-group').value;
+  const price = parseInt(document.getElementById('quiz-price').value);
+  const fileUrl = document.getElementById('quiz-file-url').value;
+  const preview = document.getElementById('quiz-preview').value;
+
+  if (!title || !price) {
+    alert('Заполните название и цену');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/quizzes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        subject,
+        description,
+        faculty,
+        department,
+        course,
+        group_name: group,
+        price,
+        file_url: fileUrl,
+        preview_text: preview
+      })
+    });
+
+    if (res.ok) {
+      document.getElementById('quiz-form-overlay').classList.add('hidden');
+      loadQuizzes();
+      alert('Тест добавлен');
+      // Очистить форму
+      document.getElementById('quiz-title').value = '';
+      document.getElementById('quiz-subject').value = '';
+      document.getElementById('quiz-description').value = '';
+      document.getElementById('quiz-faculty').value = '';
+      document.getElementById('quiz-department').value = '';
+      document.getElementById('quiz-course').value = '';
+      document.getElementById('quiz-group').value = '';
+      document.getElementById('quiz-price').value = '';
+      document.getElementById('quiz-file-url').value = '';
+      document.getElementById('quiz-preview').value = '';
+    } else {
+      alert('Ошибка при добавлении теста');
+    }
+  } catch (e) {
+    console.error('Error adding quiz:', e);
+    alert('Ошибка при добавлении теста');
+  }
+});

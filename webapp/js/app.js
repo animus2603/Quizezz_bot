@@ -1829,6 +1829,16 @@ document.getElementById("btn-refresh-profile").addEventListener("click", async (
 let phoneAutoRequested = false;
 
 function requestPhoneAndPoll() {
+  // Проверяем, запрашивали ли номер за последние 72 часа
+  const lastRequest = localStorage.getItem('phone_request_time');
+  const now = Date.now();
+  const REQUEST_COOLDOWN = 72 * 60 * 60 * 1000; // 72 часа в миллисекундах
+
+  if (lastRequest && (now - parseInt(lastRequest)) < REQUEST_COOLDOWN) {
+    // Не прошло 72 часа - не запрашиваем
+    return;
+  }
+
   // Поллим профиль независимо от того, что вернул коллбэк requestContact —
   // на части клиентов Telegram он не сообщает true, даже если контакт реально отправлен.
   const poll = () => {
@@ -1841,9 +1851,15 @@ function requestPhoneAndPoll() {
           profileData = fresh;
           renderPhoneRow();
           clearInterval(timer);
+          // Сохраняем время успешной привязки
+          localStorage.setItem('phone_request_time', now.toString());
         }
       } catch (e) { /* игнор, попробуем ещё раз */ }
-      if (attempts >= 10) clearInterval(timer);
+      if (attempts >= 10) {
+        clearInterval(timer);
+        // Сохраняем время попытки (даже если не привязали)
+        localStorage.setItem('phone_request_time', now.toString());
+      }
     }, 1500);
   };
 

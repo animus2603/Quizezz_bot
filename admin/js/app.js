@@ -129,7 +129,7 @@ async function loadOrders() {
             👤 ${order.user.full_name || 'Без имени'}
             ${order.user.username ? `(@${order.user.username})` : ''}
           </span>
-          <a href="${order.telegram_link}" target="_blank" class="profile-link">🔗 Профиль</a>
+          <button class="profile-link" onclick="openTelegramLink('${order.telegram_link}')">🔗 Профиль</button>
         </div>
         <div class="card-meta">
           📞 ${order.user.phone || 'Нет телефона'}
@@ -357,12 +357,22 @@ async function loadUsers() {
           </div>
         </div>
         <div class="user-actions">
-          <a href="${user.telegram_link}" target="_blank" class="profile-link">🔗 Профиль</a>
+          <button class="profile-link" onclick="openTelegramLink('${user.telegram_link}')">🔗 Профиль</button>
         </div>
       </div>
     `).join('');
   } catch (e) {
     console.error('Error loading users:', e);
+  }
+}
+
+// ---------- Утилиты ----------
+
+function openTelegramLink(url) {
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.openTelegramLink(url);
+  } else {
+    window.open(url, '_blank');
   }
 }
 

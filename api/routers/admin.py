@@ -243,7 +243,14 @@ async def get_quizzes(search: str = ""):
                 "id": q.id,
                 "title": q.title,
                 "subject": q.subject,
+                "description": q.description,
+                "faculty": q.faculty,
+                "department": q.department,
+                "course": q.course,
+                "group_name": q.group_name,
                 "price": q.price,
+                "file_url": q.file_url,
+                "preview_text": q.preview_text,
                 "created_at": q.created_at.strftime("%Y-%m-%d %H:%M"),
             }
             for q in quizzes

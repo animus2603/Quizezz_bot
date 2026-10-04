@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database.engine import init_db
-from api.routers import quiz, marketplace, users, uploads
+from api.routers import quiz, marketplace, users, uploads, admin
 from bot.main import start_polling
 
 # Настройка логирования
@@ -51,6 +51,7 @@ app.include_router(quiz.router, prefix="/api")
 app.include_router(marketplace.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(uploads.router, prefix="/api")
+app.include_router(admin.router, prefix="/api/admin")
 
 
 @app.get("/health")
@@ -64,6 +65,7 @@ async def health_check():
 
 # отдаём статику Mini App прямо с бэкенда (проще для MVP, чем отдельный хостинг)
 app.mount("/webapp", StaticFiles(directory="webapp", html=True), name="webapp")
+app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 

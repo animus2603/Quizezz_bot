@@ -32,13 +32,16 @@ async def cmd_start(message: Message, command: CommandObject):
             await crud.award_referral_points(session, referred_by)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))
+        InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))
     ]])
     await message.answer(
-        "Привет! 👋\n\n"
-        "Здесь можно:\n"
-        "📚 Купить готовый Quizizz-тест или заказать индивидуальный\n"
-        "🛒 Разместить или найти объявление на маркетплейсе\n\n"
-        "Жми кнопку ниже:",
+        "🎓 <b>Добро пожаловать в Bereket!</b>\n\n"
+        "Твой университетский помощник — всё в одном месте:\n\n"
+        "📚 <b>Готовые тесты</b> — покупай Quizizz и экономь время\n"
+        "✍️ <b>Индивидуальные заказы</b> — мы решим за тебя\n"
+        "🛒 <b>Маркетплейс</b> — продавай и покупай учебное и товары\n"
+        "💎 <b>Бонусы</b> — приглашай друзей и получай баллы\n\n"
+        "Жми кнопку ниже и начни прямо сейчас! 👇",
         reply_markup=kb,
+        parse_mode="HTML"
     )

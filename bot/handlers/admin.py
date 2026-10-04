@@ -4,13 +4,13 @@ from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from sqlalchemy import select
 
 from database.engine import async_session
 from database.models import Order, OrderStatus, OrderType, User, Listing, ListingStatus, QuizCatalogItem
 from database import crud
-from config import ADMIN_CHAT_ID
+from config import ADMIN_CHAT_ID, WEBAPP_URL
 
 router = Router(name="admin")
 router.message.filter(F.chat.id == ADMIN_CHAT_ID)
@@ -328,6 +328,22 @@ async def remove_quiz_cmd(message: Message):
         await message.answer(f"Тест #{item_id} удалён из каталога — пропадёт с Главной сразу же.")
     else:
         await message.answer(f"Тест #{item_id} не найден.")
+
+
+@router.message(Command("administration"))
+async def administration_panel(message: Message):
+    """Открывает админ-панель как mini app"""
+    admin_webapp_url = WEBAPP_URL.replace("/webapp/index.html", "/admin/index.html")
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="🔧 Открыть админ-панель", web_app=WebAppInfo(url=admin_webapp_url))
+    ]])
+    await message.answer(
+        "🔧 <b>Панель администратора</b>\n\n"
+        "Управляйте заказами, объявлениями, тестами и пользователями через удобный интерфейс.\n\n"
+        "Жми кнопку ниже 👇",
+        reply_markup=kb,
+        parse_mode="HTML"
+    )
 
 
 

@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session
 from database.models import (
-    User, Order, OrderStatus, OrderType, Listing, ListingStatus, QuizCatalogItem
+    User, Order, OrderStatus, OrderType, Listing, ListingStatus, QuizCatalogItem,
+    Faculty, Department, Group, Banner, Advertisement, FAQ, AppSettings, SupportSettings,
 )
 from database import crud
 from config import ADMIN_CHAT_ID, BOT_USERNAME
@@ -403,6 +404,245 @@ async def reject_order(order_id: int, reason: str):
 
         order = await crud.reject_order_with_reason(session, order, reason)
         return {"success": True}
+
+
+# ---------- Настройки API ----------
+
+@router.get("/settings/faculties")
+async def get_faculties_list():
+    """Список факультетов"""
+    async with async_session() as session:
+        faculties = await crud.get_faculties(session)
+        return [{"id": f.id, "name": f.name} for f in faculties]
+
+
+@router.post("/settings/faculties")
+async def create_faculty(data: dict):
+    """Создать факультет"""
+    name = data.get("name")
+    if not name:
+        raise HTTPException(status_code=400, detail="Name required")
+    async with async_session() as session:
+        faculty = await crud.create_faculty(session, name)
+        return {"id": faculty.id, "name": faculty.name}
+
+
+@router.delete("/settings/faculties/{faculty_id}")
+async def delete_faculty(faculty_id: int):
+    """Удалить факультет"""
+    async with async_session() as session:
+        ok = await crud.delete_faculty(session, faculty_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Faculty not found")
+        return {"success": True}
+
+
+@router.get("/settings/departments")
+async def get_departments_list(faculty_id: int = None):
+    """Список кафедр"""
+    async with async_session() as session:
+        departments = await crud.get_departments(session, faculty_id)
+        return [{"id": d.id, "name": d.name, "faculty_id": d.faculty_id} for d in departments]
+
+
+@router.post("/settings/departments")
+async def create_department(data: dict):
+    """Создать кафедру"""
+    name = data.get("name")
+    faculty_id = data.get("faculty_id")
+    if not name or not faculty_id:
+        raise HTTPException(status_code=400, detail="Name and faculty_id required")
+    async with async_session() as session:
+        department = await crud.create_department(session, name, faculty_id)
+        return {"id": department.id, "name": department.name, "faculty_id": department.faculty_id}
+
+
+@router.delete("/settings/departments/{department_id}")
+async def delete_department(department_id: int):
+    """Удалить кафедру"""
+    async with async_session() as session:
+        ok = await crud.delete_department(session, department_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return {"success": True}
+
+
+@router.get("/settings/groups")
+async def get_groups_list(faculty_id: int = None, department_id: int = None):
+    """Список групп"""
+    async with async_session() as session:
+        groups = await crud.get_groups(session, faculty_id, department_id)
+        return [{"id": g.id, "name": g.name, "faculty_id": g.faculty_id, "department_id": g.department_id} for g in groups]
+
+
+@router.post("/settings/groups")
+async def create_group(data: dict):
+    """Создать группу"""
+    name = data.get("name")
+    faculty_id = data.get("faculty_id")
+    department_id = data.get("department_id")
+    if not name or not faculty_id or not department_id:
+        raise HTTPException(status_code=400, detail="Name, faculty_id and department_id required")
+    async with async_session() as session:
+        group = await crud.create_group(session, name, faculty_id, department_id)
+        return {"id": group.id, "name": group.name, "faculty_id": group.faculty_id, "department_id": group.department_id}
+
+
+@router.delete("/settings/groups/{group_id}")
+async def delete_group(group_id: int):
+    """Удалить группу"""
+    async with async_session() as session:
+        ok = await crud.delete_group(session, group_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Group not found")
+        return {"success": True}
+
+
+@router.get("/settings/banners")
+async def get_banners_list():
+    """Список баннеров"""
+    async with async_session() as session:
+        banners = await crud.get_banners(session)
+        return [{"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order": b.order} for b in banners]
+
+
+@router.post("/settings/banners")
+async def create_banner(data: dict):
+    """Создать баннер"""
+    title = data.get("title")
+    image_url = data.get("image_url")
+    link_url = data.get("link_url")
+    order = data.get("order", 0)
+    if not title or not image_url or not link_url:
+        raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
+    async with async_session() as session:
+        banner = await crud.create_banner(session, title, image_url, link_url, order)
+        return {"id": banner.id, "title": banner.title, "image_url": banner.image_url, "link_url": banner.link_url, "order": banner.order}
+
+
+@router.delete("/settings/banners/{banner_id}")
+async def delete_banner(banner_id: int):
+    """Удалить баннер"""
+    async with async_session() as session:
+        ok = await crud.delete_banner(session, banner_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Banner not found")
+        return {"success": True}
+
+
+@router.get("/settings/ads")
+async def get_ads_list():
+    """Список рекламы"""
+    async with async_session() as session:
+        ads = await crud.get_advertisements(session)
+        return [{"id": a.id, "title": a.title, "description": a.description, "image_url": a.image_url, "link_url": a.link_url, "order": a.order} for a in ads]
+
+
+@router.post("/settings/ads")
+async def create_ad(data: dict):
+    """Создать рекламу"""
+    title = data.get("title")
+    description = data.get("description")
+    image_url = data.get("image_url")
+    link_url = data.get("link_url")
+    order = data.get("order", 0)
+    if not title or not image_url or not link_url:
+        raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
+    async with async_session() as session:
+        ad = await crud.create_advertisement(session, title, description, image_url, link_url, order)
+        return {"id": ad.id, "title": ad.title, "description": ad.description, "image_url": ad.image_url, "link_url": ad.link_url, "order": ad.order}
+
+
+@router.delete("/settings/ads/{ad_id}")
+async def delete_ad(ad_id: int):
+    """Удалить рекламу"""
+    async with async_session() as session:
+        ok = await crud.delete_advertisement(session, ad_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Advertisement not found")
+        return {"success": True}
+
+
+@router.get("/settings/faq")
+async def get_faq_list():
+    """Список FAQ"""
+    async with async_session() as session:
+        faqs = await crud.get_faq(session)
+        return [{"id": f.id, "question": f.question, "answer": f.answer, "order": f.order} for f in faqs]
+
+
+@router.post("/settings/faq")
+async def create_faq(data: dict):
+    """Создать FAQ"""
+    question = data.get("question")
+    answer = data.get("answer")
+    order = data.get("order", 0)
+    if not question or not answer:
+        raise HTTPException(status_code=400, detail="Question and answer required")
+    async with async_session() as session:
+        faq = await crud.create_faq(session, question, answer, order)
+        return {"id": faq.id, "question": faq.question, "answer": faq.answer, "order": faq.order}
+
+
+@router.delete("/settings/faq/{faq_id}")
+async def delete_faq(faq_id: int):
+    """Удалить FAQ"""
+    async with async_session() as session:
+        ok = await crud.delete_faq(session, faq_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="FAQ not found")
+        return {"success": True}
+
+
+@router.get("/settings/app")
+async def get_app_settings():
+    """Настройки приложения"""
+    async with async_session() as session:
+        settings = await crud.get_app_settings(session)
+        return {"app_name": settings.app_name, "app_icon": settings.app_icon}
+
+
+@router.put("/settings/app")
+async def update_app_settings(data: dict):
+    """Обновить настройки приложения"""
+    app_name = data.get("app_name")
+    app_icon = data.get("app_icon")
+    async with async_session() as session:
+        settings = await crud.update_app_settings(session, app_name, app_icon)
+        return {"app_name": settings.app_name, "app_icon": settings.app_icon}
+
+
+@router.get("/settings/support")
+async def get_support_settings():
+    """Настройки поддержки"""
+    async with async_session() as session:
+        settings = await crud.get_support_settings(session)
+        return {
+            "whatsapp": settings.whatsapp,
+            "instagram": settings.instagram,
+            "tiktok": settings.tiktok,
+            "email": settings.email,
+            "telegram": settings.telegram,
+        }
+
+
+@router.put("/settings/support")
+async def update_support_settings(data: dict):
+    """Обновить настройки поддержки"""
+    whatsapp = data.get("whatsapp")
+    instagram = data.get("instagram")
+    tiktok = data.get("tiktok")
+    email = data.get("email")
+    telegram = data.get("telegram")
+    async with async_session() as session:
+        settings = await crud.update_support_settings(session, whatsapp, instagram, tiktok, email, telegram)
+        return {
+            "whatsapp": settings.whatsapp,
+            "instagram": settings.instagram,
+            "tiktok": settings.tiktok,
+            "email": settings.email,
+            "telegram": settings.telegram,
+        }
 
 
 @router.post("/quizzes")

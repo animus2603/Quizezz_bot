@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import (
     User, QuizCatalogItem, Order, OrderType, OrderStatus,
     Listing, ListingCategory, ListingStatus, ListingComment, Notification, SupportQuestion,
+    Faculty, Department, Group, Banner, Advertisement, FAQ, AppSettings, SupportSettings,
 )
 
 
@@ -407,6 +408,211 @@ SUBCATEGORY_EXAMPLES = {
 
 # Базовые примеры курса — чтобы форма не была пустой при первом объявлении. Максимум 4.
 COURSE_EXAMPLES = ["1", "2", "3", "4"]
+
+
+# ---------- CRUD для настроек ----------
+
+async def get_faculties(session: AsyncSession) -> list[Faculty]:
+    result = await session.execute(select(Faculty).order_by(Faculty.name))
+    return list(result.scalars().all())
+
+
+async def create_faculty(session: AsyncSession, name: str) -> Faculty:
+    faculty = Faculty(name=name)
+    session.add(faculty)
+    await session.commit()
+    await session.refresh(faculty)
+    return faculty
+
+
+async def delete_faculty(session: AsyncSession, faculty_id: int) -> bool:
+    result = await session.execute(select(Faculty).where(Faculty.id == faculty_id))
+    faculty = result.scalar_one_or_none()
+    if not faculty:
+        return False
+    await session.delete(faculty)
+    await session.commit()
+    return True
+
+
+async def get_departments(session: AsyncSession, faculty_id: int | None = None) -> list[Department]:
+    stmt = select(Department).order_by(Department.name)
+    if faculty_id:
+        stmt = stmt.where(Department.faculty_id == faculty_id)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def create_department(session: AsyncSession, name: str, faculty_id: int) -> Department:
+    department = Department(name=name, faculty_id=faculty_id)
+    session.add(department)
+    await session.commit()
+    await session.refresh(department)
+    return department
+
+
+async def delete_department(session: AsyncSession, department_id: int) -> bool:
+    result = await session.execute(select(Department).where(Department.id == department_id))
+    department = result.scalar_one_or_none()
+    if not department:
+        return False
+    await session.delete(department)
+    await session.commit()
+    return True
+
+
+async def get_groups(session: AsyncSession, faculty_id: int | None = None, department_id: int | None = None) -> list[Group]:
+    stmt = select(Group).order_by(Group.name)
+    if faculty_id:
+        stmt = stmt.where(Group.faculty_id == faculty_id)
+    if department_id:
+        stmt = stmt.where(Group.department_id == department_id)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def create_group(session: AsyncSession, name: str, faculty_id: int, department_id: int) -> Group:
+    group = Group(name=name, faculty_id=faculty_id, department_id=department_id)
+    session.add(group)
+    await session.commit()
+    await session.refresh(group)
+    return group
+
+
+async def delete_group(session: AsyncSession, group_id: int) -> bool:
+    result = await session.execute(select(Group).where(Group.id == group_id))
+    group = result.scalar_one_or_none()
+    if not group:
+        return False
+    await session.delete(group)
+    await session.commit()
+    return True
+
+
+async def get_banners(session: AsyncSession) -> list[Banner]:
+    result = await session.execute(select(Banner).where(Banner.is_active == True).order_by(Banner.order))
+    return list(result.scalars().all())
+
+
+async def create_banner(session: AsyncSession, title: str, image_url: str, link_url: str, order: int = 0) -> Banner:
+    banner = Banner(title=title, image_url=image_url, link_url=link_url, order=order)
+    session.add(banner)
+    await session.commit()
+    await session.refresh(banner)
+    return banner
+
+
+async def delete_banner(session: AsyncSession, banner_id: int) -> bool:
+    result = await session.execute(select(Banner).where(Banner.id == banner_id))
+    banner = result.scalar_one_or_none()
+    if not banner:
+        return False
+    await session.delete(banner)
+    await session.commit()
+    return True
+
+
+async def get_advertisements(session: AsyncSession) -> list[Advertisement]:
+    result = await session.execute(select(Advertisement).where(Advertisement.is_active == True).order_by(Advertisement.order))
+    return list(result.scalars().all())
+
+
+async def create_advertisement(session: AsyncSession, title: str, description: str | None, image_url: str, link_url: str, order: int = 0) -> Advertisement:
+    ad = Advertisement(title=title, description=description, image_url=image_url, link_url=link_url, order=order)
+    session.add(ad)
+    await session.commit()
+    await session.refresh(ad)
+    return ad
+
+
+async def delete_advertisement(session: AsyncSession, ad_id: int) -> bool:
+    result = await session.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    if not ad:
+        return False
+    await session.delete(ad)
+    await session.commit()
+    return True
+
+
+async def get_faq(session: AsyncSession) -> list[FAQ]:
+    result = await session.execute(select(FAQ).where(FAQ.is_active == True).order_by(FAQ.order))
+    return list(result.scalars().all())
+
+
+async def create_faq(session: AsyncSession, question: str, answer: str, order: int = 0) -> FAQ:
+    faq = FAQ(question=question, answer=answer, order=order)
+    session.add(faq)
+    await session.commit()
+    await session.refresh(faq)
+    return faq
+
+
+async def delete_faq(session: AsyncSession, faq_id: int) -> bool:
+    result = await session.execute(select(FAQ).where(FAQ.id == faq_id))
+    faq = result.scalar_one_or_none()
+    if not faq:
+        return False
+    await session.delete(faq)
+    await session.commit()
+    return True
+
+
+async def get_app_settings(session: AsyncSession) -> AppSettings:
+    result = await session.execute(select(AppSettings))
+    settings = result.scalar_one_or_none()
+    if not settings:
+        settings = AppSettings()
+        session.add(settings)
+        await session.commit()
+        await session.refresh(settings)
+    return settings
+
+
+async def update_app_settings(session: AsyncSession, app_name: str | None = None, app_icon: str | None = None) -> AppSettings:
+    settings = await get_app_settings(session)
+    if app_name:
+        settings.app_name = app_name
+    if app_icon:
+        settings.app_icon = app_icon
+    await session.commit()
+    await session.refresh(settings)
+    return settings
+
+
+async def get_support_settings(session: AsyncSession) -> SupportSettings:
+    result = await session.execute(select(SupportSettings))
+    settings = result.scalar_one_or_none()
+    if not settings:
+        settings = SupportSettings()
+        session.add(settings)
+        await session.commit()
+        await session.refresh(settings)
+    return settings
+
+
+async def update_support_settings(
+    session: AsyncSession,
+    whatsapp: str | None = None,
+    instagram: str | None = None,
+    tiktok: str | None = None,
+    email: str | None = None,
+    telegram: str | None = None,
+) -> SupportSettings:
+    settings = await get_support_settings(session)
+    if whatsapp:
+        settings.whatsapp = whatsapp
+    if instagram:
+        settings.instagram = instagram
+    if tiktok:
+        settings.tiktok = tiktok
+    if email:
+        settings.email = email
+    if telegram:
+        settings.telegram = telegram
+    await session.commit()
+    await session.refresh(settings)
+    return settings
 
 FALLBACK_OTHER = "Прочее"
 

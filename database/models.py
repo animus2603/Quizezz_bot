@@ -148,6 +148,105 @@ class ListingComment(Base):
     user: Mapped["User"] = relationship()
 
 
+# ---------- Настройки приложения ----------
+
+class Faculty(Base):
+    """Факультеты"""
+    __tablename__ = "faculties"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+
+class Department(Base):
+    """Кафедры с привязкой к факультету"""
+    __tablename__ = "departments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    faculty_id: Mapped[int] = mapped_column(ForeignKey("faculties.id"))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+    faculty: Mapped["Faculty"] = relationship()
+
+
+class Group(Base):
+    """Группы с привязкой к факультету и кафедре"""
+    __tablename__ = "groups"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(64))
+    faculty_id: Mapped[int] = mapped_column(ForeignKey("faculties.id"))
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+    faculty: Mapped["Faculty"] = relationship()
+    department: Mapped["Department"] = relationship()
+
+
+class Banner(Base):
+    """Баннеры"""
+    __tablename__ = "banners"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+    image_url: Mapped[str] = mapped_column(Text)
+    link_url: Mapped[str] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+
+class Advertisement(Base):
+    """Реклама"""
+    __tablename__ = "advertisements"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str] = mapped_column(Text)
+    link_url: Mapped[str] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+
+class FAQ(Base):
+    """FAQ - вопросы и ответы"""
+    __tablename__ = "faq"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    question: Mapped[str] = mapped_column(Text)
+    answer: Mapped[str] = mapped_column(Text)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))
+
+
+class AppSettings(Base):
+    """Настройки приложения"""
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    app_name: Mapped[str] = mapped_column(String(64), default="Bereket")
+    app_icon: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc), onupdate=lambda: dt.datetime.now(timezone.utc))
+
+
+class SupportSettings(Base):
+    """Настройки поддержки"""
+    __tablename__ = "support_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    whatsapp: Mapped[str] = mapped_column(String(64), default="+7 700 362 60 26")
+    instagram: Mapped[str] = mapped_column(String(255), default="https://www.instagram.com/bereket_app.sh")
+    tiktok: Mapped[str] = mapped_column(String(255), default="https://www.tiktok.com/@bereket_app")
+    email: Mapped[str] = mapped_column(String(128), default="rozybayewdemon@gmail.com")
+    telegram: Mapped[str] = mapped_column(String(128), default="https://t.me/animus_sh1")
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc), onupdate=lambda: dt.datetime.now(timezone.utc))
+
+
 class NotificationCategory(str, enum.Enum):
     orders = "orders"
     marketplace = "marketplace"

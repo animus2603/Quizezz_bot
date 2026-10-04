@@ -675,13 +675,13 @@ document.querySelector('[data-tab="settings"]').addEventListener('click', loadSe
 async function loadSettings() {
   // Загрузка факультетов
   try {
-    const res = await fetch(`${API_BASE}/cascade/faculties`);
+    const res = await fetch(`${API_BASE}/settings/faculties`);
     const faculties = await res.json();
     const container = document.getElementById('faculties-list');
     container.innerHTML = faculties.map(f => `
       <div class="settings-item">
-        <span>${f}</span>
-        <button class="btn-danger" onclick="deleteFaculty('${f}')">✕</button>
+        <span>${f.name}</span>
+        <button class="btn-danger" onclick="deleteFaculty(${f.id})">✕</button>
       </div>
     `).join('');
   } catch (e) {
@@ -690,13 +690,13 @@ async function loadSettings() {
 
   // Загрузка кафедр
   try {
-    const res = await fetch(`${API_BASE}/cascade/departments`);
+    const res = await fetch(`${API_BASE}/settings/departments`);
     const departments = await res.json();
     const container = document.getElementById('departments-list');
     container.innerHTML = departments.map(d => `
       <div class="settings-item">
-        <span>${d}</span>
-        <button class="btn-danger" onclick="deleteDepartment('${d}')">✕</button>
+        <span>${d.name} (ID: ${d.faculty_id})</span>
+        <button class="btn-danger" onclick="deleteDepartment(${d.id})">✕</button>
       </div>
     `).join('');
   } catch (e) {
@@ -705,41 +705,101 @@ async function loadSettings() {
 
   // Загрузка групп
   try {
-    const res = await fetch(`${API_BASE}/cascade/groups`);
+    const res = await fetch(`${API_BASE}/settings/groups`);
     const groups = await res.json();
     const container = document.getElementById('groups-list');
     container.innerHTML = groups.map(g => `
       <div class="settings-item">
-        <span>${g}</span>
-        <button class="btn-danger" onclick="deleteGroup('${g}')">✕</button>
+        <span>${g.name} (F: ${g.faculty_id}, D: ${g.department_id})</span>
+        <button class="btn-danger" onclick="deleteGroup(${g.id})">✕</button>
       </div>
     `).join('');
   } catch (e) {
     console.error('Error loading groups:', e);
   }
 
+  // Загрузка баннеров
+  try {
+    const res = await fetch(`${API_BASE}/settings/banners`);
+    const banners = await res.json();
+    const container = document.getElementById('banners-list');
+    container.innerHTML = banners.map(b => `
+      <div class="settings-item">
+        <span>${b.title}</span>
+        <button class="btn-danger" onclick="deleteBanner(${b.id})">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading banners:', e);
+  }
+
+  // Загрузка рекламы
+  try {
+    const res = await fetch(`${API_BASE}/settings/ads`);
+    const ads = await res.json();
+    const container = document.getElementById('ads-list');
+    container.innerHTML = ads.map(a => `
+      <div class="settings-item">
+        <span>${a.title}</span>
+        <button class="btn-danger" onclick="deleteAd(${a.id})">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading ads:', e);
+  }
+
+  // Загрузка FAQ
+  try {
+    const res = await fetch(`${API_BASE}/settings/faq`);
+    const faqs = await res.json();
+    const container = document.getElementById('faq-list');
+    container.innerHTML = faqs.map(f => `
+      <div class="settings-item">
+        <span>${f.question.substring(0, 30)}...</span>
+        <button class="btn-danger" onclick="deleteFAQ(${f.id})">✕</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Error loading FAQ:', e);
+  }
+
   // Загрузка информации о поддержке
-  document.getElementById('support-info').innerHTML = `
-    <div class="settings-item">
-      <span>WhatsApp: +7 700 362 60 26</span>
-    </div>
-    <div class="settings-item">
-      <span>Instagram: @bereket_app</span>
-    </div>
-    <div class="settings-item">
-      <span>TikTok: @bereket_app</span>
-    </div>
-    <div class="settings-item">
-      <span>Email: rozybayewdemon@gmail.com</span>
-    </div>
-  `;
+  try {
+    const res = await fetch(`${API_BASE}/settings/support`);
+    const support = await res.json();
+    document.getElementById('support-info').innerHTML = `
+      <div class="settings-item">
+        <span>WhatsApp: ${support.whatsapp}</span>
+      </div>
+      <div class="settings-item">
+        <span>Instagram: ${support.instagram}</span>
+      </div>
+      <div class="settings-item">
+        <span>TikTok: ${support.tiktok}</span>
+      </div>
+      <div class="settings-item">
+        <span>Email: ${support.email}</span>
+      </div>
+      <div class="settings-item">
+        <span>Telegram: ${support.telegram}</span>
+      </div>
+    `;
+  } catch (e) {
+    console.error('Error loading support settings:', e);
+  }
 
   // Загрузка названия приложения
-  document.getElementById('app-name-info').innerHTML = `
-    <div class="settings-item">
-      <span>Bereket</span>
-    </div>
-  `;
+  try {
+    const res = await fetch(`${API_BASE}/settings/app`);
+    const app = await res.json();
+    document.getElementById('app-name-info').innerHTML = `
+      <div class="settings-item">
+        <span>${app.app_name}</span>
+      </div>
+    `;
+  } catch (e) {
+    console.error('Error loading app settings:', e);
+  }
 
   // Загрузка иконки
   document.getElementById('icon-info').innerHTML = `
@@ -753,65 +813,349 @@ async function loadSettings() {
 function openFacultyModal() {
   const name = prompt('Название факультета:');
   if (name) {
-    alert('Функция добавления факультета будет реализована после создания таблицы в БД');
+    createFaculty(name);
+  }
+}
+
+async function createFaculty(name) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/faculties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Факультет добавлен');
+    } else {
+      alert('Ошибка при добавлении факультета');
+    }
+  } catch (e) {
+    console.error('Error creating faculty:', e);
+    alert('Ошибка при добавлении факультета');
   }
 }
 
 function openDepartmentModal() {
   const name = prompt('Название кафедры:');
-  if (name) {
-    alert('Функция добавления кафедры будет реализована после создания таблицы в БД');
+  if (!name) return;
+  const facultyId = prompt('ID факультета:');
+  if (!facultyId) return;
+  createDepartment(name, parseInt(facultyId));
+}
+
+async function createDepartment(name, facultyId) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/departments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, faculty_id: facultyId })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Кафедра добавлена');
+    } else {
+      alert('Ошибка при добавлении кафедры');
+    }
+  } catch (e) {
+    console.error('Error creating department:', e);
+    alert('Ошибка при добавлении кафедры');
   }
 }
 
 function openGroupModal() {
   const name = prompt('Название группы:');
-  if (name) {
-    alert('Функция добавления группы будет реализована после создания таблицы в БД');
+  if (!name) return;
+  const facultyId = prompt('ID факультета:');
+  if (!facultyId) return;
+  const departmentId = prompt('ID кафедры:');
+  if (!departmentId) return;
+  createGroup(name, parseInt(facultyId), parseInt(departmentId));
+}
+
+async function createGroup(name, facultyId, departmentId) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/groups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, faculty_id: facultyId, department_id: departmentId })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Группа добавлена');
+    } else {
+      alert('Ошибка при добавлении группы');
+    }
+  } catch (e) {
+    console.error('Error creating group:', e);
+    alert('Ошибка при добавлении группы');
   }
 }
 
 function openBannerModal() {
-  alert('Функция баннеров будет реализована после создания таблицы в БД');
+  const title = prompt('Название баннера:');
+  if (!title) return;
+  const imageUrl = prompt('URL изображения:');
+  if (!imageUrl) return;
+  const linkUrl = prompt('URL ссылки:');
+  if (!linkUrl) return;
+  createBanner(title, imageUrl, linkUrl);
+}
+
+async function createBanner(title, imageUrl, linkUrl) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/banners`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, image_url: imageUrl, link_url: linkUrl })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Баннер добавлен');
+    } else {
+      alert('Ошибка при добавлении баннера');
+    }
+  } catch (e) {
+    console.error('Error creating banner:', e);
+    alert('Ошибка при добавлении баннера');
+  }
 }
 
 function openAdModal() {
-  alert('Функция рекламы будет реализована после создания таблицы в БД');
+  const title = prompt('Название рекламы:');
+  if (!title) return;
+  const description = prompt('Описание:');
+  const imageUrl = prompt('URL изображения:');
+  if (!imageUrl) return;
+  const linkUrl = prompt('URL ссылки:');
+  if (!linkUrl) return;
+  createAd(title, description, imageUrl, linkUrl);
+}
+
+async function createAd(title, description, imageUrl, linkUrl) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/ads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description, image_url: imageUrl, link_url: linkUrl })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Реклама добавлена');
+    } else {
+      alert('Ошибка при добавлении рекламы');
+    }
+  } catch (e) {
+    console.error('Error creating ad:', e);
+    alert('Ошибка при добавлении рекламы');
+  }
 }
 
 function openFAQModal() {
-  alert('Функция FAQ будет реализована после создания таблицы в БД');
+  const question = prompt('Вопрос:');
+  if (!question) return;
+  const answer = prompt('Ответ:');
+  if (!answer) return;
+  createFAQ(question, answer);
+}
+
+async function createFAQ(question, answer) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/faq`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, answer })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('FAQ добавлен');
+    } else {
+      alert('Ошибка при добавлении FAQ');
+    }
+  } catch (e) {
+    console.error('Error creating FAQ:', e);
+    alert('Ошибка при добавлении FAQ');
+  }
 }
 
 function openSupportModal() {
-  alert('Функция редактирования поддержки будет реализована');
+  const whatsapp = prompt('WhatsApp:');
+  const instagram = prompt('Instagram:');
+  const tiktok = prompt('TikTok:');
+  const email = prompt('Email:');
+  const telegram = prompt('Telegram:');
+  updateSupportSettings(whatsapp, instagram, tiktok, email, telegram);
+}
+
+async function updateSupportSettings(whatsapp, instagram, tiktok, email, telegram) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/support`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ whatsapp, instagram, tiktok, email, telegram })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Настройки поддержки обновлены');
+    } else {
+      alert('Ошибка при обновлении настроек');
+    }
+  } catch (e) {
+    console.error('Error updating support settings:', e);
+    alert('Ошибка при обновлении настроек');
+  }
 }
 
 function openAppNameModal() {
   const name = prompt('Название приложения:');
   if (name) {
-    alert('Функция изменения названия будет реализована');
+    updateAppName(name);
+  }
+}
+
+async function updateAppName(name) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/app`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_name: name })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Название обновлено');
+    } else {
+      alert('Ошибка при обновлении названия');
+    }
+  } catch (e) {
+    console.error('Error updating app name:', e);
+    alert('Ошибка при обновлении названия');
   }
 }
 
 function openIconModal() {
-  alert('Функция изменения иконки будет реализована');
-}
-
-function deleteFaculty(name) {
-  if (confirm(`Удалить факультет "${name}"?`)) {
-    alert('Функция удаления будет реализована после создания таблицы в БД');
+  const icon = prompt('URL иконки:');
+  if (icon) {
+    updateAppIcon(icon);
   }
 }
 
-function deleteDepartment(name) {
-  if (confirm(`Удалить кафедру "${name}"?`)) {
-    alert('Функция удаления будет реализована после создания таблицы в БД');
+async function updateAppIcon(icon) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/app`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_icon: icon })
+    });
+    if (res.ok) {
+      loadSettings();
+      alert('Иконка обновлена');
+    } else {
+      alert('Ошибка при обновлении иконки');
+    }
+  } catch (e) {
+    console.error('Error updating app icon:', e);
+    alert('Ошибка при обновлении иконки');
   }
 }
 
-function deleteGroup(name) {
-  if (confirm(`Удалить группу "${name}"?`)) {
-    alert('Функция удаления будет реализована после создания таблицы в БД');
+async function deleteFaculty(id) {
+  if (confirm('Удалить факультет?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/faculties/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('Факультет удалён');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting faculty:', e);
+      alert('Ошибка при удалении');
+    }
+  }
+}
+
+async function deleteDepartment(id) {
+  if (confirm('Удалить кафедру?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/departments/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('Кафедра удалена');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting department:', e);
+      alert('Ошибка при удалении');
+    }
+  }
+}
+
+async function deleteGroup(id) {
+  if (confirm('Удалить группу?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/groups/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('Группа удалена');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting group:', e);
+      alert('Ошибка при удалении');
+    }
+  }
+}
+
+async function deleteBanner(id) {
+  if (confirm('Удалить баннер?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/banners/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('Баннер удалён');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting banner:', e);
+      alert('Ошибка при удалении');
+    }
+  }
+}
+
+async function deleteAd(id) {
+  if (confirm('Удалить рекламу?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/ads/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('Реклама удалена');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting ad:', e);
+      alert('Ошибка при удалении');
+    }
+  }
+}
+
+async function deleteFAQ(id) {
+  if (confirm('Удалить FAQ?')) {
+    try {
+      const res = await fetch(`${API_BASE}/settings/faq/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadSettings();
+        alert('FAQ удалён');
+      } else {
+        alert('Ошибка при удалении');
+      }
+    } catch (e) {
+      console.error('Error deleting FAQ:', e);
+      alert('Ошибка при удалении');
+    }
   }
 }

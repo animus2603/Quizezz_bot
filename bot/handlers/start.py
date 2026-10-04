@@ -5,6 +5,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, W
 from config import WEBAPP_URL, ADMIN_CHAT_ID, BOT_USERNAME
 from database.engine import async_session
 from database import crud
+from bot.avatar import refresh_user_avatar
 
 router = Router(name="start")
 
@@ -30,6 +31,7 @@ async def cmd_start(message: Message, command: CommandObject):
         # баллы начисляем только один раз — если пользователь только что создан по этой ссылке
         if existing is None and referred_by and user.referred_by == referred_by:
             await crud.award_referral_points(session, referred_by)
+        await refresh_user_avatar(message.bot, session, user)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="🚀 Открыть Bereket", web_app=WebAppInfo(url=WEBAPP_URL))

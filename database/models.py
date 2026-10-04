@@ -20,6 +20,9 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    phone_verified_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    avatar_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    avatar_file_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     referred_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # tg_id пригласившего
     points: Mapped[int] = mapped_column(Integer, default=0)  # баллы за рефералов и т.д.
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=lambda: dt.datetime.now(timezone.utc))

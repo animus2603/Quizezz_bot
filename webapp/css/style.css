@@ -332,6 +332,16 @@ h2 { font-size: 16px; margin: 20px 0 10px; }
 
 .profile-phone-icon { font-size: 14px; }
 .profile-phone { color: var(--text); font-weight: 600; }
+.btn-attach-phone {
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent, #6366f1);
+  cursor: pointer;
+}
 
 .btn-attach {
   margin-top: 10px;

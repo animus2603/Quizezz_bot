@@ -61,6 +61,7 @@ class ProfileOut(BaseModel):
     username: str | None
     full_name: str | None
     phone: str | None
+    phone_expired: bool = True
     referral_count: int = 0
     bot_username: str | None = None
     points: int = 0

@@ -328,7 +328,9 @@ async function loadUsers() {
       <div class="card user-card">
         <div class="user-header">
           <div class="user-avatar">
-            ${user.username ? `@${user.username[0].toUpperCase()}` : '👤'}
+            ${user.avatar_url
+              ? `<img src="${user.avatar_url}" alt="" onerror="this.replaceWith(document.createTextNode(this.dataset.fallback))" data-fallback="${user.username ? user.username[0].toUpperCase() : '👤'}">`
+              : (user.username ? user.username[0].toUpperCase() : '👤')}
           </div>
           <div class="user-info">
             <div class="user-name">${user.full_name || 'Без имени'}</div>
@@ -672,18 +674,41 @@ document.getElementById('btn-add-quiz').addEventListener('click', async () => {
 
 document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
 
+const settingsCache = { faculties: [], departments: [], groups: [], banners: [], ads: [], faq: [] };
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function settingsItemHtml(label, editCall, deleteCall, isActive = true) {
+  return `
+      <div class="settings-item${isActive ? '' : ' inactive'}">
+        <span>${label}${isActive ? '' : ' <em>(скрыто)</em>'}</span>
+        <div class="settings-item-actions">
+          <button class="btn-edit" onclick="${editCall}">✏️ Изменить</button>
+          <button class="btn-danger" onclick="${deleteCall}">✕</button>
+        </div>
+      </div>
+    `;
+}
+
+function nameById(list, id) {
+  const item = list.find(x => x.id === id);
+  return item ? item.name : `ID ${id}`;
+}
+
 async function loadSettings() {
   // Загрузка факультетов
   try {
     const res = await fetch(`${API_BASE}/settings/faculties`);
     const faculties = await res.json();
+    settingsCache.faculties = faculties;
     const container = document.getElementById('faculties-list');
-    container.innerHTML = faculties.map(f => `
-      <div class="settings-item">
-        <span>${f.name}</span>
-        <button class="btn-danger" onclick="deleteFaculty(${f.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = faculties.map(f =>
+      settingsItemHtml(escapeHtml(f.name), `editFaculty(${f.id})`, `deleteFaculty(${f.id})`)
+    ).join('');
   } catch (e) {
     console.error('Error loading faculties:', e);
   }
@@ -692,13 +717,14 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/departments`);
     const departments = await res.json();
+    settingsCache.departments = departments;
     const container = document.getElementById('departments-list');
-    container.innerHTML = departments.map(d => `
-      <div class="settings-item">
-        <span>${d.name} (ID: ${d.faculty_id})</span>
-        <button class="btn-danger" onclick="deleteDepartment(${d.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = departments.map(d =>
+      settingsItemHtml(
+        `${escapeHtml(d.name)} (${escapeHtml(nameById(settingsCache.faculties, d.faculty_id))})`,
+        `editDepartment(${d.id})`, `deleteDepartment(${d.id})`
+      )
+    ).join('');
   } catch (e) {
     console.error('Error loading departments:', e);
   }
@@ -707,13 +733,14 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/groups`);
     const groups = await res.json();
+    settingsCache.groups = groups;
     const container = document.getElementById('groups-list');
-    container.innerHTML = groups.map(g => `
-      <div class="settings-item">
-        <span>${g.name} (F: ${g.faculty_id}, D: ${g.department_id})</span>
-        <button class="btn-danger" onclick="deleteGroup(${g.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = groups.map(g =>
+      settingsItemHtml(
+        `${escapeHtml(g.name)} (${escapeHtml(nameById(settingsCache.faculties, g.faculty_id))} / ${escapeHtml(nameById(settingsCache.departments, g.department_id))})`,
+        `editGroup(${g.id})`, `deleteGroup(${g.id})`
+      )
+    ).join('');
   } catch (e) {
     console.error('Error loading groups:', e);
   }
@@ -722,13 +749,11 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/banners`);
     const banners = await res.json();
+    settingsCache.banners = banners;
     const container = document.getElementById('banners-list');
-    container.innerHTML = banners.map(b => `
-      <div class="settings-item">
-        <span>${b.title}</span>
-        <button class="btn-danger" onclick="deleteBanner(${b.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = banners.map(b =>
+      settingsItemHtml(escapeHtml(b.title), `editBanner(${b.id})`, `deleteBanner(${b.id})`, b.is_active)
+    ).join('');
   } catch (e) {
     console.error('Error loading banners:', e);
   }
@@ -737,13 +762,11 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/ads`);
     const ads = await res.json();
+    settingsCache.ads = ads;
     const container = document.getElementById('ads-list');
-    container.innerHTML = ads.map(a => `
-      <div class="settings-item">
-        <span>${a.title}</span>
-        <button class="btn-danger" onclick="deleteAd(${a.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = ads.map(a =>
+      settingsItemHtml(escapeHtml(a.title), `editAd(${a.id})`, `deleteAd(${a.id})`, a.is_active)
+    ).join('');
   } catch (e) {
     console.error('Error loading ads:', e);
   }
@@ -752,13 +775,14 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/faq`);
     const faqs = await res.json();
+    settingsCache.faq = faqs;
     const container = document.getElementById('faq-list');
-    container.innerHTML = faqs.map(f => `
-      <div class="settings-item">
-        <span>${f.question.substring(0, 30)}...</span>
-        <button class="btn-danger" onclick="deleteFAQ(${f.id})">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = faqs.map(f =>
+      settingsItemHtml(
+        escapeHtml(f.question.length > 30 ? `${f.question.substring(0, 30)}...` : f.question),
+        `editFAQ(${f.id})`, `deleteFAQ(${f.id})`, f.is_active
+      )
+    ).join('');
   } catch (e) {
     console.error('Error loading FAQ:', e);
   }
@@ -836,12 +860,12 @@ async function createFaculty(name) {
   }
 }
 
-function openDepartmentModal() {
+async function openDepartmentModal() {
   const name = prompt('Название кафедры:');
   if (!name) return;
-  const facultyId = prompt('ID факультета:');
+  const facultyId = await pickFaculty();
   if (!facultyId) return;
-  createDepartment(name, parseInt(facultyId));
+  createDepartment(name, facultyId);
 }
 
 async function createDepartment(name, facultyId) {
@@ -863,14 +887,14 @@ async function createDepartment(name, facultyId) {
   }
 }
 
-function openGroupModal() {
+async function openGroupModal() {
   const name = prompt('Название группы:');
   if (!name) return;
-  const facultyId = prompt('ID факультета:');
+  const facultyId = await pickFaculty();
   if (!facultyId) return;
-  const departmentId = prompt('ID кафедры:');
+  const departmentId = await pickDepartment(facultyId);
   if (!departmentId) return;
-  createGroup(name, parseInt(facultyId), parseInt(departmentId));
+  createGroup(name, facultyId, departmentId);
 }
 
 async function createGroup(name, facultyId, departmentId) {
@@ -1158,4 +1182,179 @@ async function deleteFAQ(id) {
       alert('Ошибка при удалении');
     }
   }
+}
+
+// ---------- Выбор факультета/кафедры из списка ----------
+
+// Показывает пронумерованный список и возвращает выбранный элемент (по номеру, ID или названию).
+function pickFromList(title, items, currentId = null) {
+  if (items.length === 0) {
+    alert(`${title}: список пуст — сначала добавьте записи`);
+    return null;
+  }
+  const lines = items.map((item, i) => `${i + 1}. ${item.name} (ID: ${item.id})`).join('\n');
+  const currentIndex = items.findIndex(item => item.id === currentId);
+  const input = prompt(
+    `${title}\nВведите номер из списка или название:\n\n${lines}`,
+    currentIndex >= 0 ? String(currentIndex + 1) : ''
+  );
+  if (input === null) return null;
+  const value = input.trim();
+  const byNumber = /^\d+$/.test(value) ? items[parseInt(value, 10) - 1] : null;
+  const byName = items.find(item => item.name.toLowerCase() === value.toLowerCase());
+  const picked = byNumber || byName;
+  if (!picked) {
+    alert('Не найдено. Попробуйте ещё раз.');
+    return null;
+  }
+  return picked.id;
+}
+
+async function pickFaculty(currentId = null) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/faculties`);
+    const faculties = await res.json();
+    return pickFromList('Выберите факультет', faculties, currentId);
+  } catch (e) {
+    console.error('Error loading faculties:', e);
+    alert('Ошибка при загрузке факультетов');
+    return null;
+  }
+}
+
+async function pickDepartment(facultyId, currentId = null) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/departments?faculty_id=${facultyId}`);
+    const departments = await res.json();
+    return pickFromList('Выберите кафедру', departments, currentId);
+  } catch (e) {
+    console.error('Error loading departments:', e);
+    alert('Ошибка при загрузке кафедр');
+    return null;
+  }
+}
+
+// ---------- Редактирование настроек ----------
+
+async function updateSetting(path, id, body, label) {
+  try {
+    const res = await fetch(`${API_BASE}/settings/${path}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      loadSettings();
+      alert(`${label} обновлено`);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(`Ошибка при обновлении: ${err.detail || res.status}`);
+    }
+  } catch (e) {
+    console.error(`Error updating ${path}:`, e);
+    alert('Ошибка при обновлении');
+  }
+}
+
+function findCached(key, id) {
+  const item = settingsCache[key].find(x => x.id === id);
+  if (!item) alert('Запись не найдена, обновите страницу');
+  return item;
+}
+
+// prompt с текущим значением; null — отмена, пустая строка для обязательного поля — тоже отмена
+function promptRequired(label, current) {
+  const value = prompt(label, current ?? '');
+  if (value === null || !value.trim()) return null;
+  return value.trim();
+}
+
+function promptOrder(current) {
+  const value = prompt('Порядок (число):', String(current ?? 0));
+  if (value === null) return null;
+  const order = parseInt(value, 10);
+  if (Number.isNaN(order)) {
+    alert('Порядок должен быть числом');
+    return null;
+  }
+  return order;
+}
+
+function editFaculty(id) {
+  const faculty = findCached('faculties', id);
+  if (!faculty) return;
+  const name = promptRequired('Название факультета:', faculty.name);
+  if (name === null) return;
+  updateSetting('faculties', id, { name }, 'Факультет');
+}
+
+async function editDepartment(id) {
+  const department = findCached('departments', id);
+  if (!department) return;
+  const name = promptRequired('Название кафедры:', department.name);
+  if (name === null) return;
+  const facultyId = await pickFaculty(department.faculty_id);
+  if (!facultyId) return;
+  updateSetting('departments', id, { name, faculty_id: facultyId }, 'Кафедра');
+}
+
+async function editGroup(id) {
+  const group = findCached('groups', id);
+  if (!group) return;
+  const name = promptRequired('Название группы:', group.name);
+  if (name === null) return;
+  const facultyId = await pickFaculty(group.faculty_id);
+  if (!facultyId) return;
+  const departmentId = await pickDepartment(
+    facultyId, facultyId === group.faculty_id ? group.department_id : null
+  );
+  if (!departmentId) return;
+  updateSetting('groups', id, { name, faculty_id: facultyId, department_id: departmentId }, 'Группа');
+}
+
+function editBanner(id) {
+  const banner = findCached('banners', id);
+  if (!banner) return;
+  const title = promptRequired('Название баннера:', banner.title);
+  if (title === null) return;
+  const imageUrl = promptRequired('URL изображения:', banner.image_url);
+  if (imageUrl === null) return;
+  const linkUrl = promptRequired('URL ссылки:', banner.link_url);
+  if (linkUrl === null) return;
+  const order = promptOrder(banner.order);
+  if (order === null) return;
+  const isActive = confirm('Показывать баннер? (OK — да, Отмена — скрыть)');
+  updateSetting('banners', id, { title, image_url: imageUrl, link_url: linkUrl, order, is_active: isActive }, 'Баннер');
+}
+
+function editAd(id) {
+  const ad = findCached('ads', id);
+  if (!ad) return;
+  const title = promptRequired('Название рекламы:', ad.title);
+  if (title === null) return;
+  const description = prompt('Описание:', ad.description ?? '');
+  if (description === null) return;
+  const imageUrl = promptRequired('URL изображения:', ad.image_url);
+  if (imageUrl === null) return;
+  const linkUrl = promptRequired('URL ссылки:', ad.link_url);
+  if (linkUrl === null) return;
+  const order = promptOrder(ad.order);
+  if (order === null) return;
+  const isActive = confirm('Показывать рекламу? (OK — да, Отмена — скрыть)');
+  updateSetting('ads', id, {
+    title, description: description.trim() || null, image_url: imageUrl, link_url: linkUrl, order, is_active: isActive
+  }, 'Реклама');
+}
+
+function editFAQ(id) {
+  const faq = findCached('faq', id);
+  if (!faq) return;
+  const question = promptRequired('Вопрос:', faq.question);
+  if (question === null) return;
+  const answer = promptRequired('Ответ:', faq.answer);
+  if (answer === null) return;
+  const order = promptOrder(faq.order);
+  if (order === null) return;
+  const isActive = confirm('Показывать вопрос? (OK — да, Отмена — скрыть)');
+  updateSetting('faq', id, { question, answer, order, is_active: isActive }, 'FAQ');
 }

@@ -1762,7 +1762,7 @@ async function loadProfile() {
 
   // Номер показываем так же "само собой", как имя и username — без отдельной
   // кнопки. Если ещё не привязан, один раз за сессию тихо запрашиваем его.
-  if (!profileData?.phone && !phoneAutoRequested) {
+  if (isPhoneExpired() && !phoneAutoRequested) {
     phoneAutoRequested = true;
     requestPhoneAndPoll();
   }
@@ -1812,10 +1812,31 @@ document.getElementById("btn-share-referral").addEventListener("click", () => {
   }
 });
 
+// Номер нужно подтверждать заново раз в 72 часа — срок считает сервер (phone_expired).
+function isPhoneExpired() {
+  if (!profileData) return false;
+  return profileData.phone_expired ?? !profileData.phone;
+}
+
 function renderPhoneRow() {
   const phoneEl = document.getElementById("profile-phone");
   if (!phoneEl) return;
   phoneEl.textContent = profileData?.phone || t("phoneNotLinked");
+
+  let attachBtn = document.getElementById("btn-attach-phone");
+  if (isPhoneExpired()) {
+    if (!attachBtn) {
+      attachBtn = document.createElement("button");
+      attachBtn.id = "btn-attach-phone";
+      attachBtn.type = "button";
+      attachBtn.className = "btn-attach-phone";
+      attachBtn.addEventListener("click", () => requestPhoneAndPoll({ force: true }));
+      phoneEl.insertAdjacentElement("afterend", attachBtn);
+    }
+    attachBtn.textContent = t("attachPhone");
+  } else if (attachBtn) {
+    attachBtn.remove();
+  }
 }
 
 document.getElementById("btn-refresh-profile").addEventListener("click", async () => {
@@ -1828,14 +1849,14 @@ document.getElementById("btn-refresh-profile").addEventListener("click", async (
 
 let phoneAutoRequested = false;
 
-function requestPhoneAndPoll() {
-  // Проверяем, запрашивали ли номер за последние 72 часа
+function requestPhoneAndPoll({ force = false } = {}) {
+  // Автозапрос не повторяем чаще раза в 72 часа, если пользователь отказался.
+  // Кнопка «Привязать номер» (force) запрашивает всегда.
   const lastRequest = localStorage.getItem('phone_request_time');
   const now = Date.now();
   const REQUEST_COOLDOWN = 72 * 60 * 60 * 1000; // 72 часа в миллисекундах
 
-  if (lastRequest && (now - parseInt(lastRequest)) < REQUEST_COOLDOWN) {
-    // Не прошло 72 часа - не запрашиваем
+  if (!force && lastRequest && (now - parseInt(lastRequest)) < REQUEST_COOLDOWN) {
     return;
   }
 
@@ -1847,12 +1868,13 @@ function requestPhoneAndPoll() {
       attempts += 1;
       try {
         const fresh = await fetchProfile();
-        if (fresh.phone) {
+        if (fresh.phone && !(fresh.phone_expired ?? false)) {
           profileData = fresh;
           renderPhoneRow();
           clearInterval(timer);
-          // Сохраняем время успешной привязки
-          localStorage.setItem('phone_request_time', now.toString());
+          // Номер подтверждён — дальше срок повторного запроса считает сервер
+          localStorage.removeItem('phone_request_time');
+          return;
         }
       } catch (e) { /* игнор, попробуем ещё раз */ }
       if (attempts >= 10) {

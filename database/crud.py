@@ -17,8 +17,30 @@ async def get_user_by_tg_id(session: AsyncSession, tg_id: int) -> User | None:
     return result.scalar_one_or_none()
 
 
+PHONE_REVERIFY_PERIOD = dt.timedelta(hours=72)
+
+
 async def set_user_phone(session: AsyncSession, user: User, phone: str) -> User:
     user.phone = phone
+    user.phone_verified_at = dt.datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+def phone_is_expired(user: User) -> bool:
+    """True, если телефон не привязан или подтверждён более 72 часов назад."""
+    if not user.phone or not user.phone_verified_at:
+        return True
+    verified_at = user.phone_verified_at
+    if verified_at.tzinfo is None:
+        verified_at = verified_at.replace(tzinfo=timezone.utc)
+    return dt.datetime.now(timezone.utc) - verified_at > PHONE_REVERIFY_PERIOD
+
+
+async def set_user_avatar(session: AsyncSession, user: User, file_id: str | None, file_path: str | None) -> User:
+    user.avatar_file_id = file_id
+    user.avatar_file_path = file_path
     await session.commit()
     await session.refresh(user)
     return user
@@ -489,8 +511,11 @@ async def delete_group(session: AsyncSession, group_id: int) -> bool:
     return True
 
 
-async def get_banners(session: AsyncSession) -> list[Banner]:
-    result = await session.execute(select(Banner).where(Banner.is_active == True).order_by(Banner.order))
+async def get_banners(session: AsyncSession, include_inactive: bool = False) -> list[Banner]:
+    stmt = select(Banner).order_by(Banner.order)
+    if not include_inactive:
+        stmt = stmt.where(Banner.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
@@ -512,8 +537,11 @@ async def delete_banner(session: AsyncSession, banner_id: int) -> bool:
     return True
 
 
-async def get_advertisements(session: AsyncSession) -> list[Advertisement]:
-    result = await session.execute(select(Advertisement).where(Advertisement.is_active == True).order_by(Advertisement.order))
+async def get_advertisements(session: AsyncSession, include_inactive: bool = False) -> list[Advertisement]:
+    stmt = select(Advertisement).order_by(Advertisement.order)
+    if not include_inactive:
+        stmt = stmt.where(Advertisement.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
@@ -535,8 +563,11 @@ async def delete_advertisement(session: AsyncSession, ad_id: int) -> bool:
     return True
 
 
-async def get_faq(session: AsyncSession) -> list[FAQ]:
-    result = await session.execute(select(FAQ).where(FAQ.is_active == True).order_by(FAQ.order))
+async def get_faq(session: AsyncSession, include_inactive: bool = False) -> list[FAQ]:
+    stmt = select(FAQ).order_by(FAQ.order)
+    if not include_inactive:
+        stmt = stmt.where(FAQ.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
@@ -556,6 +587,42 @@ async def delete_faq(session: AsyncSession, faq_id: int) -> bool:
     await session.delete(faq)
     await session.commit()
     return True
+
+
+async def _update_fields(session: AsyncSession, model, item_id: int, fields: dict):
+    result = await session.execute(select(model).where(model.id == item_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        return None
+    for key, value in fields.items():
+        setattr(item, key, value)
+    await session.commit()
+    await session.refresh(item)
+    return item
+
+
+async def update_faculty(session: AsyncSession, faculty_id: int, **fields) -> Faculty | None:
+    return await _update_fields(session, Faculty, faculty_id, fields)
+
+
+async def update_department(session: AsyncSession, department_id: int, **fields) -> Department | None:
+    return await _update_fields(session, Department, department_id, fields)
+
+
+async def update_group(session: AsyncSession, group_id: int, **fields) -> Group | None:
+    return await _update_fields(session, Group, group_id, fields)
+
+
+async def update_banner(session: AsyncSession, banner_id: int, **fields) -> Banner | None:
+    return await _update_fields(session, Banner, banner_id, fields)
+
+
+async def update_advertisement(session: AsyncSession, ad_id: int, **fields) -> Advertisement | None:
+    return await _update_fields(session, Advertisement, ad_id, fields)
+
+
+async def update_faq(session: AsyncSession, faq_id: int, **fields) -> FAQ | None:
+    return await _update_fields(session, FAQ, faq_id, fields)
 
 
 async def get_app_settings(session: AsyncSession) -> AppSettings:

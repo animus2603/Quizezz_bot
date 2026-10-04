@@ -8,7 +8,7 @@ from database.models import (
     Faculty, Department, Group, Banner, Advertisement, FAQ, AppSettings, SupportSettings,
 )
 from database import crud
-from config import ADMIN_CHAT_ID, BOT_USERNAME
+from config import ADMIN_CHAT_ID, BOT_USERNAME, BOT_TOKEN
 from api.schemas import CreateQuizIn, UpdateQuizIn
 
 router = APIRouter()
@@ -287,6 +287,12 @@ async def delete_quiz(quiz_id: int):
         return {"success": True}
 
 
+def _avatar_url(user: User) -> str | None:
+    if not user.avatar_file_path or not BOT_TOKEN:
+        return None
+    return f"https://api.telegram.org/file/bot{BOT_TOKEN}/{user.avatar_file_path}"
+
+
 @router.get("/users")
 async def get_users():
     """Список пользователей"""
@@ -306,6 +312,7 @@ async def get_users():
                 "full_name": u.full_name,
                 "phone": u.phone,
                 "points": u.points,
+                "avatar_url": _avatar_url(u),
                 "created_at": u.created_at.strftime("%Y-%m-%d %H:%M"),
                 "is_admin": u.tg_id == ADMIN_CHAT_ID,
                 "telegram_link": f"https://t.me/{BOT_USERNAME}" if u.username else f"https://t.me/{u.tg_id}",
@@ -314,43 +321,59 @@ async def get_users():
         ]
 
 
+async def _catalog_distinct(session: AsyncSession, column, **filters) -> list[str]:
+    """Fallback: distinct-значения из quiz_catalog, если таблицы настроек пустые."""
+    stmt = select(column).where(column.is_not(None))
+    for attr, value in filters.items():
+        if value:
+            stmt = stmt.where(getattr(QuizCatalogItem, attr) == value)
+    result = await session.execute(stmt.distinct())
+    return [row[0] for row in result.all() if row[0]]
+
+
+async def _table_is_empty(session: AsyncSession, model) -> bool:
+    result = await session.execute(select(func.count(model.id)))
+    return not result.scalar()
+
+
 @router.get("/cascade/faculties")
 async def get_faculties():
-    """Список уникальных факультетов"""
+    """Список факультетов (из настроек, иначе — из каталога тестов)"""
     async with async_session() as session:
-        result = await session.execute(
-            select(QuizCatalogItem.faculty)
-            .where(QuizCatalogItem.faculty.is_not(None))
-            .distinct()
-        )
-        faculties = [row[0] for row in result.all() if row[0]]
-        return faculties
+        if await _table_is_empty(session, Faculty):
+            return await _catalog_distinct(session, QuizCatalogItem.faculty)
+        result = await session.execute(select(Faculty.name).order_by(Faculty.name))
+        return [row[0] for row in result.all()]
 
 
 @router.get("/cascade/departments")
 async def get_departments(faculty: str = None):
     """Список кафедр по факультету"""
     async with async_session() as session:
-        stmt = select(QuizCatalogItem.department).where(QuizCatalogItem.department.is_not(None))
+        if await _table_is_empty(session, Department):
+            return await _catalog_distinct(session, QuizCatalogItem.department, faculty=faculty)
+        stmt = select(Department.name).order_by(Department.name)
         if faculty:
-            stmt = stmt.where(QuizCatalogItem.faculty == faculty)
+            stmt = stmt.join(Faculty, Department.faculty_id == Faculty.id).where(Faculty.name == faculty)
         result = await session.execute(stmt.distinct())
-        departments = [row[0] for row in result.all() if row[0]]
-        return departments
+        return [row[0] for row in result.all()]
 
 
 @router.get("/cascade/groups")
 async def get_groups(faculty: str = None, department: str = None):
     """Список групп по факультету и кафедре"""
     async with async_session() as session:
-        stmt = select(QuizCatalogItem.group_name).where(QuizCatalogItem.group_name.is_not(None))
+        if await _table_is_empty(session, Group):
+            return await _catalog_distinct(
+                session, QuizCatalogItem.group_name, faculty=faculty, department=department
+            )
+        stmt = select(Group.name).order_by(Group.name)
         if faculty:
-            stmt = stmt.where(QuizCatalogItem.faculty == faculty)
+            stmt = stmt.join(Faculty, Group.faculty_id == Faculty.id).where(Faculty.name == faculty)
         if department:
-            stmt = stmt.where(QuizCatalogItem.department == department)
+            stmt = stmt.join(Department, Group.department_id == Department.id).where(Department.name == department)
         result = await session.execute(stmt.distinct())
-        groups = [row[0] for row in result.all() if row[0]]
-        return groups
+        return [row[0] for row in result.all()]
 
 
 @router.post("/listings/{listing_id}/approve")
@@ -437,6 +460,38 @@ async def delete_faculty(faculty_id: int):
         return {"success": True}
 
 
+def _pick(data: dict, allowed: tuple[str, ...]) -> dict:
+    return {k: data[k] for k in allowed if k in data}
+
+
+def _require_non_empty(fields: dict, keys: tuple[str, ...]) -> None:
+    for key in keys:
+        if key in fields and (fields[key] is None or (isinstance(fields[key], str) and not fields[key].strip())):
+            raise HTTPException(status_code=400, detail=f"{key} cannot be empty")
+
+
+async def _ensure_faculty_and_department(session: AsyncSession, faculty_id=None, department_id=None) -> None:
+    if faculty_id is not None and not await session.get(Faculty, faculty_id):
+        raise HTTPException(status_code=400, detail="Faculty not found")
+    if department_id is not None:
+        department = await session.get(Department, department_id)
+        if not department:
+            raise HTTPException(status_code=400, detail="Department not found")
+        if faculty_id is not None and department.faculty_id != faculty_id:
+            raise HTTPException(status_code=400, detail="Department does not belong to faculty")
+
+
+@router.put("/settings/faculties/{faculty_id}")
+async def update_faculty(faculty_id: int, data: dict):
+    """Изменить факультет"""
+    fields = _pick(data, ("name",))
+    _require_non_empty(fields, ("name",))
+    async with async_session() as session:
+        faculty = await crud.update_faculty(session, faculty_id, **fields)
+        if not faculty:
+            raise HTTPException(status_code=404, detail="Faculty not found")
+        return {"id": faculty.id, "name": faculty.name}
+
 @router.get("/settings/departments")
 async def get_departments_list(faculty_id: int = None):
     """Список кафедр"""
@@ -466,6 +521,18 @@ async def delete_department(department_id: int):
             raise HTTPException(status_code=404, detail="Department not found")
         return {"success": True}
 
+
+@router.put("/settings/departments/{department_id}")
+async def update_department(department_id: int, data: dict):
+    """Изменить кафедру"""
+    fields = _pick(data, ("name", "faculty_id"))
+    _require_non_empty(fields, ("name", "faculty_id"))
+    async with async_session() as session:
+        await _ensure_faculty_and_department(session, faculty_id=fields.get("faculty_id"))
+        department = await crud.update_department(session, department_id, **fields)
+        if not department:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return {"id": department.id, "name": department.name, "faculty_id": department.faculty_id}
 
 @router.get("/settings/groups")
 async def get_groups_list(faculty_id: int = None, department_id: int = None):
@@ -498,12 +565,29 @@ async def delete_group(group_id: int):
         return {"success": True}
 
 
+@router.put("/settings/groups/{group_id}")
+async def update_group(group_id: int, data: dict):
+    """Изменить группу"""
+    fields = _pick(data, ("name", "faculty_id", "department_id"))
+    _require_non_empty(fields, ("name", "faculty_id", "department_id"))
+    async with async_session() as session:
+        group = await session.get(Group, group_id)
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+        await _ensure_faculty_and_department(
+            session,
+            faculty_id=fields.get("faculty_id", group.faculty_id),
+            department_id=fields.get("department_id", group.department_id),
+        )
+        group = await crud.update_group(session, group_id, **fields)
+        return {"id": group.id, "name": group.name, "faculty_id": group.faculty_id, "department_id": group.department_id}
+
 @router.get("/settings/banners")
 async def get_banners_list():
     """Список баннеров"""
     async with async_session() as session:
-        banners = await crud.get_banners(session)
-        return [{"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order": b.order} for b in banners]
+        banners = await crud.get_banners(session, include_inactive=True)
+        return [_banner_out(b) for b in banners]
 
 
 @router.post("/settings/banners")
@@ -517,7 +601,7 @@ async def create_banner(data: dict):
         raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
     async with async_session() as session:
         banner = await crud.create_banner(session, title, image_url, link_url, order)
-        return {"id": banner.id, "title": banner.title, "image_url": banner.image_url, "link_url": banner.link_url, "order": banner.order}
+        return _banner_out(banner)
 
 
 @router.delete("/settings/banners/{banner_id}")
@@ -530,12 +614,27 @@ async def delete_banner(banner_id: int):
         return {"success": True}
 
 
+def _banner_out(b: Banner) -> dict:
+    return {"id": b.id, "title": b.title, "image_url": b.image_url, "link_url": b.link_url, "order": b.order, "is_active": b.is_active}
+
+
+@router.put("/settings/banners/{banner_id}")
+async def update_banner(banner_id: int, data: dict):
+    """Изменить баннер"""
+    fields = _pick(data, ("title", "image_url", "link_url", "order", "is_active"))
+    _require_non_empty(fields, ("title", "image_url", "link_url", "order", "is_active"))
+    async with async_session() as session:
+        banner = await crud.update_banner(session, banner_id, **fields)
+        if not banner:
+            raise HTTPException(status_code=404, detail="Banner not found")
+        return _banner_out(banner)
+
 @router.get("/settings/ads")
 async def get_ads_list():
     """Список рекламы"""
     async with async_session() as session:
-        ads = await crud.get_advertisements(session)
-        return [{"id": a.id, "title": a.title, "description": a.description, "image_url": a.image_url, "link_url": a.link_url, "order": a.order} for a in ads]
+        ads = await crud.get_advertisements(session, include_inactive=True)
+        return [_ad_out(a) for a in ads]
 
 
 @router.post("/settings/ads")
@@ -550,7 +649,7 @@ async def create_ad(data: dict):
         raise HTTPException(status_code=400, detail="Title, image_url and link_url required")
     async with async_session() as session:
         ad = await crud.create_advertisement(session, title, description, image_url, link_url, order)
-        return {"id": ad.id, "title": ad.title, "description": ad.description, "image_url": ad.image_url, "link_url": ad.link_url, "order": ad.order}
+        return _ad_out(ad)
 
 
 @router.delete("/settings/ads/{ad_id}")
@@ -563,12 +662,30 @@ async def delete_ad(ad_id: int):
         return {"success": True}
 
 
+def _ad_out(a: Advertisement) -> dict:
+    return {
+        "id": a.id, "title": a.title, "description": a.description, "image_url": a.image_url,
+        "link_url": a.link_url, "order": a.order, "is_active": a.is_active,
+    }
+
+
+@router.put("/settings/ads/{ad_id}")
+async def update_ad(ad_id: int, data: dict):
+    """Изменить рекламу"""
+    fields = _pick(data, ("title", "description", "image_url", "link_url", "order", "is_active"))
+    _require_non_empty(fields, ("title", "image_url", "link_url", "order", "is_active"))
+    async with async_session() as session:
+        ad = await crud.update_advertisement(session, ad_id, **fields)
+        if not ad:
+            raise HTTPException(status_code=404, detail="Advertisement not found")
+        return _ad_out(ad)
+
 @router.get("/settings/faq")
 async def get_faq_list():
     """Список FAQ"""
     async with async_session() as session:
-        faqs = await crud.get_faq(session)
-        return [{"id": f.id, "question": f.question, "answer": f.answer, "order": f.order} for f in faqs]
+        faqs = await crud.get_faq(session, include_inactive=True)
+        return [_faq_out(f) for f in faqs]
 
 
 @router.post("/settings/faq")
@@ -581,7 +698,7 @@ async def create_faq(data: dict):
         raise HTTPException(status_code=400, detail="Question and answer required")
     async with async_session() as session:
         faq = await crud.create_faq(session, question, answer, order)
-        return {"id": faq.id, "question": faq.question, "answer": faq.answer, "order": faq.order}
+        return _faq_out(faq)
 
 
 @router.delete("/settings/faq/{faq_id}")
@@ -593,6 +710,21 @@ async def delete_faq(faq_id: int):
             raise HTTPException(status_code=404, detail="FAQ not found")
         return {"success": True}
 
+
+def _faq_out(f: FAQ) -> dict:
+    return {"id": f.id, "question": f.question, "answer": f.answer, "order": f.order, "is_active": f.is_active}
+
+
+@router.put("/settings/faq/{faq_id}")
+async def update_faq(faq_id: int, data: dict):
+    """Изменить FAQ"""
+    fields = _pick(data, ("question", "answer", "order", "is_active"))
+    _require_non_empty(fields, ("question", "answer", "order", "is_active"))
+    async with async_session() as session:
+        faq = await crud.update_faq(session, faq_id, **fields)
+        if not faq:
+            raise HTTPException(status_code=404, detail="FAQ not found")
+        return _faq_out(faq)
 
 @router.get("/settings/app")
 async def get_app_settings():

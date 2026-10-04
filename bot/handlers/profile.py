@@ -3,6 +3,7 @@ from aiogram.types import Message
 
 from database.engine import async_session
 from database import crud
+from bot.avatar import refresh_user_avatar
 from config import ADMIN_CHAT_ID
 
 router = Router(name="profile")
@@ -21,5 +22,6 @@ async def handle_contact(message: Message):
             session, message.from_user.id, message.from_user.username, message.from_user.full_name
         )
         await crud.set_user_phone(session, user, contact.phone_number)
+        await refresh_user_avatar(message.bot, session, user)
 
     await message.answer("✅ Номер телефона привязан к вашему профилю.")

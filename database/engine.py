@@ -137,6 +137,47 @@ EXAMPLE_STUDY_LISTINGS = [
 ]
 
 
+DEFAULT_STRUCTURE = {
+    "Информационные технологии": ["Прикладная математика", "Информационные системы", "Компьютерная инженерия"],
+    "Гуманитарный факультет": ["История и социология", "Филология", "Педагогика и психология"],
+    "Иностранные языки": ["Кафедра иностранных языков", "Переводческое дело", "Лингвистика"],
+}
+
+DEFAULT_FAQ = [
+    ("Как оплатить заказ?", "После оформления заказа бот пришлёт реквизиты Kaspi. Переведите сумму и отправьте боту скриншот чека — оператор подтвердит оплату."),
+    ("Сколько ждать готовый тест?", "Готовые тесты из каталога отправляются сразу после подтверждения оплаты. Индивидуальные заказы выполняются в течение рабочего дня после подтверждения."),
+    ("Можно ли отменить заказ?", "Да, в течение часа после оформления — в разделе «Заказы» рядом с неоплаченным заказом появится кнопка отмены."),
+    ("Как разместить объявление?", "Перейдите в раздел «Разместить», выберите категорию — Учебное или Товары — и заполните форму. Объявление опубликуется после проверки модератором."),
+    ("Что делать, если номер не привязался?", "Откройте раздел «Профиль» — Telegram покажет запрос на отправку номера. Подтвердите его, и номер появится автоматически в течение нескольких секунд."),
+]
+
+
+async def seed_default_settings(session: AsyncSession) -> None:
+    """Один раз добавляет стартовые факультеты/кафедры и FAQ (только в пустые таблицы).
+    Флаг defaults_seeded не даёт вернуть их после того, как админ всё удалил."""
+    from database.models import Faculty, Department, FAQ
+    from database import crud
+
+    settings = await crud.get_app_settings(session)
+    if settings.defaults_seeded:
+        return
+
+    if (await session.execute(select(Faculty))).first() is None:
+        for faculty_name, departments in DEFAULT_STRUCTURE.items():
+            faculty = Faculty(name=faculty_name)
+            session.add(faculty)
+            await session.flush()
+            for department_name in departments:
+                session.add(Department(name=department_name, faculty_id=faculty.id))
+
+    if (await session.execute(select(FAQ))).first() is None:
+        for order, (question, answer) in enumerate(DEFAULT_FAQ):
+            session.add(FAQ(question=question, answer=answer, order=order))
+
+    settings.defaults_seeded = True
+    await session.commit()
+
+
 async def init_db() -> None:
     """Создаёт таблицы, если их ещё нет, и добавляет примеры тестов/объявлений в пустую БД."""
     async with engine.begin() as conn:
@@ -170,6 +211,8 @@ async def init_db() -> None:
                     photo_urls=item.get("photo_urls"),
                 )
                 await crud.set_listing_status(session, listing, ListingStatus.approved)
+
+        await seed_default_settings(session)
 
 
 async def get_session() -> AsyncSession:

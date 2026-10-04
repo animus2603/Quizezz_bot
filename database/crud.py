@@ -2,7 +2,7 @@ import datetime as dt
 import json
 from datetime import timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, delete, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import (
@@ -17,8 +17,30 @@ async def get_user_by_tg_id(session: AsyncSession, tg_id: int) -> User | None:
     return result.scalar_one_or_none()
 
 
+PHONE_REVERIFY_PERIOD = dt.timedelta(hours=72)
+
+
 async def set_user_phone(session: AsyncSession, user: User, phone: str) -> User:
     user.phone = phone
+    user.phone_verified_at = dt.datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+def phone_is_expired(user: User) -> bool:
+    """True, если телефон не привязан или подтверждён более 72 часов назад."""
+    if not user.phone or not user.phone_verified_at:
+        return True
+    verified_at = user.phone_verified_at
+    if verified_at.tzinfo is None:
+        verified_at = verified_at.replace(tzinfo=timezone.utc)
+    return dt.datetime.now(timezone.utc) - verified_at > PHONE_REVERIFY_PERIOD
+
+
+async def set_user_avatar(session: AsyncSession, user: User, file_id: str | None, file_path: str | None) -> User:
+    user.avatar_file_id = file_id
+    user.avatar_file_path = file_path
     await session.commit()
     await session.refresh(user)
     return user
@@ -430,6 +452,9 @@ async def delete_faculty(session: AsyncSession, faculty_id: int) -> bool:
     faculty = result.scalar_one_or_none()
     if not faculty:
         return False
+    # SQLite не каскадирует FK — удаляем зависимые кафедры и группы вручную
+    await session.execute(delete(Group).where(Group.faculty_id == faculty_id))
+    await session.execute(delete(Department).where(Department.faculty_id == faculty_id))
     await session.delete(faculty)
     await session.commit()
     return True
@@ -456,6 +481,7 @@ async def delete_department(session: AsyncSession, department_id: int) -> bool:
     department = result.scalar_one_or_none()
     if not department:
         return False
+    await session.execute(delete(Group).where(Group.department_id == department_id))
     await session.delete(department)
     await session.commit()
     return True
@@ -489,13 +515,22 @@ async def delete_group(session: AsyncSession, group_id: int) -> bool:
     return True
 
 
-async def get_banners(session: AsyncSession) -> list[Banner]:
-    result = await session.execute(select(Banner).where(Banner.is_active == True).order_by(Banner.order))
+async def get_banners(session: AsyncSession, include_inactive: bool = False) -> list[Banner]:
+    stmt = select(Banner).order_by(Banner.order)
+    if not include_inactive:
+        stmt = stmt.where(Banner.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
-async def create_banner(session: AsyncSession, title: str, image_url: str, link_url: str, order: int = 0) -> Banner:
-    banner = Banner(title=title, image_url=image_url, link_url=link_url, order=order)
+async def create_banner(
+    session: AsyncSession, title: str, image_url: str, link_url: str, order: int = 0,
+    description: str | None = None, is_active: bool = True,
+) -> Banner:
+    banner = Banner(
+        title=title, description=description, image_url=image_url, link_url=link_url,
+        order=order, is_active=is_active,
+    )
     session.add(banner)
     await session.commit()
     await session.refresh(banner)
@@ -512,13 +547,22 @@ async def delete_banner(session: AsyncSession, banner_id: int) -> bool:
     return True
 
 
-async def get_advertisements(session: AsyncSession) -> list[Advertisement]:
-    result = await session.execute(select(Advertisement).where(Advertisement.is_active == True).order_by(Advertisement.order))
+async def get_advertisements(session: AsyncSession, include_inactive: bool = False) -> list[Advertisement]:
+    stmt = select(Advertisement).order_by(Advertisement.order)
+    if not include_inactive:
+        stmt = stmt.where(Advertisement.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
-async def create_advertisement(session: AsyncSession, title: str, description: str | None, image_url: str, link_url: str, order: int = 0) -> Advertisement:
-    ad = Advertisement(title=title, description=description, image_url=image_url, link_url=link_url, order=order)
+async def create_advertisement(
+    session: AsyncSession, title: str, description: str | None, image_url: str, link_url: str,
+    order: int = 0, is_active: bool = True,
+) -> Advertisement:
+    ad = Advertisement(
+        title=title, description=description, image_url=image_url, link_url=link_url,
+        order=order, is_active=is_active,
+    )
     session.add(ad)
     await session.commit()
     await session.refresh(ad)
@@ -535,13 +579,16 @@ async def delete_advertisement(session: AsyncSession, ad_id: int) -> bool:
     return True
 
 
-async def get_faq(session: AsyncSession) -> list[FAQ]:
-    result = await session.execute(select(FAQ).where(FAQ.is_active == True).order_by(FAQ.order))
+async def get_faq(session: AsyncSession, include_inactive: bool = False) -> list[FAQ]:
+    stmt = select(FAQ).order_by(FAQ.order)
+    if not include_inactive:
+        stmt = stmt.where(FAQ.is_active == True)
+    result = await session.execute(stmt)
     return list(result.scalars().all())
 
 
-async def create_faq(session: AsyncSession, question: str, answer: str, order: int = 0) -> FAQ:
-    faq = FAQ(question=question, answer=answer, order=order)
+async def create_faq(session: AsyncSession, question: str, answer: str, order: int = 0, is_active: bool = True) -> FAQ:
+    faq = FAQ(question=question, answer=answer, order=order, is_active=is_active)
     session.add(faq)
     await session.commit()
     await session.refresh(faq)
@@ -556,6 +603,53 @@ async def delete_faq(session: AsyncSession, faq_id: int) -> bool:
     await session.delete(faq)
     await session.commit()
     return True
+
+
+async def _update_fields(session: AsyncSession, model, item_id: int, fields: dict):
+    result = await session.execute(select(model).where(model.id == item_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        return None
+    for key, value in fields.items():
+        setattr(item, key, value)
+    await session.commit()
+    await session.refresh(item)
+    return item
+
+
+async def update_faculty(session: AsyncSession, faculty_id: int, **fields) -> Faculty | None:
+    return await _update_fields(session, Faculty, faculty_id, fields)
+
+
+async def update_department(session: AsyncSession, department_id: int, **fields) -> Department | None:
+    return await _update_fields(session, Department, department_id, fields)
+
+
+async def update_group(session: AsyncSession, group_id: int, **fields) -> Group | None:
+    return await _update_fields(session, Group, group_id, fields)
+
+
+async def rename_academic_value(session: AsyncSession, field: str, old: str, new: str) -> None:
+    """Переименование факультета/кафедры/группы в настройках — переносим новое название
+    в уже созданные тесты каталога и объявления."""
+    if not old or old == new:
+        return
+    for model in (QuizCatalogItem, Listing):
+        column = getattr(model, field)
+        await session.execute(update(model).where(column == old).values({field: new}))
+    await session.commit()
+
+
+async def update_banner(session: AsyncSession, banner_id: int, **fields) -> Banner | None:
+    return await _update_fields(session, Banner, banner_id, fields)
+
+
+async def update_advertisement(session: AsyncSession, ad_id: int, **fields) -> Advertisement | None:
+    return await _update_fields(session, Advertisement, ad_id, fields)
+
+
+async def update_faq(session: AsyncSession, faq_id: int, **fields) -> FAQ | None:
+    return await _update_fields(session, FAQ, faq_id, fields)
 
 
 async def get_app_settings(session: AsyncSession) -> AppSettings:
@@ -628,6 +722,32 @@ def get_subcategory_examples(category: str | None) -> list[str]:
     return SUBCATEGORY_EXAMPLES["study"] + SUBCATEGORY_EXAMPLES["goods"]
 
 
+async def _academic_options_from_settings(
+    session: AsyncSession,
+    field: str,
+    query: str = "",
+    faculty: str | None = None,
+    department: str | None = None,
+) -> list[str] | None:
+    """Факультеты/кафедры/группы из раздела «Настройки» админки.
+    None — если соответствующая таблица пустая (тогда работает старый источник — объявления)."""
+    model = {"faculty": Faculty, "department": Department, "group_name": Group}.get(field)
+    if model is None:
+        return None
+    if not (await session.execute(select(func.count(model.id)))).scalar():
+        return None
+
+    stmt = select(model.name)
+    if model is not Faculty and faculty and faculty != FALLBACK_OTHER:
+        stmt = stmt.join(Faculty, model.faculty_id == Faculty.id).where(Faculty.name == faculty)
+    if model is Group and department and department != FALLBACK_OTHER:
+        stmt = stmt.join(Department, Group.department_id == Department.id).where(Department.name == department)
+    if query:
+        stmt = stmt.where(model.name.ilike(f"%{query}%"))
+    result = await session.execute(stmt.distinct().order_by(model.name).limit(50))
+    return [row[0] for row in result.all()]
+
+
 async def search_listing_filter_options(
     session: AsyncSession,
     field: str,
@@ -646,6 +766,12 @@ async def search_listing_filter_options(
     даже если в БД ещё нет ни одного значения."""
     if field not in FILTERABLE_FIELDS:
         return []
+
+    settings_values = await _academic_options_from_settings(session, field, query, faculty, department)
+    if settings_values is not None:
+        if not query or FALLBACK_OTHER.lower().startswith(query.lower()):
+            settings_values.append(FALLBACK_OTHER)
+        return settings_values
 
     column = getattr(Listing, field)
     stmt = select(column).where(Listing.status == ListingStatus.approved, column.is_not(None), column != "")

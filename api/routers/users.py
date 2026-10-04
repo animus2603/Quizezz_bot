@@ -19,6 +19,7 @@ async def get_or_init_profile(data: ProfileIn, session: AsyncSession = Depends(g
     referral_count = await crud.count_referrals(session, user.tg_id)
     out = ProfileOut.model_validate(user)
     out.referral_count = referral_count
+    out.phone_expired = crud.phone_is_expired(user)
     out.bot_username = BOT_USERNAME
     return out
 

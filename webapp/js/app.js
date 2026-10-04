@@ -29,6 +29,7 @@ const BASE_DICT = {
     appName: "Bereket",
     readyQuizzes: "Готовые тесты",
     goodsPreviewTitle: "Товары",
+    adsTitle: "Реклама",
     viewAllBtn: "Смотреть все ›",
     noQuizFound: "Нет нужного теста?",
     orderCustomBtn: "Заказать индивидуальный тест — 5000₸",
@@ -176,6 +177,7 @@ const BASE_DICT = {
     appName: "Bereket",
     readyQuizzes: "Дайын тесттер",
     goodsPreviewTitle: "Тауарлар",
+    adsTitle: "Жарнама",
     viewAllBtn: "Барлығын көру ›",
     noQuizFound: "Керекті тест жоқ па?",
     orderCustomBtn: "Жеке тест тапсырыс беру — 5000₸",
@@ -323,6 +325,7 @@ const BASE_DICT = {
     appName: "Bereket",
     readyQuizzes: "Ready-made quizzes",
     goodsPreviewTitle: "Goods",
+    adsTitle: "Sponsored",
     viewAllBtn: "View all ›",
     noQuizFound: "Can't find your quiz?",
     orderCustomBtn: "Order a custom quiz — 5000₸",
@@ -470,6 +473,7 @@ const BASE_DICT = {
     appName: "Bereket",
     readyQuizzes: "Taýýar testler",
     goodsPreviewTitle: "Harytlar",
+    adsTitle: "Mahabat",
     viewAllBtn: "Ählisini görmek ›",
     noQuizFound: "Gerekli testiňiz ýokmy?",
     orderCustomBtn: "Şahsy test sargyt et — 5000₸",
@@ -618,7 +622,11 @@ const BASE_DICT = {
 const DICT = BASE_DICT;
 let currentLang = "RU";
 
+// Контент из раздела «Настройки» админки (баннеры, реклама, FAQ, поддержка, название и иконка)
+let siteContent = null;
+
 function t(key) {
+  if (key === "appName" && siteContent?.app?.name) return siteContent.app.name;
   return DICT[currentLang][key] ?? DICT.RU[key] ?? key;
 }
 
@@ -680,25 +688,94 @@ let bannerIndex = 0;
 function renderBanner() {
   const track = document.getElementById("banner-track");
   const dots = document.getElementById("banner-dots");
-  const slides = t("banners");
+  const dbBanners = siteContent?.banners || [];
+  const slides = dbBanners.length ? dbBanners : t("banners");
 
-  track.innerHTML = slides.map((s) => `
+  document.getElementById("banner").classList.toggle("banner-images", dbBanners.length > 0);
+  track.innerHTML = dbBanners.length
+    ? dbBanners.map((b) => `
+      <div class="banner-slide banner-slide-image" data-link="${escapeHtml(b.link_url)}"
+           style="background-image: url('${encodeURI(b.image_url)}')">
+        <div class="banner-caption">
+          <div class="banner-caption-title">${escapeHtml(b.title)}</div>
+          ${b.description ? `<div class="banner-caption-desc">${escapeHtml(b.description)}</div>` : ""}
+        </div>
+      </div>
+    `).join("")
+    : slides.map((s) => `
     <div class="banner-slide">
       <span class="banner-icon">${s.icon}</span>
       <span class="banner-text">${s.text}</span>
     </div>
   `).join("");
+  track.querySelectorAll("[data-link]").forEach((el) => {
+    el.addEventListener("click", () => openExternalLink(el.dataset.link));
+  });
   dots.innerHTML = slides.map((_, i) => `<span class="${i === 0 ? "active" : ""}"></span>`).join("");
 
   bannerIndex = 0;
   track.style.transform = "translateX(0%)";
 
   if (bannerTimer) clearInterval(bannerTimer);
+  if (slides.length < 2) return;
   bannerTimer = setInterval(() => {
     bannerIndex = (bannerIndex + 1) % slides.length;
     track.style.transform = `translateX(-${bannerIndex * 100}%)`;
     dots.querySelectorAll("span").forEach((d, i) => d.classList.toggle("active", i === bannerIndex));
   }, 4000);
+}
+
+function openExternalLink(url) {
+  if (!url) return;
+  if (/^https:\/\/t\.me\//.test(url) && tg?.openTelegramLink) {
+    tg.openTelegramLink(url);
+  } else if (/^https?:\/\//.test(url) && tg?.openLink) {
+    tg.openLink(url);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
+function renderHomeAds() {
+  const ads = siteContent?.ads || [];
+  const section = document.getElementById("home-ads-section");
+  section.classList.toggle("hidden", ads.length === 0);
+  const list = document.getElementById("home-ads");
+  list.innerHTML = ads.map((a) => `
+    <button class="ad-card" type="button" data-link="${escapeHtml(a.link_url)}">
+      <img class="ad-card-image" src="${escapeHtml(a.image_url)}" alt="">
+      <div class="ad-card-body">
+        <div class="ad-card-title">${escapeHtml(a.title)}</div>
+        ${a.description ? `<div class="ad-card-desc">${escapeHtml(a.description)}</div>` : ""}
+      </div>
+    </button>
+  `).join("");
+  list.querySelectorAll("[data-link]").forEach((el) => {
+    el.addEventListener("click", () => openExternalLink(el.dataset.link));
+  });
+}
+
+function applyBranding() {
+  const app = siteContent?.app || {};
+  if (app.name) document.title = app.name;
+  const logo = document.getElementById("app-logo");
+  if (app.icon) {
+    logo.innerHTML = `<img src="${escapeHtml(app.icon)}" alt="">`;
+    document.getElementById("app-favicon").href = app.icon;
+  }
+}
+
+async function loadSiteContent() {
+  try {
+    const res = await fetch(`${API_BASE}/content`);
+    if (!res.ok) return;
+    siteContent = await res.json();
+  } catch (e) {
+    return;
+  }
+  applyBranding();
+  applyTranslations();
+  renderHomeAds();
 }
 
 function setBannerVisible(visible) {
@@ -1762,7 +1839,7 @@ async function loadProfile() {
 
   // Номер показываем так же "само собой", как имя и username — без отдельной
   // кнопки. Если ещё не привязан, один раз за сессию тихо запрашиваем его.
-  if (!profileData?.phone && !phoneAutoRequested) {
+  if (isPhoneExpired() && !phoneAutoRequested) {
     phoneAutoRequested = true;
     requestPhoneAndPoll();
   }
@@ -1812,10 +1889,31 @@ document.getElementById("btn-share-referral").addEventListener("click", () => {
   }
 });
 
+// Номер нужно подтверждать заново раз в 72 часа — срок считает сервер (phone_expired).
+function isPhoneExpired() {
+  if (!profileData) return false;
+  return profileData.phone_expired ?? !profileData.phone;
+}
+
 function renderPhoneRow() {
   const phoneEl = document.getElementById("profile-phone");
   if (!phoneEl) return;
   phoneEl.textContent = profileData?.phone || t("phoneNotLinked");
+
+  let attachBtn = document.getElementById("btn-attach-phone");
+  if (isPhoneExpired()) {
+    if (!attachBtn) {
+      attachBtn = document.createElement("button");
+      attachBtn.id = "btn-attach-phone";
+      attachBtn.type = "button";
+      attachBtn.className = "btn-attach-phone";
+      attachBtn.addEventListener("click", () => requestPhoneAndPoll({ force: true }));
+      phoneEl.insertAdjacentElement("afterend", attachBtn);
+    }
+    attachBtn.textContent = t("attachPhone");
+  } else if (attachBtn) {
+    attachBtn.remove();
+  }
 }
 
 document.getElementById("btn-refresh-profile").addEventListener("click", async () => {
@@ -1828,14 +1926,14 @@ document.getElementById("btn-refresh-profile").addEventListener("click", async (
 
 let phoneAutoRequested = false;
 
-function requestPhoneAndPoll() {
-  // Проверяем, запрашивали ли номер за последние 72 часа
+function requestPhoneAndPoll({ force = false } = {}) {
+  // Автозапрос не повторяем чаще раза в 72 часа, если пользователь отказался.
+  // Кнопка «Привязать номер» (force) запрашивает всегда.
   const lastRequest = localStorage.getItem('phone_request_time');
   const now = Date.now();
   const REQUEST_COOLDOWN = 72 * 60 * 60 * 1000; // 72 часа в миллисекундах
 
-  if (lastRequest && (now - parseInt(lastRequest)) < REQUEST_COOLDOWN) {
-    // Не прошло 72 часа - не запрашиваем
+  if (!force && lastRequest && (now - parseInt(lastRequest)) < REQUEST_COOLDOWN) {
     return;
   }
 
@@ -1847,12 +1945,13 @@ function requestPhoneAndPoll() {
       attempts += 1;
       try {
         const fresh = await fetchProfile();
-        if (fresh.phone) {
+        if (fresh.phone && !(fresh.phone_expired ?? false)) {
           profileData = fresh;
           renderPhoneRow();
           clearInterval(timer);
-          // Сохраняем время успешной привязки
-          localStorage.setItem('phone_request_time', now.toString());
+          // Номер подтверждён — дальше срок повторного запроса считает сервер
+          localStorage.removeItem('phone_request_time');
+          return;
         }
       } catch (e) { /* игнор, попробуем ещё раз */ }
       if (attempts >= 10) {
@@ -1870,7 +1969,7 @@ function requestPhoneAndPoll() {
   }
 }
 
-const SUPPORT_CHANNELS = [
+const DEFAULT_SUPPORT_CHANNELS = [
   { icon: "✈️", labelKey: "supportTelegram", url: "https://t.me/animus_sh1" },
   { icon: "💬", labelKey: "supportWhatsapp", url: "https://wa.me/77003626026" },
   { icon: "📷", labelKey: "supportInstagram", url: "https://www.instagram.com/bereket_app.sh?stkn=MWwwNTJkN3VjdTBtNw%3D%3D&utm_source=qr" },
@@ -1878,7 +1977,33 @@ const SUPPORT_CHANNELS = [
   { icon: "✉️", labelKey: "supportEmail", url: "mailto:rozybayewdemon@gmail.com" },
 ];
 
+// Значение из настроек поддержки (@username, номер, email или ссылка) → ссылка
+function supportUrl(kind, value) {
+  value = (value || "").trim();
+  if (!value) return null;
+  if (kind === "whatsapp" && !value.startsWith("http")) {
+    const digits = value.replace(/\D/g, "");
+    return digits ? `https://wa.me/${digits}` : null;
+  }
+  if (kind === "telegram" && !value.startsWith("http")) return `https://t.me/${value.replace(/^@/, "")}`;
+  if (kind === "email" && !value.startsWith("mailto:")) return `mailto:${value}`;
+  return value;
+}
+
+function getSupportChannels() {
+  const support = siteContent?.support;
+  if (!support) return DEFAULT_SUPPORT_CHANNELS;
+  const kinds = [
+    ["telegram", "✈️", "supportTelegram"], ["whatsapp", "💬", "supportWhatsapp"],
+    ["instagram", "📷", "supportInstagram"], ["tiktok", "🎵", "supportTiktok"], ["email", "✉️", "supportEmail"],
+  ];
+  return kinds
+    .map(([kind, icon, labelKey]) => ({ icon, labelKey, url: supportUrl(kind, support[kind]) }))
+    .filter((ch) => ch.url);
+}
+
 document.getElementById("menu-support").addEventListener("click", () => {
+  const SUPPORT_CHANNELS = getSupportChannels();
   const html = `
     <div class="profile-menu">
       ${SUPPORT_CHANNELS.map((ch, i) => `
@@ -1895,11 +2020,7 @@ document.getElementById("menu-support").addEventListener("click", () => {
   subscreenBody.querySelectorAll("[data-support-idx]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const channel = SUPPORT_CHANNELS[Number(btn.dataset.supportIdx)];
-      if (channel.url.startsWith("https://t.me/") && tg.openTelegramLink) {
-        tg.openTelegramLink(channel.url);
-      } else {
-        window.open(channel.url, "_blank");
-      }
+      openExternalLink(channel.url);
     });
   });
 });
@@ -1925,7 +2046,10 @@ document.getElementById("subscreen-back").addEventListener("click", () => {
 // ---- FAQ ----
 function renderFaqScreen() {
   activeSubscreenRenderer = renderFaqScreen;
-  const items = t("faqItems");
+  const dbFaq = siteContent?.faq || [];
+  const items = dbFaq.length
+    ? dbFaq.map((f) => ({ q: escapeHtml(f.question), a: escapeHtml(f.answer).replace(/\n/g, "<br>") }))
+    : t("faqItems");
   const faqHtml = items.map((item, i) => `
     <div class="faq-item" data-idx="${i}">
       <button class="faq-question" data-idx="${i}">
@@ -2104,6 +2228,7 @@ document.getElementById("menu-settings").addEventListener("click", renderSetting
 // ---------- Init ----------
 applyTranslations();
 setBannerVisible(true);
+loadSiteContent();
 
 // Запрещаем выбор прошлой даты в поле "Показывать до"
 const lfExpiresInput = document.getElementById("lf-expires");

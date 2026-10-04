@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bereket</title>
+<link rel="icon" id="app-favicon" href="data:,">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,7 +15,7 @@
   <!-- ===== ВЕРХНЯЯ ШАПКА ===== -->
   <header class="topbar">
     <div class="topbar-title">
-      <span class="logo-badge">🎓</span>
+      <span class="logo-badge" id="app-logo">🎓</span>
       <span data-i18n="appName">StudHub</span>
     </div>
     <button id="lang-switch" class="lang-pill" type="button">RU</button>
@@ -85,6 +86,11 @@
         <button id="btn-view-all-listings" class="link-btn hidden" data-i18n="viewAllBtn">Смотреть все ›</button>
       </div>
       <div id="home-listings-preview" class="list">…</div>
+
+      <div id="home-ads-section" class="hidden">
+        <h2 data-i18n="adsTitle">Реклама</h2>
+        <div id="home-ads" class="ads-list"></div>
+      </div>
     </section>
 
     <!-- ===== КАТЕГОРИИ (маркетплейс) ===== -->

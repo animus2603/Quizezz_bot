@@ -48,6 +48,9 @@ async function loadTab(tab) {
     case 'users':
       loadUsers();
       break;
+    case 'settings':
+      loadSettings();
+      break;
   }
 }
 
@@ -669,8 +672,6 @@ document.getElementById('btn-add-quiz').addEventListener('click', async () => {
 });
 
 // ---------- Настройки ----------
-
-document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
 
 async function loadSettings() {
   // Инициализация дефолтных данных

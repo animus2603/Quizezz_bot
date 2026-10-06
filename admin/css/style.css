@@ -678,11 +678,11 @@ h2 {
 
 /* ===== Стили для настроек ===== */
 
-.settings-section {
+#tab-settings .settings-section {
   margin-bottom: 32px;
 }
 
-.settings-section h3 {
+#tab-settings .settings-section h3 {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;

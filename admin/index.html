@@ -234,6 +234,192 @@
       <span class="nav-label">Настройки</span>
     </button>
   </nav>
+
+  <!-- ===== МОДАЛЬНЫЕ ОКНА ДЛЯ НАСТРОЕК ===== -->
+
+  <!-- Модальное окно для факультета -->
+  <div id="faculty-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить факультет</h3>
+        <button class="btn-close" onclick="closeFacultyModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Название факультета</label>
+        <input type="text" id="faculty-name" placeholder="Например: Информационные технологии">
+        <button id="btn-save-faculty" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для кафедры -->
+  <div id="department-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить кафедру</h3>
+        <button class="btn-close" onclick="closeDepartmentModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Факультет</label>
+        <select id="department-faculty">
+          <option value="">Выберите факультет...</option>
+        </select>
+        <label>Название кафедры</label>
+        <input type="text" id="department-name" placeholder="Например: Прикладная математика">
+        <button id="btn-save-department" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для группы -->
+  <div id="group-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить группу</h3>
+        <button class="btn-close" onclick="closeGroupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Факультет</label>
+        <select id="group-faculty">
+          <option value="">Выберите факультет...</option>
+        </select>
+        <label>Кафедра</label>
+        <select id="group-department" disabled>
+          <option value="">Сначала выберите факультет</option>
+        </select>
+        <label>Название группы</label>
+        <input type="text" id="group-name" placeholder="Например: ИС-21">
+        <button id="btn-save-group" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для баннера -->
+  <div id="banner-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить баннер</h3>
+        <button class="btn-close" onclick="closeBannerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Название</label>
+        <input type="text" id="banner-title" placeholder="Название баннера">
+        <label>URL изображения</label>
+        <input type="text" id="banner-image-url" placeholder="https://example.com/banner.jpg">
+        <label>Или загрузить файл</label>
+        <input type="file" id="banner-file" accept="image/*">
+        <div id="banner-preview" class="image-preview"></div>
+        <label>URL ссылки</label>
+        <input type="text" id="banner-link-url" placeholder="https://example.com">
+        <label>Порядок</label>
+        <input type="number" id="banner-order" value="0">
+        <button id="btn-save-banner" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для рекламы -->
+  <div id="ad-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить рекламу</h3>
+        <button class="btn-close" onclick="closeAdModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Название</label>
+        <input type="text" id="ad-title" placeholder="Название рекламы">
+        <label>Описание</label>
+        <textarea id="ad-description" placeholder="Описание рекламы"></textarea>
+        <label>URL изображения</label>
+        <input type="text" id="ad-image-url" placeholder="https://example.com/ad.jpg">
+        <label>Или загрузить файл</label>
+        <input type="file" id="ad-file" accept="image/*">
+        <div id="ad-preview" class="image-preview"></div>
+        <label>URL ссылки</label>
+        <input type="text" id="ad-link-url" placeholder="https://example.com">
+        <label>Порядок</label>
+        <input type="number" id="ad-order" value="0">
+        <button id="btn-save-ad" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для FAQ -->
+  <div id="faq-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Добавить FAQ</h3>
+        <button class="btn-close" onclick="closeFAQModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Вопрос</label>
+        <textarea id="faq-question" placeholder="Вопрос"></textarea>
+        <label>Ответ</label>
+        <textarea id="faq-answer" placeholder="Ответ"></textarea>
+        <label>Порядок</label>
+        <input type="number" id="faq-order" value="0">
+        <button id="btn-save-faq" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для поддержки -->
+  <div id="support-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Настройки поддержки</h3>
+        <button class="btn-close" onclick="closeSupportModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>WhatsApp</label>
+        <input type="text" id="support-whatsapp" placeholder="+7 700 362 60 26">
+        <label>Instagram</label>
+        <input type="text" id="support-instagram" placeholder="https://www.instagram.com/bereket_app.sh">
+        <label>TikTok</label>
+        <input type="text" id="support-tiktok" placeholder="https://www.tiktok.com/@bereket_app">
+        <label>Email</label>
+        <input type="text" id="support-email" placeholder="rozybayewdemon@gmail.com">
+        <label>Telegram</label>
+        <input type="text" id="support-telegram" placeholder="https://t.me/animus_sh1">
+        <button id="btn-save-support" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для названия приложения -->
+  <div id="app-name-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Название приложения</h3>
+        <button class="btn-close" onclick="closeAppNameModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Название</label>
+        <input type="text" id="app-name-input" placeholder="Bereket">
+        <button id="btn-save-app-name" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для иконки -->
+  <div id="icon-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Иконка приложения</h3>
+        <button class="btn-close" onclick="closeIconModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Текущая иконка</label>
+        <div id="current-icon" class="icon-preview">🎓</div>
+        <label>URL новой иконки</label>
+        <input type="text" id="icon-url" placeholder="https://example.com/icon.png">
+        <div id="icon-preview" class="icon-preview"></div>
+        <label>Или загрузить файл</label>
+        <input type="file" id="icon-file" accept="image/*">
+        <button id="btn-save-icon" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="js/app.js"></script>

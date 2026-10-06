@@ -425,6 +425,26 @@ async def create_faculty(session: AsyncSession, name: str) -> Faculty:
     return faculty
 
 
+async def get_or_create_default_faculties(session: AsyncSession) -> list[Faculty]:
+    """Создаёт дефолтные факультеты если их нет"""
+    existing = await get_faculties(session)
+    if existing:
+        return existing
+
+    default_faculties = [
+        "Информационные технологии",
+        "Экономика и бизнес",
+        "Инженерия"
+    ]
+
+    faculties = []
+    for name in default_faculties:
+        faculty = await create_faculty(session, name)
+        faculties.append(faculty)
+
+    return faculties
+
+
 async def delete_faculty(session: AsyncSession, faculty_id: int) -> bool:
     result = await session.execute(select(Faculty).where(Faculty.id == faculty_id))
     faculty = result.scalar_one_or_none()
@@ -449,6 +469,41 @@ async def create_department(session: AsyncSession, name: str, faculty_id: int) -
     await session.commit()
     await session.refresh(department)
     return department
+
+
+async def get_or_create_default_departments(session: AsyncSession) -> list[Department]:
+    """Создаёт дефолтные кафедры если их нет"""
+    existing = await get_departments(session)
+    if existing:
+        return existing
+
+    faculties = await get_faculties(session)
+    default_departments = {
+        "Информационные технологии": [
+            "Прикладная математика",
+            "Компьютерные науки",
+            "Информационные системы"
+        ],
+        "Экономика и бизнес": [
+            "Менеджмент",
+            "Финансы",
+            "Маркетинг"
+        ],
+        "Инженерия": [
+            "Механика",
+            "Электротехника",
+            "Строительство"
+        ]
+    }
+
+    departments = []
+    for faculty in faculties:
+        if faculty.name in default_departments:
+            for dept_name in default_departments[faculty.name]:
+                dept = await create_department(session, dept_name, faculty.id)
+                departments.append(dept)
+
+    return departments
 
 
 async def delete_department(session: AsyncSession, department_id: int) -> bool:

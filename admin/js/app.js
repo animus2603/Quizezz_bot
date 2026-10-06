@@ -673,6 +673,13 @@ document.getElementById('btn-add-quiz').addEventListener('click', async () => {
 document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
 
 async function loadSettings() {
+  // Инициализация дефолтных данных
+  try {
+    await fetch(`${API_BASE}/settings/init-defaults`, { method: 'POST' });
+  } catch (e) {
+    console.error('Error initializing defaults:', e);
+  }
+
   // Загрузка факультетов
   try {
     const res = await fetch(`${API_BASE}/settings/faculties`);
@@ -695,7 +702,7 @@ async function loadSettings() {
     const container = document.getElementById('departments-list');
     container.innerHTML = departments.map(d => `
       <div class="settings-item">
-        <span>${d.name} (ID: ${d.faculty_id})</span>
+        <span>${d.name}</span>
         <button class="btn-danger" onclick="deleteDepartment(${d.id})">✕</button>
       </div>
     `).join('');
@@ -710,7 +717,7 @@ async function loadSettings() {
     const container = document.getElementById('groups-list');
     container.innerHTML = groups.map(g => `
       <div class="settings-item">
-        <span>${g.name} (F: ${g.faculty_id}, D: ${g.department_id})</span>
+        <span>${g.name}</span>
         <button class="btn-danger" onclick="deleteGroup(${g.id})">✕</button>
       </div>
     `).join('');
@@ -767,23 +774,11 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/support`);
     const support = await res.json();
-    document.getElementById('support-info').innerHTML = `
-      <div class="settings-item">
-        <span>WhatsApp: ${support.whatsapp}</span>
-      </div>
-      <div class="settings-item">
-        <span>Instagram: ${support.instagram}</span>
-      </div>
-      <div class="settings-item">
-        <span>TikTok: ${support.tiktok}</span>
-      </div>
-      <div class="settings-item">
-        <span>Email: ${support.email}</span>
-      </div>
-      <div class="settings-item">
-        <span>Telegram: ${support.telegram}</span>
-      </div>
-    `;
+    document.getElementById('support-whatsapp').value = support.whatsapp || '';
+    document.getElementById('support-instagram').value = support.instagram || '';
+    document.getElementById('support-tiktok').value = support.tiktok || '';
+    document.getElementById('support-email').value = support.email || '';
+    document.getElementById('support-telegram').value = support.telegram || '';
   } catch (e) {
     console.error('Error loading support settings:', e);
   }
@@ -792,32 +787,227 @@ async function loadSettings() {
   try {
     const res = await fetch(`${API_BASE}/settings/app`);
     const app = await res.json();
-    document.getElementById('app-name-info').innerHTML = `
-      <div class="settings-item">
-        <span>${app.app_name}</span>
-      </div>
-    `;
+    document.getElementById('app-name-input').value = app.app_name || 'Bereket';
+    if (app.app_icon) {
+      document.getElementById('current-icon').innerHTML = `<img src="${app.app_icon}" alt="Icon">`;
+    }
   } catch (e) {
     console.error('Error loading app settings:', e);
   }
-
-  // Загрузка иконки
-  document.getElementById('icon-info').innerHTML = `
-    <div class="settings-item">
-      <span>🎓</span>
-    </div>
-  `;
 }
 
-// Модальные окна для настроек
+// ===== Модальные окна для настроек =====
+
 function openFacultyModal() {
-  const name = prompt('Название факультета:');
-  if (name) {
-    createFaculty(name);
+  document.getElementById('faculty-modal').classList.remove('hidden');
+}
+
+function closeFacultyModal() {
+  document.getElementById('faculty-modal').classList.add('hidden');
+  document.getElementById('faculty-name').value = '';
+}
+
+function openDepartmentModal() {
+  document.getElementById('department-modal').classList.remove('hidden');
+  loadFacultiesForDepartment();
+}
+
+function closeDepartmentModal() {
+  document.getElementById('department-modal').classList.add('hidden');
+  document.getElementById('department-name').value = '';
+  document.getElementById('department-faculty').value = '';
+}
+
+function openGroupModal() {
+  document.getElementById('group-modal').classList.remove('hidden');
+  loadFacultiesForGroup();
+}
+
+function closeGroupModal() {
+  document.getElementById('group-modal').classList.add('hidden');
+  document.getElementById('group-name').value = '';
+  document.getElementById('group-faculty').value = '';
+  document.getElementById('group-department').value = '';
+  document.getElementById('group-department').disabled = true;
+}
+
+function openBannerModal() {
+  document.getElementById('banner-modal').classList.remove('hidden');
+}
+
+function closeBannerModal() {
+  document.getElementById('banner-modal').classList.add('hidden');
+  document.getElementById('banner-title').value = '';
+  document.getElementById('banner-image-url').value = '';
+  document.getElementById('banner-link-url').value = '';
+  document.getElementById('banner-order').value = '0';
+  document.getElementById('banner-preview').innerHTML = '';
+}
+
+function openAdModal() {
+  document.getElementById('ad-modal').classList.remove('hidden');
+}
+
+function closeAdModal() {
+  document.getElementById('ad-modal').classList.add('hidden');
+  document.getElementById('ad-title').value = '';
+  document.getElementById('ad-description').value = '';
+  document.getElementById('ad-image-url').value = '';
+  document.getElementById('ad-link-url').value = '';
+  document.getElementById('ad-order').value = '0';
+  document.getElementById('ad-preview').innerHTML = '';
+}
+
+function openFAQModal() {
+  document.getElementById('faq-modal').classList.remove('hidden');
+}
+
+function closeFAQModal() {
+  document.getElementById('faq-modal').classList.add('hidden');
+  document.getElementById('faq-question').value = '';
+  document.getElementById('faq-answer').value = '';
+  document.getElementById('faq-order').value = '0';
+}
+
+function openSupportModal() {
+  document.getElementById('support-modal').classList.remove('hidden');
+}
+
+function closeSupportModal() {
+  document.getElementById('support-modal').classList.add('hidden');
+}
+
+function openAppNameModal() {
+  document.getElementById('app-name-modal').classList.remove('hidden');
+}
+
+function closeAppNameModal() {
+  document.getElementById('app-name-modal').classList.add('hidden');
+}
+
+function openIconModal() {
+  document.getElementById('icon-modal').classList.remove('hidden');
+}
+
+function closeIconModal() {
+  document.getElementById('icon-modal').classList.add('hidden');
+  document.getElementById('icon-url').value = '';
+  document.getElementById('icon-file').value = '';
+  document.getElementById('icon-preview').innerHTML = '';
+}
+
+// ===== Загрузка данных для селектов =====
+
+async function loadFacultiesForDepartment() {
+  try {
+    const res = await fetch(`${API_BASE}/settings/faculties`);
+    const faculties = await res.json();
+    const select = document.getElementById('department-faculty');
+    select.innerHTML = '<option value="">Выберите факультет...</option>' +
+      faculties.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading faculties:', e);
   }
 }
 
-async function createFaculty(name) {
+async function loadFacultiesForGroup() {
+  try {
+    const res = await fetch(`${API_BASE}/settings/faculties`);
+    const faculties = await res.json();
+    const select = document.getElementById('group-faculty');
+    select.innerHTML = '<option value="">Выберите факультет...</option>' +
+      faculties.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading faculties:', e);
+  }
+}
+
+document.getElementById('group-faculty').addEventListener('change', async (e) => {
+  const facultyId = e.target.value;
+  const deptSelect = document.getElementById('group-department');
+
+  if (!facultyId) {
+    deptSelect.disabled = true;
+    deptSelect.innerHTML = '<option value="">Сначала выберите факультет</option>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/settings/departments?faculty_id=${facultyId}`);
+    const departments = await res.json();
+    deptSelect.disabled = false;
+    deptSelect.innerHTML = '<option value="">Выберите кафедру...</option>' +
+      departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading departments:', e);
+  }
+});
+
+// ===== Превью изображений =====
+
+document.getElementById('banner-image-url').addEventListener('input', (e) => {
+  const url = e.target.value;
+  const preview = document.getElementById('banner-preview');
+  if (url) {
+    preview.innerHTML = `<img src="${url}" alt="Preview">`;
+  } else {
+    preview.innerHTML = '';
+  }
+});
+
+document.getElementById('ad-image-url').addEventListener('input', (e) => {
+  const url = e.target.value;
+  const preview = document.getElementById('ad-preview');
+  if (url) {
+    preview.innerHTML = `<img src="${url}" alt="Preview">`;
+  } else {
+    preview.innerHTML = '';
+  }
+});
+
+document.getElementById('icon-url').addEventListener('input', (e) => {
+  const url = e.target.value;
+  const preview = document.getElementById('icon-preview');
+  if (url) {
+    preview.innerHTML = `<img src="${url}" alt="Preview">`;
+  } else {
+    preview.innerHTML = '';
+  }
+});
+
+document.getElementById('banner-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const preview = document.getElementById('banner-preview');
+    preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview">`;
+  }
+});
+
+document.getElementById('ad-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const preview = document.getElementById('ad-preview');
+    preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview">`;
+  }
+});
+
+document.getElementById('icon-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const preview = document.getElementById('icon-preview');
+    preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Preview">`;
+  }
+});
+
+// ===== Сохранение данных =====
+
+document.getElementById('btn-save-faculty').addEventListener('click', async () => {
+  const name = document.getElementById('faculty-name').value;
+  if (!name) {
+    alert('Введите название факультета');
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/settings/faculties`, {
       method: 'POST',
@@ -825,6 +1015,7 @@ async function createFaculty(name) {
       body: JSON.stringify({ name })
     });
     if (res.ok) {
+      closeFacultyModal();
       loadSettings();
       alert('Факультет добавлен');
     } else {
@@ -834,24 +1025,24 @@ async function createFaculty(name) {
     console.error('Error creating faculty:', e);
     alert('Ошибка при добавлении факультета');
   }
-}
+});
 
-function openDepartmentModal() {
-  const name = prompt('Название кафедры:');
-  if (!name) return;
-  const facultyId = prompt('ID факультета:');
-  if (!facultyId) return;
-  createDepartment(name, parseInt(facultyId));
-}
+document.getElementById('btn-save-department').addEventListener('click', async () => {
+  const name = document.getElementById('department-name').value;
+  const facultyId = document.getElementById('department-faculty').value;
+  if (!name || !facultyId) {
+    alert('Заполните все поля');
+    return;
+  }
 
-async function createDepartment(name, facultyId) {
   try {
     const res = await fetch(`${API_BASE}/settings/departments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, faculty_id: facultyId })
+      body: JSON.stringify({ name, faculty_id: parseInt(facultyId) })
     });
     if (res.ok) {
+      closeDepartmentModal();
       loadSettings();
       alert('Кафедра добавлена');
     } else {
@@ -861,26 +1052,25 @@ async function createDepartment(name, facultyId) {
     console.error('Error creating department:', e);
     alert('Ошибка при добавлении кафедры');
   }
-}
+});
 
-function openGroupModal() {
-  const name = prompt('Название группы:');
-  if (!name) return;
-  const facultyId = prompt('ID факультета:');
-  if (!facultyId) return;
-  const departmentId = prompt('ID кафедры:');
-  if (!departmentId) return;
-  createGroup(name, parseInt(facultyId), parseInt(departmentId));
-}
+document.getElementById('btn-save-group').addEventListener('click', async () => {
+  const name = document.getElementById('group-name').value;
+  const facultyId = document.getElementById('group-faculty').value;
+  const departmentId = document.getElementById('group-department').value;
+  if (!name || !facultyId || !departmentId) {
+    alert('Заполните все поля');
+    return;
+  }
 
-async function createGroup(name, facultyId, departmentId) {
   try {
     const res = await fetch(`${API_BASE}/settings/groups`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, faculty_id: facultyId, department_id: departmentId })
+      body: JSON.stringify({ name, faculty_id: parseInt(facultyId), department_id: parseInt(departmentId) })
     });
     if (res.ok) {
+      closeGroupModal();
       loadSettings();
       alert('Группа добавлена');
     } else {
@@ -890,26 +1080,49 @@ async function createGroup(name, facultyId, departmentId) {
     console.error('Error creating group:', e);
     alert('Ошибка при добавлении группы');
   }
-}
+});
 
-function openBannerModal() {
-  const title = prompt('Название баннера:');
-  if (!title) return;
-  const imageUrl = prompt('URL изображения:');
-  if (!imageUrl) return;
-  const linkUrl = prompt('URL ссылки:');
-  if (!linkUrl) return;
-  createBanner(title, imageUrl, linkUrl);
-}
+document.getElementById('btn-save-banner').addEventListener('click', async () => {
+  const title = document.getElementById('banner-title').value;
+  const imageUrl = document.getElementById('banner-image-url').value;
+  const file = document.getElementById('banner-file').files[0];
+  const linkUrl = document.getElementById('banner-link-url').value;
+  const order = parseInt(document.getElementById('banner-order').value) || 0;
+  if (!title || !linkUrl) {
+    alert('Заполните название и ссылку');
+    return;
+  }
+  if (!imageUrl && !file) {
+    alert('Введите URL или выберите файл');
+    return;
+  }
 
-async function createBanner(title, imageUrl, linkUrl) {
+  let finalImageUrl = imageUrl;
+  if (file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch('/api/settings/upload-banner', {
+        method: 'POST',
+        body: formData
+      });
+      const uploadData = await uploadRes.json();
+      finalImageUrl = uploadData.url;
+    } catch (e) {
+      console.error('Error uploading banner:', e);
+      alert('Ошибка при загрузке файла');
+      return;
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/settings/banners`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, image_url: imageUrl, link_url: linkUrl })
+      body: JSON.stringify({ title, image_url: finalImageUrl, link_url: linkUrl, order })
     });
     if (res.ok) {
+      closeBannerModal();
       loadSettings();
       alert('Баннер добавлен');
     } else {
@@ -919,27 +1132,50 @@ async function createBanner(title, imageUrl, linkUrl) {
     console.error('Error creating banner:', e);
     alert('Ошибка при добавлении баннера');
   }
-}
+});
 
-function openAdModal() {
-  const title = prompt('Название рекламы:');
-  if (!title) return;
-  const description = prompt('Описание:');
-  const imageUrl = prompt('URL изображения:');
-  if (!imageUrl) return;
-  const linkUrl = prompt('URL ссылки:');
-  if (!linkUrl) return;
-  createAd(title, description, imageUrl, linkUrl);
-}
+document.getElementById('btn-save-ad').addEventListener('click', async () => {
+  const title = document.getElementById('ad-title').value;
+  const description = document.getElementById('ad-description').value;
+  const imageUrl = document.getElementById('ad-image-url').value;
+  const file = document.getElementById('ad-file').files[0];
+  const linkUrl = document.getElementById('ad-link-url').value;
+  const order = parseInt(document.getElementById('ad-order').value) || 0;
+  if (!title || !linkUrl) {
+    alert('Заполните название и ссылку');
+    return;
+  }
+  if (!imageUrl && !file) {
+    alert('Введите URL или выберите файл');
+    return;
+  }
 
-async function createAd(title, description, imageUrl, linkUrl) {
+  let finalImageUrl = imageUrl;
+  if (file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch('/api/settings/upload-banner', {
+        method: 'POST',
+        body: formData
+      });
+      const uploadData = await uploadRes.json();
+      finalImageUrl = uploadData.url;
+    } catch (e) {
+      console.error('Error uploading ad image:', e);
+      alert('Ошибка при загрузке файла');
+      return;
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/settings/ads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, image_url: imageUrl, link_url: linkUrl })
+      body: JSON.stringify({ title, description, image_url: finalImageUrl, link_url: linkUrl, order })
     });
     if (res.ok) {
+      closeAdModal();
       loadSettings();
       alert('Реклама добавлена');
     } else {
@@ -949,24 +1185,25 @@ async function createAd(title, description, imageUrl, linkUrl) {
     console.error('Error creating ad:', e);
     alert('Ошибка при добавлении рекламы');
   }
-}
+});
 
-function openFAQModal() {
-  const question = prompt('Вопрос:');
-  if (!question) return;
-  const answer = prompt('Ответ:');
-  if (!answer) return;
-  createFAQ(question, answer);
-}
+document.getElementById('btn-save-faq').addEventListener('click', async () => {
+  const question = document.getElementById('faq-question').value;
+  const answer = document.getElementById('faq-answer').value;
+  const order = parseInt(document.getElementById('faq-order').value) || 0;
+  if (!question || !answer) {
+    alert('Заполните вопрос и ответ');
+    return;
+  }
 
-async function createFAQ(question, answer) {
   try {
     const res = await fetch(`${API_BASE}/settings/faq`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, answer })
+      body: JSON.stringify({ question, answer, order })
     });
     if (res.ok) {
+      closeFAQModal();
       loadSettings();
       alert('FAQ добавлен');
     } else {
@@ -976,18 +1213,15 @@ async function createFAQ(question, answer) {
     console.error('Error creating FAQ:', e);
     alert('Ошибка при добавлении FAQ');
   }
-}
+});
 
-function openSupportModal() {
-  const whatsapp = prompt('WhatsApp:');
-  const instagram = prompt('Instagram:');
-  const tiktok = prompt('TikTok:');
-  const email = prompt('Email:');
-  const telegram = prompt('Telegram:');
-  updateSupportSettings(whatsapp, instagram, tiktok, email, telegram);
-}
+document.getElementById('btn-save-support').addEventListener('click', async () => {
+  const whatsapp = document.getElementById('support-whatsapp').value;
+  const instagram = document.getElementById('support-instagram').value;
+  const tiktok = document.getElementById('support-tiktok').value;
+  const email = document.getElementById('support-email').value;
+  const telegram = document.getElementById('support-telegram').value;
 
-async function updateSupportSettings(whatsapp, instagram, tiktok, email, telegram) {
   try {
     const res = await fetch(`${API_BASE}/settings/support`, {
       method: 'PUT',
@@ -995,6 +1229,7 @@ async function updateSupportSettings(whatsapp, instagram, tiktok, email, telegra
       body: JSON.stringify({ whatsapp, instagram, tiktok, email, telegram })
     });
     if (res.ok) {
+      closeSupportModal();
       loadSettings();
       alert('Настройки поддержки обновлены');
     } else {
@@ -1004,16 +1239,15 @@ async function updateSupportSettings(whatsapp, instagram, tiktok, email, telegra
     console.error('Error updating support settings:', e);
     alert('Ошибка при обновлении настроек');
   }
-}
+});
 
-function openAppNameModal() {
-  const name = prompt('Название приложения:');
-  if (name) {
-    updateAppName(name);
+document.getElementById('btn-save-app-name').addEventListener('click', async () => {
+  const name = document.getElementById('app-name-input').value;
+  if (!name) {
+    alert('Введите название');
+    return;
   }
-}
 
-async function updateAppName(name) {
   try {
     const res = await fetch(`${API_BASE}/settings/app`, {
       method: 'PUT',
@@ -1021,6 +1255,7 @@ async function updateAppName(name) {
       body: JSON.stringify({ app_name: name })
     });
     if (res.ok) {
+      closeAppNameModal();
       loadSettings();
       alert('Название обновлено');
     } else {
@@ -1030,23 +1265,43 @@ async function updateAppName(name) {
     console.error('Error updating app name:', e);
     alert('Ошибка при обновлении названия');
   }
-}
+});
 
-function openIconModal() {
-  const icon = prompt('URL иконки:');
-  if (icon) {
-    updateAppIcon(icon);
+document.getElementById('btn-save-icon').addEventListener('click', async () => {
+  const url = document.getElementById('icon-url').value;
+  const file = document.getElementById('icon-file').files[0];
+
+  if (!url && !file) {
+    alert('Введите URL или выберите файл');
+    return;
   }
-}
 
-async function updateAppIcon(icon) {
+  let iconUrl = url;
+  if (file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch('/api/settings/upload-icon', {
+        method: 'POST',
+        body: formData
+      });
+      const uploadData = await uploadRes.json();
+      iconUrl = uploadData.url;
+    } catch (e) {
+      console.error('Error uploading icon:', e);
+      alert('Ошибка при загрузке файла');
+      return;
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/settings/app`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_icon: icon })
+      body: JSON.stringify({ app_icon: iconUrl })
     });
     if (res.ok) {
+      closeIconModal();
       loadSettings();
       alert('Иконка обновлена');
     } else {
@@ -1056,7 +1311,9 @@ async function updateAppIcon(icon) {
     console.error('Error updating app icon:', e);
     alert('Ошибка при обновлении иконки');
   }
-}
+});
+
+// ===== Удаление =====
 
 async function deleteFaculty(id) {
   if (confirm('Удалить факультет?')) {

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -408,6 +408,18 @@ async def reject_order(order_id: int, reason: str):
 
 # ---------- Настройки API ----------
 
+@router.post("/settings/init-defaults")
+async def init_defaults():
+    """Инициализировать дефолтные факультеты и кафедры"""
+    async with async_session() as session:
+        faculties = await crud.get_or_create_default_faculties(session)
+        departments = await crud.get_or_create_default_departments(session)
+        return {
+            "faculties": len(faculties),
+            "departments": len(departments)
+        }
+
+
 @router.get("/settings/faculties")
 async def get_faculties_list():
     """Список факультетов"""
@@ -551,6 +563,48 @@ async def create_ad(data: dict):
     async with async_session() as session:
         ad = await crud.create_advertisement(session, title, description, image_url, link_url, order)
         return {"id": ad.id, "title": ad.title, "description": ad.description, "image_url": ad.image_url, "link_url": ad.link_url, "order": ad.order}
+
+
+@router.post("/settings/upload-icon")
+async def upload_icon(file: UploadFile = File(...)):
+    """Загрузить иконку приложения"""
+    from pathlib import Path
+    import uuid
+
+    UPLOAD_DIR = Path("uploads")
+    UPLOAD_DIR.mkdir(exist_ok=True)
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:  # 5 МБ
+        raise HTTPException(400, "Файл слишком большой (максимум 5 МБ)")
+
+    ext = Path(file.filename or "icon").suffix
+    safe_name = f"icon_{uuid.uuid4().hex}{ext}"
+    dest = UPLOAD_DIR / safe_name
+    dest.write_bytes(content)
+
+    return {"url": f"/uploads/{safe_name}"}
+
+
+@router.post("/settings/upload-banner")
+async def upload_banner_image(file: UploadFile = File(...)):
+    """Загрузить изображение баннера"""
+    from pathlib import Path
+    import uuid
+
+    UPLOAD_DIR = Path("uploads")
+    UPLOAD_DIR.mkdir(exist_ok=True)
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10 МБ
+        raise HTTPException(400, "Файл слишком большой (максимум 10 МБ)")
+
+    ext = Path(file.filename or "banner").suffix
+    safe_name = f"banner_{uuid.uuid4().hex}{ext}"
+    dest = UPLOAD_DIR / safe_name
+    dest.write_bytes(content)
+
+    return {"url": f"/uploads/{safe_name}"}
 
 
 @router.delete("/settings/ads/{ad_id}")

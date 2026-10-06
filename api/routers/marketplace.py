@@ -3,12 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import get_session
 from database import crud
-from database.models import ListingCategory
+from database.models import ListingCategory, Faculty, Department
 from api.schemas import (
     ListingOut, CreateListingIn, UpdateListingIn, DeleteListingIn, FilterOptionsOut,
     CommentOut, CreateCommentIn, UpdateCommentIn, DeleteCommentIn,
 )
 from bot.notify import notify_admin_new_listing, notify_client_listing_submitted, notify_seller_new_review
+from sqlalchemy import select
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
@@ -133,6 +134,25 @@ async def remove_comment(comment_id: int, data: DeleteCommentIn, session: AsyncS
 
     await crud.delete_comment(session, comment)
     return {"ok": True}
+
+
+@router.get("/faculties")
+async def get_faculties(session: AsyncSession = Depends(get_session)):
+    """Получить список факультетов из настроек"""
+    result = await session.execute(select(Faculty).order_by(Faculty.name))
+    faculties = result.scalars().all()
+    return [{"id": f.id, "name": f.name} for f in faculties]
+
+
+@router.get("/departments")
+async def get_departments(faculty_id: int | None = None, session: AsyncSession = Depends(get_session)):
+    """Получить список кафедр из настроек"""
+    stmt = select(Department).order_by(Department.name)
+    if faculty_id:
+        stmt = stmt.where(Department.faculty_id == faculty_id)
+    result = await session.execute(stmt)
+    departments = result.scalars().all()
+    return [{"id": d.id, "name": d.name, "faculty_id": d.faculty_id} for d in departments]
 
 
 @router.get("/filter-options/{field}", response_model=FilterOptionsOut)

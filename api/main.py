@@ -31,6 +31,15 @@ async def lifespan(app: FastAPI):
     logger.info("Запуск приложения...")
     await init_db()
     logger.info("База данных инициализирована")
+
+    # Инициализация дефолтных настроек
+    from database.engine import async_session
+    from database import crud
+    async with async_session() as session:
+        await crud.get_or_create_default_faculties(session)
+        await crud.get_or_create_default_departments(session)
+    logger.info("Дефолтные настройки инициализированы")
+
     bot_task = asyncio.create_task(start_polling())
     yield
     logger.info("Остановка приложения...")
